@@ -14,6 +14,17 @@
 }
 
 /* Page background */
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+#root {
+  min-height: 100%;
+}
+
 .catch23,
 .landing {
   min-height: 100vh;
@@ -154,4 +165,60 @@ body, input, button {
   color: white;
   font-weight: 700;
   cursor: pointer;
+}
+
+/* Navbar */
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+
+  height: 64px;
+  padding: 0 18px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  background: #BD2522;
+  z-index: 50;
+}
+
+.navbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.navbar-brand {
+  font-family: "Robson", Impact, sans-serif;
+  color: white;
+  font-size: 36px;
+  letter-spacing: 1px;
+
+  text-shadow:
+    0 3px 0 #000,
+    1px 0 0 #000,
+    -1px 0 0 #000,
+    0 1px 0 #000,
+    0 -1px 0 #000;
+}
+
+.navbar-iconbtn {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+
+  border: none;
+  background: rgba(255,255,255,0.12);
+  color: white;
+
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.navbar-iconbtn i {
+  font-size: 20px;
 }
