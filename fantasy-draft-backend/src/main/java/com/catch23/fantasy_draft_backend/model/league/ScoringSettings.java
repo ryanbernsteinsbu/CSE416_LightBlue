@@ -1,9 +1,18 @@
 package com.catch23.fantasy_draft_backend.model;
 
+import jakarta.persistence.*; // this might have to be javax.persistence.*
+
 // Getters, and setters done using AI
+@Entity
+@Table(name = "scoring_settings")
 
 public class ScoringSettings {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @OneToOne
+    @JoinColumn(name = "league_id")
     private League league;
 
     /* POST MVP TASKS:
@@ -24,8 +33,7 @@ public class ScoringSettings {
     private boolean useStrikeouts; // Strikeouts
     private boolean useSaves; // Saves
 
-    public ScoringSettings(League league) { // Setting common stats (Based on MLB website) to true;
-        this.league = league;
+    public ScoringSettings() { // Setting common stats (Based on MLB website) to true;
         this.useAvg = true;
         this.useHr = true;
         this.useRbi = true;

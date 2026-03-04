@@ -3,6 +3,10 @@ package com.catch23.fantasy_draft_backend.model;
 // Used AI and MLB website to make sure I had correct formatting since this will be external datas
 
 import java.time.LocalDate;
+import jakarta.persistence.*; // this might have to be javax.persistence.*
+
+@Entity
+@Table(name = "player_stats")
 
 public class PlayerStats {
     // Enums
@@ -11,11 +15,15 @@ public class PlayerStats {
     }
 
     // Fields
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private Player player;
+
+    @Enumerated(EnumType.STRING)
+    private StatType statType;
+
     private String dataSource;
     private LocalDate lastUpdated;
-    private StatType statType;
 
     // Hitting Data
     private double avg;
@@ -42,7 +50,6 @@ public class PlayerStats {
 
     // Getters
     public Long getId() { return id; }
-    public Player getPlayer() { return player; }
     public String getDataSource() { return dataSource; }
     public double getAvg() { return avg; }
     public int getHits() { return hits; }
@@ -66,7 +73,6 @@ public class PlayerStats {
 
     // Setters
     public void setId(Long id) { this.id = id; }
-    public void setPlayer(Player player) { this.player = player; }
     public void setDataSource(String dataSource) { this.dataSource = dataSource; }
     public void setAvg(double avg) { this.avg = avg; }
     public void setHits(int hits) { this.hits = hits; }

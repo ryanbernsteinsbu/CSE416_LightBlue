@@ -3,6 +3,10 @@ package com.catch23.fantasy_draft_backend.model;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import jakarta.persistence.*; // this might have to be javax.persistence.*
+
+@Entity
+@Table(name = "league")
 
 public class League {
     // Enums
@@ -11,27 +15,47 @@ public class League {
     }
 
     // Fields
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id")
     private User user;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status")
+    private Status status;
+
+    @OneToMany(mappedBy = "league", cascade = CascadeType.ALL)
+    private List<Team> teams = new ArrayList<>();
+
+    @OneToOne(mappedBy = "league", cascade = CascadeType.ALL)
+    private DraftPrep draftPrep;
+
+    @OneToOne(mappedBy = "league", cascade = CascadeType.ALL)
+    private ScoringSettings scoringSettings;
+
+    @OneToOne(mappedBy = "league", cascade = CascadeType.ALL)
+    private PlayerSettings playerSettings;
+
+    @OneToOne(mappedBy = "league", cascade = CascadeType.ALL)
+    private RosterSettings rosterSettings;
+
+    @OneToOne(mappedBy = "league", cascade = CascadeType.ALL)
+    private DraftSettings draftSettings;
+
     private String title;
     private String leagueIconUrl;
-    private Status status;
     private int currRank;
     private int projectFinish;
     private LocalDate dateMade;
     private int season;
-    private List<Team> teams = new ArrayList<>();
-    private DraftPrep draftPrep;
-    private ScoringSettings scoringSettings;
-    private PlayerSettings playerSettings;
-    private RosterSettings rosterSettings;
-    private DraftSettings draftSettings;
 
     // Constructors
     public League() {
         season = 1;
         dateMade = LocalDate.now();
-        draftPrep = new DraftPrep();
     }
 
     // Getters
@@ -45,7 +69,6 @@ public class League {
     public LocalDate getDate() { return dateMade; }
     public int getSeason() { return season; }
     public List<Team> getTeams(){ return teams; }
-    public int getNumTeams() { return teams.size(); }
     public ScoringSettings getScoringSettings(){ return scoringSettings; }
     public DraftPrep getDraftPrep() { return draftPrep; }
     public PlayerSettings getPlayerSettings() { return playerSettings; }

@@ -1,8 +1,18 @@
 package com.catch23.fantasy_draft_backend.model;
 
+import jakarta.persistence.*; // this might have to be javax.persistence.*
+
+@Entity
+@Table(name = "roster_settings")
+
 public class RosterSettings {
     // Fields
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @OneToOne
+    @JoinColumn(name = "league_id")
     private League league;
 
     private int numCatchers;
@@ -63,6 +73,7 @@ public class RosterSettings {
     public void setNumTaxi(int numTaxi) { this.numTaxi = numTaxi; }
 
     // Helper Methods
+    @Transient
     public int getTotalRosterSize() {
         return numCatchers + numFirstBase + numSecondBase + numThirdBase +
             numShortstop + numCornerInfield + numMiddleInfield +
