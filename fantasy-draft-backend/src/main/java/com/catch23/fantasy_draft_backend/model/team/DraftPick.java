@@ -2,9 +2,9 @@ package com.catch23.fantasy_draft_backend.model;
 
 public class DraftPick {
     // Fields
-    public Long id;
-    public Player player;
-    public double cost;
+    private Long id;
+    private Player player;
+    private double cost;
 
     // Constructors
     public DraftPick() {

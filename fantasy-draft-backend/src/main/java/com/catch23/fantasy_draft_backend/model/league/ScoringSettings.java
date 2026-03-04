@@ -24,8 +24,6 @@ public class ScoringSettings {
     private boolean useStrikeouts; // Strikeouts
     private boolean useSaves; // Saves
 
-    public ScoringSettings() {}
-
     public ScoringSettings(League league) { // Setting common stats (Based on MLB website) to true;
         this.league = league;
         this.useAvg = true;
