@@ -2,12 +2,20 @@ package com.catch23.fantasy_draft_backend.model;
 
 // Used AI and MLB website to make sure I had correct formatting since this will be external datas
 
+import java.time.LocalDate;
+
 public class PlayerStats {
+    // Enums
+    public enum StatType {
+        LAST_YEAR, THREE_YEAR_AVG, PROJECTED
+    }
+
     // Fields
     private Long id;
     private Player player;
     private String dataSource;
-    private Date lastUpdated;
+    private LocalDate lastUpdated;
+    private StatType statType;
 
     // Hitting Data
     private double avg;
@@ -16,7 +24,7 @@ public class PlayerStats {
     private int rbi;
     private int runs;
     private int stolenBases;
-    private double ops;
+    private double obp;
     private int atBats;
 
     // Pitching Data
@@ -30,20 +38,19 @@ public class PlayerStats {
     private int qualityStarts;
 
     // Constructors
-    public PlayerProjection() {}
+    public PlayerStats() {}
 
     // Getters
     public Long getId() { return id; }
     public Player getPlayer() { return player; }
-    public String getSource() { return source; }
-    public int getProjectedYear() { return projectedYear; }
+    public String getDataSource() { return dataSource; }
     public double getAvg() { return avg; }
     public int getHits() { return hits; }
     public int getHomeRuns() { return homeRuns; }
     public int getRbi() { return rbi; }
     public int getRuns() { return runs; }
     public int getStolenBases() { return stolenBases; }
-    public double getOps() { return ops; }
+    public double getObp() { return obp; }
     public int getAtBats() { return atBats; }
     public double getEra() { return era; }
     public double getWhip() { return whip; }
@@ -53,20 +60,21 @@ public class PlayerStats {
     public int getHolds() { return holds; }
     public double getInningsPitched() { return inningsPitched; }
     public int getQualityStarts() { return qualityStarts; }
+    public LocalDate getLastUpdated() { return lastUpdated; }
+    public StatType getStatType() { return statType; }
 
 
     // Setters
     public void setId(Long id) { this.id = id; }
     public void setPlayer(Player player) { this.player = player; }
-    public void setSource(String source) { this.source = source; }
-    public void setProjectedYear(int projectedYear) { this.projectedYear = projectedYear; }
+    public void setDataSource(String dataSource) { this.dataSource = dataSource; }
     public void setAvg(double avg) { this.avg = avg; }
     public void setHits(int hits) { this.hits = hits; }
     public void setHomeRuns(int homeRuns) { this.homeRuns = homeRuns; }
     public void setRbi(int rbi) { this.rbi = rbi; }
     public void setRuns(int runs) { this.runs = runs; }
     public void setStolenBases(int stolenBases) { this.stolenBases = stolenBases; }
-    public void setOps(double ops) { this.ops = ops; }
+    public void setObp(double obp) { this.obp = obp; }
     public void setAtBats(int atBats) { this.atBats = atBats; }
     public void setEra(double era) { this.era = era; }
     public void setWhip(double whip) { this.whip = whip; }
@@ -76,4 +84,6 @@ public class PlayerStats {
     public void setHolds(int holds) { this.holds = holds; }
     public void setInningsPitched(double inningsPitched) { this.inningsPitched = inningsPitched; }
     public void setQualityStarts(int qualityStarts) { this.qualityStarts = qualityStarts; }
+    public void setLastUpdated(LocalDate lastUpdated) { this.lastUpdated = lastUpdated; }
+    public void setStatType(StatType statType) { this.statType = statType; }
 }
