@@ -34,7 +34,7 @@ public class PlayerSettings {
         private boolean hideLongTermIL;
 
     // Constructors
-    public LeagueSettings() { // Default conditions
+    public PlayerSettings() { // Default conditions
         this.positionEligibility = true;
         this.multiPositionEnabled = false;
         this.prospectEligibility = true;

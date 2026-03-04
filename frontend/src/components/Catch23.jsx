@@ -6,7 +6,7 @@ import runner from "../assets/images/reddude.png";
 import Navbar from "./Navbar";
 import Home from "./Home";
 
-const PREVIEW_LOGGED_IN = true; // for testing
+const PREVIEW_LOGGED_IN = false; // for testing
 
 export default function Catch23() {
   const [authView, setAuthView] = useState("login");
