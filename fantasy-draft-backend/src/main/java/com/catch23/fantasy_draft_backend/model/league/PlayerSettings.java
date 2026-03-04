@@ -1,5 +1,10 @@
 package com.catch23.fantasy_draft_backend.model;
 
+import jakarta.persistence.*; // this might have to be javax.persistence.*
+
+@Entity
+@Table(name = "player_settings")
+
 public class PlayerSettings {
     // Enums
     public enum Division {
@@ -11,7 +16,12 @@ public class PlayerSettings {
     }
 
     // Fields
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @OneToOne
+    @JoinColumn(name = "league_id")
     private League league;
 
         // Eligibility
@@ -25,7 +35,13 @@ public class PlayerSettings {
         private boolean mlbPlusProspects;
         private boolean minorLeaguePlayers;
         private boolean freeAgents;
+
+        @Enumerated(EnumType.STRING)
+        @Column(name = "ohtani_rule")
         private OhtaniRule ohtani;
+
+        @Enumerated(EnumType.STRING)
+        @Column(name = "division")
         private Division division;
 
         // Injury Handling

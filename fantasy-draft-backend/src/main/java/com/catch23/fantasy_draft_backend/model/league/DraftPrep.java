@@ -1,9 +1,20 @@
 package com.catch23.fantasy_draft_backend.model;
 
-public class DraftPrep {
+import jakarta.persistence.*; // this might have to be javax.persistence.*
 
+@Entity
+@Table(name = "draft_prep")
+
+public class DraftPrep {
     // Fields
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @OneToOne
+    @JoinColumn(name = "league_id")
+    private League league;
+
     private boolean rankingsImported;
     private boolean cheatsheetBuilt;
     private boolean sleepersTagged;
@@ -32,6 +43,7 @@ public class DraftPrep {
     public void setProjectionsImported(boolean projectionsImported) { this.projectionsImported = projectionsImported; }
 
     // Completed percentage helper function
+    @Transient
     public int getCompletedPercentage() {
         int count = (rankingsImported? 1 : 0)
                     + (cheatsheetBuilt? 1 : 0)

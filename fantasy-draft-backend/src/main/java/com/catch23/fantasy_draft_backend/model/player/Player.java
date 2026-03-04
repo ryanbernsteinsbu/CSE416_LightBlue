@@ -4,6 +4,10 @@ package com.catch23.fantasy_draft_backend.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import jakarta.persistence.*; // this might have to be javax.persistence.*
+
+@Entity
+@Table(name = "player")
 
 public class Player {
     // Enums
@@ -17,15 +21,35 @@ public class Player {
     } // QUESTION: Do we even care about 10 or 15 day injury list? I didn't include 7 because that didn't feel necessary
 
     // Fields
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @ElementCollection
+    @Enumerated(EnumType.STRING)
+    @CollectionTable(name = "playable_positions", joinColumns = @JoinColumn(name = "player_id"))
+    @Column(name = "position")
+    private List<Position> playablePosition = new ArrayList<>();
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "player_status")
+    private PlayerStatus status;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "last_year_stats_id")
+    private PlayerStats lastYearStats;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "three_year_avg_id")
+    private PlayerStats threeYearAvg;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "projected_stats_id")
+    private PlayerStats projectedStats;
+  
     private String name;
     private String mlbPlayerId; // use for syncing with MLB database
     private String realTeam;
-    private List<Position> playablePosition = new ArrayList<>();
-    private PlayerStatus status;
-    private PlayerStats lastYearStats;
-    private PlayerStats threeYearAvg;
-    private PlayerStats projectedStats;
     private boolean isKeeper;
     private int seasonsLeft; // only relevant if isKeeper is true
 
