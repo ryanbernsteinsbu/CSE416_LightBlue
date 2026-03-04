@@ -5,19 +5,22 @@ import Modal from "./Modal";
 import runner from "../assets/images/reddude.png";
 import Navbar from "./Navbar";
 import Home from "./Home";
+import PlayerInformation from "./PlayerInformation";
 
 const PREVIEW_LOGGED_IN = true; // for testing
 
 export default function Catch23() {
   const [authView, setAuthView] = useState("login");
   const showLoggedIn = PREVIEW_LOGGED_IN; // for testing
+  const [route, setRoute] = useState("home");
 
   return (
     <>
       {showLoggedIn ? (
         <>
-          <Navbar />
-          <Home />
+          <Navbar onNavigate={setRoute} />
+          {route === "home" && <Home/>}
+          {route === "player" && <PlayerInformation/>}
         </>
       ) : (
     <div className="landing">
