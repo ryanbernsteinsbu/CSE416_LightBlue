@@ -1,0 +1,27 @@
+import React, { useState } from "react";
+import Login from "./Login";
+import Register from "./Register";
+import Modal from "./Modal";
+import runner from "../assets/images/reddude.png";
+
+export default function Catch23() {
+  const [authView, setAuthView] = useState("login");
+
+  return (
+    <div className="landing">
+      <img className="landing-runner" src={runner} alt="runner" />
+      <h1 className="landing-title">CATCH 23</h1>
+
+      <Modal isOpen={true}>
+        {authView === "login" ? (
+          <Login onShowRegister={() => setAuthView("register")} />
+        ) : (
+          <Register
+            createUser={async () => {}}
+            onCreateUserClick={() => setAuthView("login")}
+          />
+        )}
+      </Modal>
+    </div>
+  );
+}
