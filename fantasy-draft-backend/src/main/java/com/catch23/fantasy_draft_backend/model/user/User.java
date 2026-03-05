@@ -11,7 +11,7 @@ import jakarta.persistence.*; // this might have to be javax.persistence.*
 public class User {
     // Features
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY);
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(unique = true, nullable = false)
