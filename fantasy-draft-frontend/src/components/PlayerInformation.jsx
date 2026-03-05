@@ -4,279 +4,325 @@ import { useMemo, useState } from "react";
 const MOCK_PLAYERS = [
   {
     id: "p1",
-    name: "E. DÍAZ",
+    firstName: "Edwin",
+    lastName: "Díaz",
     team: "LAD",
     pos: "RP",
-    stats: { W: 6, SV: 28, K: 98, AVG: ".164", ERA: "1.63", WHIP: "0.87" },
+    age: 30,
+    stats: { W: 6, SV: 28, K: 98, AVG: 0.164, ERA: 1.63, WHIP: 0.87, HR: 0, RBI: 0, SB: 0, R: 0, OBP: 0.0 },
   },
   {
     id: "p2",
-    name: "J. RAMÍREZ",
+    firstName: "José",
+    lastName: "Ramírez",
     team: "CLE",
     pos: "3B",
-    stats: { HR: 30, RBI: 85, SB: 44, AVG: ".283", R: 103, OBP: ".360" },
+    age: 32,
+    stats: { HR: 30, RBI: 85, SB: 44, AVG: 0.283, R: 103, OBP: 0.36, W: 0, SV: 0, K: 0, ERA: 0.0, WHIP: 0.0 },
   },
   {
     id: "p3",
-    name: "M. BETTS",
+    firstName: "Mookie",
+    lastName: "Betts",
     team: "LAD",
     pos: "RF",
-    stats: { HR: 22, RBI: 67, SB: 14, AVG: ".301", R: 98, OBP: ".392" },
+    age: 31,
+    stats: { HR: 22, RBI: 67, SB: 14, AVG: 0.301, R: 98, OBP: 0.392, W: 0, SV: 0, K: 0, ERA: 0.0, WHIP: 0.0 },
   },
 ];
 
-function PlayerCard({ player, onPick }) {
-  return (
-    <button className="pi-card" type="button" onClick={() => onPick(player)}>
-      <div className="pi-card-top">
-        <div className="pi-headshot" aria-hidden="true" />
-        <div className="pi-stats">
-          {Object.entries(player.stats).slice(0, 6).map(([k, v]) => (
-            <div className="pi-stat" key={k}>
-              <span className="pi-stat-k">{k}</span>
-              <span className="pi-stat-dots" aria-hidden="true" />
-              <span className="pi-stat-v">{v}</span>
-            </div>
-          ))}
-        </div>
-      </div>
+// Base columns (shared columns that appear both hitting and pitching views)
+const BASE_COLUMNS = [
+  { key: "name", label: "PLAYER", sortable: true },
+  { key: "team", label: "TEAM", sortable: true },
+  { key: "pos", label: "POS", sortable: true },
+  { key: "age", label: "AGE", sortable: true },
+];
 
-      <div className="pi-name">{player.name}</div>
-      <div className="pi-sub">
-        {player.team} - {player.pos}
-      </div>
-    </button>
-  );
+// Hitting-specific columns
+const HITTING_COLUMNS = [
+  ...BASE_COLUMNS,
+  { key: "HR", label: "HR", sortable: true, stat: "HR" },
+  { key: "RBI", label: "RBI", sortable: true, stat: "RBI" },
+  { key: "SB", label: "SB", sortable: true, stat: "SB" },
+  { key: "R", label: "R", sortable: true, stat: "R" },
+  { key: "AVG", label: "AVG", sortable: true, stat: "AVG", format: "avg" },
+  { key: "OBP", label: "OBP", sortable: true, stat: "OBP", format: "avg" },
+];
+
+// Pitching-specific columns
+const PITCHING_COLUMNS = [
+  ...BASE_COLUMNS,
+  { key: "W", label: "W", sortable: true, stat: "W" },
+  { key: "SV", label: "SV", sortable: true, stat: "SV" },
+  { key: "K", label: "K", sortable: true, stat: "K" },
+  { key: "ERA", label: "ERA", sortable: true, stat: "ERA", format: "era" },
+  { key: "WHIP", label: "WHIP", sortable: true, stat: "WHIP", format: "whip" },
+];
+
+// Sort helpers
+
+// Converts any value into a number so we can sort numerically
+function toNum(v){
+  const s = String(v ?? "").trim().replace(/^\./, "0."); 
+  const n = Number(s);
+  return Number.isFinite(n) ? n: -Infinity;
 }
-export default function PlayerInformation() {
-  // search
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [team, setTeam] = useState("");
 
-  // sort
-  const [sortBy, setSortBy] = useState("overall");
+// Returns the sortable value for a given player + column combination
+// what value should I use to sort this player for this column?
+function sortVal(player, col){
+  const raw = col.stat ? player.stats?.[col.stat] : player[col.key];
+  if (col.key === "name" || col.key === "team" || col.key === "pos")
+    return String(raw ?? "").toLowerCase(); // string sort 
+  return toNum(raw); // numeric sort 
+}
 
-  // filters
-  const [slot1, setSlot1] = useState(null);
-  const [slot2, setSlot2] = useState(null);
+export default function PlayerInformation(){
 
-  // age
-  const [age, setAge] = useState(30);
+  // MLB-like tabs
+  const [mode, setMode] = useState("hitting") // hitting | pitching
 
-  const filtered = useMemo(() => {
-    // TODO: Sawp this to backend queries
-    return MOCK_PLAYERS.filter((p) => {
-      const fnOk = firstName.trim()
-        ? p.name.toLowerCase().includes(firstName.trim().toLowerCase())
-        : true;
-      const lnOk = lastName.trim()
-        ? p.name.toLowerCase().includes(lastName.trim().toLowerCase())
-        : true;
-      const teamOk = team.trim()
-        ? p.team.toLowerCase().includes(team.trim().toLowerCase())
-        : true;
-      return fnOk && lnOk && teamOk;
+  // search filter inputs
+  const [nameQuery, setNameQuery] = useState("");
+  const [teamQuery, setTeamQuery] = useState("");
+  const [posQuery, setPosQuery] = useState("");
+
+  // which column is currently sorted, and in which direction
+  const [sortKey, setSortKey] = useState("name")
+  const [sortDir, setSortDir] = useState("asc")
+
+  // current page number, and how many rows to show per page
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
+
+  // pick the right column set based on the active tab 
+  const columns = mode === "hitting" ? HITTING_COLUMNS: PITCHING_COLUMNS;
+
+  // returns only te players that match all active filter inputs 
+  // Note: useMemo only re-runs when nameQuery or posQuery changes, not on every single render
+  const filtered = useMemo(() => 
+    MOCK_PLAYERS.filter((p) => 
+    (!nameQuery || `${p.firstName} ${p.lastName}`.toLowerCase().includes(nameQuery.toLowerCase())) &&
+    (!teamQuery || p.team.toLowerCase().includes(teamQuery.toLowerCase())) && 
+    (!posQuery || p.pos.toLowerCase().includes(posQuery.toLowerCase()))  
+  ), [nameQuery, teamQuery, posQuery]);
+
+  // Sort
+
+  // takes the filtered array and returns a new sorted copy 
+  const sorted = useMemo(() => {
+    const col = columns.find((c) => c.key === sortKey);
+    if (!col) return filtered;
+    // converts sort direction into a number you can multiply with
+    const dir = sortDir === "asc" ? 1: -1;
+    return [...filtered].sort((a,b) => {
+      const va = sortVal(a, col), vb = sortVal(b,col);
+      // alphabetically compare strings (asc v desc)
+      if (typeof va === "string") return va.localeCompare(vb) * dir;
+      // compare numbers (asc v desc)
+      return (va-vb)*dir;
     });
-  }, [firstName, lastName, team]);
+  }, [filtered, columns, sortKey, sortDir]);
 
-  const onPickPlayer = (player) => {
-    if (!slot1) setSlot1(player);
-    else if (!slot2) setSlot2(player);
-    else setSlot2(player); // if both filled, overwrite slot2
-  }
+  // Pagination
 
-  const onClearSearch = () => {
-    setFirstName("");
-    setLastName("");
-    setTeam("");
+  // total number of pages based on how many players passed filtering
+  const pageCount = Math.max(1, Math.ceil(sorted.length/pageSize));
+  // clamp page to a valid range (prevents being stuck on page 5 if filters reduce results to 1 page)
+  const safePage = Math.min(Math.max(1, page), pageCount);
+  // slice just the rows for the current page to render in the table
+  const pageRows = sorted.slice((safePage - 1) * pageSize, safePage * pageSize);
+
+
+  // Event Handlers
+
+  // called when the user clicks a column eader to sort it
+  const handleHeader = (col) => {
+    setSortKey(col.key);
+    setSortDir(sortKey === col.key && sortDir === "asc" ? "desc" : "asc");
+    setPage(1);
   };
 
-  return (
+  // called when the user switches between Hitting and Pitching tabs.
+  // resets sort and page so the new tab starts in a clean state.
+  const switchTab = (next) => {
+    setMode(next);
+    setSortKey("name");
+    setSortDir("asc");
+    setPage(1);
+  }
+
+    return (
     <div className="pi-page">
-      {/* TOP SEARCH BAR */}
-      <div className="pi-top">
-        <div className="pi-top-title">Find a Player</div>
+      <div className="pi-wrap">
+        <div className="pi-header">
+          <div className="pi-titleRow">
+            <h1 className="pi-title">Player Information</h1>
 
-        <div className="pi-searchrow">
-          <input
-            className="pi-searchinput"
-            placeholder="First Name"
-            value={firstName}
-            onChange={(e) => setFirstName(e.target.value)}
-          />
-          <input
-            className="pi-searchinput"
-            placeholder="Last Name"
-            value={lastName}
-            onChange={(e) => setLastName(e.target.value)}
-          />
-          <input
-            className="pi-searchinput"
-            placeholder="Team"
-            value={team}
-            onChange={(e) => setTeam(e.target.value)}
-          />
-
-          <button className="pi-btn primary" type="button">
-            Search
-          </button>
-          <button className="pi-btn" type="button" onClick={onClearSearch}>
-            Clear
-          </button>
-        </div>
-      </div>
-
-      {/* MAIN GRID: LEFT FILTERS / CENTER RESULTS / RIGHT COMPARE */}
-      <div className="pi-main">
-        {/* LEFT FILTER PANEL */}
-        <aside className="pi-filters">
-          <div className="pi-filter-title">FILTER BY</div>
-
-          <div className="pi-filter-section">
-            <div className="pi-filter-h">POSITION</div>
-            <div className="pi-checkgrid">
-              {["SP", "RP", "C", "1B", "2B", "3B", "SS", "LF", "CF", "RF", "DH"].map((x) => (
-                <label key={x} className="pi-check">
-                  <input type="checkbox" />
-                  <span>{x}</span>
-                </label>
+            <div className="pi-tabs">
+              {["hitting", "pitching"].map((t) => (
+                <button
+                  key={t}
+                  className={`pi-tab ${mode === t ? "is-active" : ""}`}
+                  onClick={() => switchTab(t)}
+                  type="button"
+                >
+                  {t.charAt(0).toUpperCase() + t.slice(1)}
+                </button>
               ))}
             </div>
           </div>
 
-          <div className="pi-filter-section">
-            <div className="pi-filter-h">LEAGUE</div>
-            <label className="pi-check">
-              <input type="checkbox" />
-              <span>AMERICAN LEAGUE</span>
-            </label>
-            <label className="pi-check">
-              <input type="checkbox" />
-              <span>NATIONAL LEAGUE</span>
-            </label>
-          </div>
+          <div className="pi-filters">
+            <input
+              className="pi-input"
+              placeholder="Player"
+              value={nameQuery}
+              onChange={(e) => {
+                setNameQuery(e.target.value);
+                setPage(1);
+              }}
+            />
+            <input
+              className="pi-input"
+              placeholder="Team"
+              value={teamQuery}
+              onChange={(e) => {
+                setTeamQuery(e.target.value);
+                setPage(1);
+              }}
+            />
+            <input
+              className="pi-input"
+              placeholder="Position"
+              value={posQuery}
+              onChange={(e) => {
+                setPosQuery(e.target.value);
+                setPage(1);
+              }}
+            />
 
-          <div className="pi-filter-section">
-            <div className="pi-filter-h">DIVISION</div>
-            <div className="pi-checkgrid two">
-              {["AL EAST", "AL CENTRAL", "AL WEST", "NL EAST", "NL CENTRAL", "NL WEST"].map((x) => (
-                <label key={x} className="pi-check">
-                  <input type="checkbox" />
-                  <span>{x}</span>
-                </label>
-              ))}
-            </div>
-          </div>
+            <button
+              className="pi-btn pi-btn--ghost"
+              type="button"
+              onClick={() => {
+                setNameQuery("");
+                setTeamQuery("");
+                setPosQuery("");
+                setPage(1);
+              }}
+            >
+              Clear
+            </button>
 
-          <div className="pi-filter-section">
-            <div className="pi-filter-h">INJURY STATUS</div>
-            <div className="pi-checkgrid two">
-              {["HEALTHY", "DAY TO DAY", "10-DAY IL", "15-DAY IL", "60-DAY IL", "OUT INDEF"].map((x) => (
-                <label key={x} className="pi-check">
-                  <input type="checkbox" />
-                  <span>{x}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          <div className="pi-filter-section">
-            <div className="pi-filter-h">AGE</div>
-            <div className="pi-age">
-              <input
-                type="range"
-                min="20"
-                max="45"
-                value={age}
-                onChange={(e) => setAge(Number(e.target.value))}
-              />
-              <div className="pi-age-nums">
-                <span>20</span>
-                <span>{age}</span>
-                <span>45</span>
-              </div>
-            </div>
-          </div>
-        </aside>
-
-        {/* CENTER RESULTS */}
-        <section className="pi-results">
-          <div className="pi-results-head">
-            <div className="pi-results-label">RESULTS</div>
-
-            <div className="pi-sort">
-              <div className="pi-sort-label">SORT BY</div>
+            <label className="pi-rows">
+              Rows
               <select
-                className="pi-sort-select"
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
+                className="pi-select"
+                value={pageSize}
+                onChange={(e) => {
+                  setPageSize(Number(e.target.value));
+                  setPage(1);
+                }}
               >
-                <option value="overall">OVERALL RANK</option>
-                <option value="hr">HR</option>
-                <option value="rbi">RBI</option>
-                <option value="avg">AVG</option>
+                {[10, 25, 50].map((n) => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
               </select>
-            </div>
+            </label>
+          </div>
+        </div>
+
+        <div className="pi-tableCard">
+          <div className="pi-tableScroll">
+            <table className="pi-table">
+              <thead>
+                <tr>
+                  {columns.map((col) => (
+                    <th
+                      key={col.key}
+                      className={`pi-th ${col.sortable ? "is-sortable" : ""}`}
+                      onClick={() => handleHeader(col)}
+                    >
+                      <span className="pi-thInner">
+                        {col.label}
+                        {sortKey === col.key ? (
+                          <span className="pi-sortIcon">{sortDir === "asc" ? "▲" : "▼"}</span>
+                        ) : (
+                          <span className="pi-sortIcon pi-sortIcon--muted">▲</span>
+                        )}
+                      </span>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+
+              <tbody>
+                {pageRows.length === 0 ? (
+                  <tr>
+                    <td className="pi-empty" colSpan={columns.length}>
+                      No results.
+                    </td>
+                  </tr>
+                ) : (
+                  pageRows.map((p) => (
+                    <tr key={p.id} className="pi-row">
+                      {columns.map((col) => {
+                        let val = "—";
+                        if (col.key === "name") val = `${p.firstName} ${p.lastName}`;
+                        else if (col.stat) val = p.stats?.[col.stat] ?? "—";
+                        else val = p[col.key] ?? "—";
+
+                        return (
+                          <td key={col.key} className="pi-td">
+                            {val}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div className="pi-pager">
+          <div className="pi-pagerInfo">
+            Showing{" "}
+            <b>
+              {pageRows.length === 0 ? 0 : (safePage - 1) * pageSize + 1}–
+              {(safePage - 1) * pageSize + pageRows.length}
+            </b>{" "}
+            of <b>{sorted.length}</b>
           </div>
 
-          <div className="pi-grid">
-            {filtered.map((p) => (
-              <PlayerCard key={p.id} player={p} onPick={onPickPlayer} />
+          <div className="pi-pagerBtns">
+            {[
+              ["⟪", 1],
+              ["‹", safePage - 1],
+              ["›", safePage + 1],
+              ["⟫", pageCount],
+            ].map(([label, target]) => (
+              <button
+                key={label}
+                className="pi-btn pi-btn--page"
+                type="button"
+                onClick={() => setPage(target)}
+                disabled={target < 1 || target > pageCount || target === safePage}
+              >
+                {label}
+              </button>
             ))}
+            <span className="pi-pageText">
+              Page <b>{safePage}</b> / <b>{pageCount}</b>
+            </span>
           </div>
-        </section>
-
-        {/* RIGHT COMPARE PANEL */}
-        <aside className="pi-compare">
-          <div className="pi-slot">
-            <button
-              className="pi-slot-x"
-              type="button"
-              onClick={() => setSlot1(null)}
-              aria-label="Clear slot 1"
-            >
-              ×
-            </button>
-
-            {slot1 ? (
-              <div className="pi-slot-filled">
-                <div className="pi-slot-name">{slot1.name}</div>
-                <div className="pi-slot-sub">
-                  {slot1.team} - {slot1.pos}
-                </div>
-              </div>
-            ) : (
-              <div className="pi-slot-empty">SELECT 1ST PLAYER</div>
-            )}
-          </div>
-
-          <div className="pi-slot">
-            <button
-              className="pi-slot-x"
-              type="button"
-              onClick={() => setSlot2(null)}
-              aria-label="Clear slot 2"
-            >
-              ×
-            </button>
-
-            {slot2 ? (
-              <div className="pi-slot-filled">
-                <div className="pi-slot-name">{slot2.name}</div>
-                <div className="pi-slot-sub">
-                  {slot2.team} - {slot2.pos}
-                </div>
-              </div>
-            ) : (
-              <div className="pi-slot-empty">SELECT 2ND PLAYER</div>
-            )}
-          </div>
-        </aside>
+        </div>
       </div>
     </div>
   );
 }
-
-
-
