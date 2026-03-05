@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-export default function Register({ createUser, onCreateUserClick }) {
+export default function Register({ createUser, onCreateUserClick, onShowLogin }) {
     const [email, setEmail] = useState("");
     const [displayName, setName] = useState("");
     const [firstPassword, setFirstPassword] = useState("");
@@ -91,6 +91,9 @@ export default function Register({ createUser, onCreateUserClick }) {
                 <br /><br />
                 <button id="submit_login" type="submit">
                     Register
+                </button>
+                 <button id="go_register" type="button" onClick={onShowLogin}>
+                   Sign In
                 </button>
             </form>
         </div>

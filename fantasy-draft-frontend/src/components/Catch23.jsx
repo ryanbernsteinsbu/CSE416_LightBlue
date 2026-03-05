@@ -34,6 +34,7 @@ export default function Catch23() {
           <Register
             createUser={async () => {}}
             onCreateUserClick={() => setAuthView("login")}
+            onShowLogin ={() => setAuthView("login")}
           />
         )}
       </Modal>
