@@ -33,15 +33,18 @@ User.init({
     },
     hashedPassword: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: false,
+        field: 'hashed_password'
     },
     displayName: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: false,
+        field: 'display_name'
     }
 }, {
     sequelize,
-    tableName:'users'
+    tableName:'users',
+    timestamps: false
 });
 
 export default User;
