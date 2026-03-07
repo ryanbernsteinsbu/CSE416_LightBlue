@@ -1,6 +1,9 @@
 import React, { useState } from "react";
+import axios from "axios"
+axios.defaults.withCredentials = true;
+axios.defaults.baseURL = 'http://localhost:8000';
 
-export default function Register({ createUser, onCreateUserClick, onShowLogin }) {
+export default function Register({ onCreateUserClick, onShowLogin }) {
     const [email, setEmail] = useState("");
     const [displayName, setName] = useState("");
     const [firstPassword, setFirstPassword] = useState("");
@@ -24,7 +27,13 @@ export default function Register({ createUser, onCreateUserClick, onShowLogin })
         if (p.includes(emailSub.toLowerCase())) return alert("Password cannot contain your email!");
 
         try {
-            await createUser({ email, displayName, password: firstPassword });
+            const { data } = await axios.post('/api/users/register', {
+                email,
+                displayName,
+                password: firstPassword
+            });
+
+            console.log("REGISTER:", data);
 
             alert("Your user has successfully been created");
             setEmail("");

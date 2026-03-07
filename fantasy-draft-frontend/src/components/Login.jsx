@@ -17,7 +17,7 @@ export default function Login({ onLoginSuccess, handleError, onShowRegister }) {
 
         try {
             const { data } = await axios.post(
-                "/login",
+                "/api/users/login",
                 { email, password },
                 { withCredentials: true }
             );
