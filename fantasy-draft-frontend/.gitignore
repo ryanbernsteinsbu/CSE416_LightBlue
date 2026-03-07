@@ -1,24 +1,46 @@
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
-
-node_modules
-dist
-dist-ssr
-*.local
-
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
+# ===== OS =====
 .DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+
+
+# ===== Editors =====
+.vscode/
+
+
+# ===== Java build outputs =====
+target/
+build/
+.gradle/
+
+
+# ===== IDEs =====
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+.project
+.classpath
+.settings/
+
+
+# ===== Logs / temp =====
+*.log
+*.tmp
+*.swp
+
+
+# ===== Env / secrets =====
+.env
+.env.*
+application-local.properties
+application-local.yml
+application-dev.properties
+application-dev.yml
+
+
+*.code-workspace
+
+
+# ===== Node Modules =====
+node_modules/
+
