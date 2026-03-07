@@ -7,12 +7,13 @@ import Navbar from "./Navbar";
 import Home from "./Home";
 import PlayerInformation from "./PlayerInformation";
 
-const PREVIEW_LOGGED_IN = true; // for testing
+const PREVIEW_LOGGED_IN = false; // for testing
 
 export default function Catch23() {
   const [authView, setAuthView] = useState("login");
-  const showLoggedIn = PREVIEW_LOGGED_IN; // for testing
   const [route, setRoute] = useState("home");
+  const [loggedIn, setLoggedIn] = useState(false);
+  const showLoggedIn = loggedIn; // for testing
 
   return (
     <>
@@ -29,7 +30,8 @@ export default function Catch23() {
 
       <Modal isOpen={true}>
         {authView === "login" ? (
-          <Login onShowRegister={() => setAuthView("register")} />
+          <Login onLoginSuccess = {(data) => setLoggedIn(true)}
+          onShowRegister={() => setAuthView("register")} />
         ) : (
           <Register
             createUser={async () => {}}
