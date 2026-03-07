@@ -36,3 +36,5 @@ application-dev.yml
 
 # ===== Node Modules =====
 node_modules/
+
+dist/
