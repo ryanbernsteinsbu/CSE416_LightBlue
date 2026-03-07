@@ -33,3 +33,6 @@ application-dev.properties
 application-dev.yml
 
 *.code-workspace
+
+# ===== Node Modules =====
+node_modules/
