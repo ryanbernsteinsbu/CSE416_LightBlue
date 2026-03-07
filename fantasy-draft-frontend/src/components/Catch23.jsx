@@ -7,13 +7,11 @@ import Navbar from "./Navbar";
 import Home from "./Home";
 import PlayerInformation from "./PlayerInformation";
 
-const PREVIEW_LOGGED_IN = false; // for testing
-
 export default function Catch23() {
   const [authView, setAuthView] = useState("login");
   const [route, setRoute] = useState("home");
   const [loggedIn, setLoggedIn] = useState(false);
-  const showLoggedIn = loggedIn; // for testing
+  const showLoggedIn = loggedIn;
 
   return (
     <>
