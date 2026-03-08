@@ -82,7 +82,7 @@ export default function CreateLeagueModal({ isOpen, onClose, onSave }) {
             logoFile,
         }
         try {
-            createLeague(newLeague);
+            await createLeague(newLeague);
             onSave?.(newLeague);
             handleClose();
         } catch (err) {

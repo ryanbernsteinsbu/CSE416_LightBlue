@@ -48,59 +48,73 @@ PlayerSettings.init({
     },
     positionEligibility: {
         type: DataTypes.BOOLEAN,
-        defaultValue: true
+        defaultValue: true,
+        field: 'position_eligibility'
     },
     multiPositionEnabled: {
         type: DataTypes.BOOLEAN,
-        defaultValue: false
+        defaultValue: false,
+        field: 'multi_position_enabled'
     },
     prospectEligibility: {
         type: DataTypes.BOOLEAN,
-        defaultValue: true
+        defaultValue: true,
+        field: 'prospect_eligibility'
     },
     rookieStatusFilter: {
         type: DataTypes.BOOLEAN,
-        defaultValue: true
+        defaultValue: true,
+        field: 'rookie_status_filter'
     },
     mlbOnly: {
         type: DataTypes.BOOLEAN,
-        defaultValue: true
+        defaultValue: true,
+        field: 'mlb_only'
     },
     mlbPlusProspects: {
         type: DataTypes.BOOLEAN,
-        defaultValue: false
+        defaultValue: false,
+        field: 'mlb_plus_prospects'
     },
     minorLeaguePlayers: {
         type: DataTypes.BOOLEAN,
-        defaultValue: false
+        defaultValue: false,
+        field: 'minor_league_players'
     },
     freeAgents: {
         type: DataTypes.BOOLEAN,
-        defaultValue: false
+        defaultValue: false,
+        field: 'free_agents'
     },
     draftInjuredPlayers: {
         type: DataTypes.BOOLEAN,
-        defaultValue: false
+        defaultValue: false,
+        field: 'draft_injured_players'
     },
     autoInjuryRisk: {
         type: DataTypes.BOOLEAN,
-        defaultValue: true
+        defaultValue: true,
+        field: 'auto_injury_risk',
     },
     hideLongTermIL: {
         type: DataTypes.BOOLEAN,
-        defaultValue: true
+        defaultValue: true,
+        field: 'hide_long_termil'
     },
     ohtaniRule: {
         type: DataTypes.ENUM(...Object.values(OhtaniRule)),
-        defaultValue: OhtaniRule.MIXED
+        defaultValue: OhtaniRule.MIXED,
+        field: 'ohtani_rule'
     },
     division: {
         type: DataTypes.ENUM(...Object.values(Division)),
-        defaultValue: Division.MIXED
+        defaultValue: Division.MIXED,
+        field: 'division'
     }
 }, {
     sequelize,
-    tableName:'player_settings'
+    tableName:'player_settings',
+    timestamps: false
 });
 
 export default PlayerSettings;
