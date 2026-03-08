@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { loginUser } from '../api/api';
 import axios from "axios";
 axios.defaults.withCredentials = true;
-axios.defaults.baseURL = 'http://localhost:8000';
+axios.defaults.baseURL = 'https://catch23-api.vercel.app/';
 
 export default function Login({ onLoginSuccess, handleError, onShowRegister }) {
     const [email, setEmail] = useState("");

@@ -8,7 +8,7 @@ require('dotenv').config();
 const app = express();
 app.use(express.json());
 app.use(cors({
-    origin: 'http://localhost:5173', // relink to actual server later
+    origin: 'https://catch23.vercel.app/', // relink to actual server later
     credentials: true
 }));
 
