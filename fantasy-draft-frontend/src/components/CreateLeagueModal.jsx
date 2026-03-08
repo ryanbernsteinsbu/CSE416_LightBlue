@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { createLeague } from "../api/api";
 
 // data to render sidebar buttons
 const TABS = [
@@ -69,7 +70,7 @@ export default function CreateLeagueModal({ isOpen, onClose, onSave }) {
     const handleBack = () => setStep(1);
 
     // handle saving the league
-    const handleSave = () => {
+    const handleSave = async () => {
         const newLeague = {
             id: crypto.randomUUID(),
             name: leagueName.trim(),
@@ -80,9 +81,14 @@ export default function CreateLeagueModal({ isOpen, onClose, onSave }) {
             seasonNum: 1, // placeholder for now
             logoFile,
         }
-
-        onSave?.(newLeague);
-        handleClose();
+        try {
+            createLeague(newLeague);
+            onSave?.(newLeague);
+            handleClose();
+        } catch (err) {
+            console.error("Failed to create league:", err);
+            alert("Error creating league. Please try again.");
+        }
     }
 
     // if modal isn't open, don't render anything

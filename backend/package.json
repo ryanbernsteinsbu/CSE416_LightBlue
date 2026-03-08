@@ -18,14 +18,14 @@
     "jsonwebtoken": "^9.0.3",
     "pg": "^8.20.0",
     "pg-hstore": "^2.3.4",
-    "sequelize": "^6.37.7",
-    "typescript": "^5.9.3"
+    "sequelize": "^6.37.7"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/sequelize": "^4.28.20",
-    "ts-node": "^10.9.2"
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
   }
 }

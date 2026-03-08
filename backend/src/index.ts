@@ -1,8 +1,9 @@
 const express = require('express');
 const cors = require('cors');
 import sequelize from './config/database';
-import userRoutes from './routes/userRoutes'
+import userRoutes from './routes/userRoutes';
 import playerRoutes from './routes/playerRoutes'
+import leagueRoutes from './routes/leagueRoutes';
 
 require('dotenv').config();
 
@@ -16,6 +17,7 @@ app.use(cors({
 // Routes
 app.use('/api/users', userRoutes);
 app.use('/api/players', playerRoutes);
+app.use('/api/leagues', leagueRoutes);
 
 const PORT = process.env.PORT || 8000;
 
