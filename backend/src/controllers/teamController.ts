@@ -61,6 +61,10 @@ export const updateTeam = async (req: Request, res: Response) => {
 
         await team.update(req.body);
 
+        const updatedTeam = await Team.findByPk(team.id, {
+            include: [{ association: 'league'}, { association: 'players' }]
+        });
+
         res.status(200).json(team);
     } catch (error) {
         res.status(500).json({ message: 'Error updating team', error });

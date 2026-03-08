@@ -40,11 +40,19 @@ Team.init({
     },
     name: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: true
     },
     budget: {
         type: DataTypes.DECIMAL(10, 2),
-        allowNull: false
+        allowNull: true
+    },
+    league_id: {
+        type: DataTypes.BIGINT,
+        allowNull: true,
+        references: {
+            model: 'leagues',
+            key: 'id'
+        }
     }
 }, {
     sequelize,
