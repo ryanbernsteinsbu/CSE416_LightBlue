@@ -6,8 +6,8 @@ const router = Router();
 
 // Routes
 router.post('/create', leagueController.createLeague);
-router.get('/:id', leagueController.getLeague);
 router.get('/user/:user_id', leagueController.getUserLeagues);
+router.get('/:id', leagueController.getLeague);
 router.put('/:id', leagueController.updateLeague);
 router.delete('/:id', leagueController.deleteLeague);
 

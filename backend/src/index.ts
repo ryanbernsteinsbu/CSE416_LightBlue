@@ -17,7 +17,6 @@ app.use(cors({
 app.use('/api/users', userRoutes);
 app.use('/api/leagues', leagueRoutes);
 
-
 const PORT = process.env.PORT || 8000;
 
 sequelize.sync().then(() => {

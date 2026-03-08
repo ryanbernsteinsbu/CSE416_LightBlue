@@ -44,47 +44,62 @@ ScoringSettings.init({
     },
     useAvg: {
         type: DataTypes.BOOLEAN,
-        defaultValue: true
+        defaultValue: true,
+        field: 'use_avg'
     },
     useHr: {
         type: DataTypes.BOOLEAN,
-        defaultValue: true
+        defaultValue: true,
+        field: 'use_hr'
     },
     useRbi: {
         type: DataTypes.BOOLEAN,
-        defaultValue: true
+        defaultValue: true,
+        field: 'use_rbi'
     },
     useSb: {
         type: DataTypes.BOOLEAN,
-        defaultValue: true
+        defaultValue: true,
+        field: 'use_sb'
     },
     useRuns: {
         type: DataTypes.BOOLEAN,
-        defaultValue: true
+        defaultValue: true,
+        field: 'use_runs'
     },
     useEra: {
         type: DataTypes.BOOLEAN,
-        defaultValue: true
+        defaultValue: true,
+        field: 'use_era'
     },
     useWhip: {
         type: DataTypes.BOOLEAN,
-        defaultValue: true
+        defaultValue: true,
+        field: 'use_whip'
     },
     useWins: {
         type: DataTypes.BOOLEAN,
-        defaultValue: true
+        defaultValue: true,
+        field: 'use_wins'
     },
     useStrikeouts: {
         type: DataTypes.BOOLEAN,
-        defaultValue: true
+        defaultValue: true,
+        field: 'use_strikeouts'
     },
     useSaves: {
         type: DataTypes.BOOLEAN,
-        defaultValue: true
+        defaultValue: true,
+        field: 'use_saves'
     },
+    league_id: { // fix this to camelCase later
+        type: DataTypes.BIGINT,
+        allowNull: false
+    }
 }, {
     sequelize,
-    tableName:'scoring_settings'
+    tableName:'scoring_settings',
+    timestamps: false
 });
 
 export default ScoringSettings;

@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
 import CreateLeagueModal from "./CreateLeagueModal";
 import LeagueDraftBoard from "./LeagueDraftBoard";
+import { getUserLeagues, deleteLeague } from "../api/api";
 
 export default function Home() {
   // TODO: replace with backend data later
@@ -9,26 +10,24 @@ export default function Home() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [activeLeague, setActiveLeague] = useState(null); // track which league is open
 
-  const [leagues, setLeagues] = useState([
-    // start empty to test "No leagues" state:s
-    // []
-    {
-      id: 1,
-      name: "EMPIRE BASEBALL LEAGUE",
-      format: "KEEPER",
-      teams: 12,
-      season: 2026,
-      seasonNum: 3,
-    },
-    {
-      id: 2,
-      name: "SKULL BEATERS LEAGUE",
-      format: "RE-DRAFT",
-      teams: 9,
-      season: 2026,
-      seasonNum: 5,
-    },
-  ]);
+  const DEFAULT_LOGO = 'https://i.imgur.com/DxHxkuJ.png';
+  const [leagues, setLeagues] = useState([]);
+
+  useEffect(() => {
+    const fetchLeagues = async () => {
+      try {
+        const user_id = localStorage.getItem('user_id');
+        console.log('fetching leagues for user_id:', user_id);
+        const { data } = await getUserLeagues(user_id);
+        console.log('leagues from DB:', data);
+        setLeagues(data);
+      } catch (err) {
+        console.error("Failed to fetch leagues:", err);
+      }
+    };
+    fetchLeagues();
+  }, []);
+
 
   if (activeLeague) {
     return (
@@ -57,12 +56,12 @@ export default function Home() {
       ) : (
         <div className="league-grid">
           {leagues.map((league) => (
-            <div className="league-card" key={league.id} onClick={() => setActiveLeague(league)}> 
-             <button
+            <div className="league-card" key={league.id} onClick={() => setActiveLeague(league)}>
+              <button
                 className="league-close"
                 type="button"
                 onClick={(e) => {
-                  e.stopPropagation(); 
+                  e.stopPropagation();
                   setDeleteTarget({ id: league.id, name: league.name });
                 }}
                 aria-label="Remove league"
@@ -70,9 +69,13 @@ export default function Home() {
                 ×
               </button>
 
-              <div className="league-logo-placeholder" />
+              <img
+                className="league-logo-placeholder"
+                src={league.leagueIconUrl || league.league_icon_url || league.logoUrl || DEFAULT_LOGO}
+                alt="league logo"
+              />
 
-              <div className="league-title">{league.name}</div>
+              <div className="league-title">{league.title || league.name}</div>
               <div className="league-subtitle">
                 {league.format} • {league.teams} TEAMS • {league.season} SEASON
               </div>
@@ -86,16 +89,22 @@ export default function Home() {
         isOpen={!!deleteTarget}
         leagueName={deleteTarget?.name || ""}
         onCancel={() => setDeleteTarget(null)}
-        onConfirm={() => {
-          setLeagues((prev) => prev.filter((l) => l.id !== deleteTarget.id));
-          setDeleteTarget(null);
+        onConfirm={async () => {
+          try {
+            await deleteLeague(deleteTarget.id);
+            setLeagues((prev) => prev.filter((l) => l.id !== deleteTarget.id));
+            setDeleteTarget(null);
+          } catch (err) {
+            console.error("Failed to delete league:", err);
+            alert("Error deleting league. Please try again.");
+          }
         }}
       />
 
       <CreateLeagueModal
-        isOpen = {isCreateOpen}
-        onClose = {() => setIsCreateOpen(false)}
-        onSave = {(newLeague) => {
+        isOpen={isCreateOpen}
+        onClose={() => setIsCreateOpen(false)}
+        onSave={(newLeague) => {
           setLeagues((prev) => [newLeague, ...prev]);
         }}
       />
@@ -106,3 +115,10 @@ export default function Home() {
     </div>
   );
 }
+
+// For evelyn
+// DELETE FROM scoring_settings;
+// DELETE FROM player_settings;
+// DELETE FROM roster_settings;
+// DELETE FROM draft_settings;
+// DELETE FROM league;
