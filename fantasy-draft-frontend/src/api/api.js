@@ -1,9 +1,11 @@
+import axios from 'axios'
+
 const BASE_URL = 'http://localhost:8000';
+axios.defaults.baseURL = BASE_URL;
+axios.defaults.withCredentials = true;
 
-export const getUsers = async () => {
-  const res = await fetch(`${BASE_URL}/api/users`);
-  return res.json();
-};
+export const registerUser = (email, displayName, password) => 
+    axios.post('/api/users/register', { email, displayName, password });
 
-
-
+export const loginUser = (email, password) => 
+    axios.post('/api/users/login', { email, password });

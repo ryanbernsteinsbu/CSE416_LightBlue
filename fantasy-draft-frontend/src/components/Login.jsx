@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { loginUser } from '../api/api';
 import axios from "axios";
 axios.defaults.withCredentials = true;
 axios.defaults.baseURL = 'http://localhost:8000';
@@ -7,7 +8,7 @@ export default function Login({ onLoginSuccess, handleError, onShowRegister }) {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
 
-    const loginUser = async (e) => {
+    const handleLogin = async (e) => {
         e.preventDefault();
 
         if (!email) {
@@ -16,11 +17,7 @@ export default function Login({ onLoginSuccess, handleError, onShowRegister }) {
         }
 
         try {
-            const { data } = await axios.post(
-                "/api/users/login",
-                { email, password },
-                { withCredentials: true }
-            );
+            const { data } = await loginUser(email, password);
             console.log("LOGIN:", data);
             onLoginSuccess(data);
         } catch (err) {
@@ -38,7 +35,7 @@ export default function Login({ onLoginSuccess, handleError, onShowRegister }) {
 
    return (
     <div id="login_setup">
-      <form id="login_form" onSubmit={loginUser}>
+      <form id="login_form" onSubmit={handleLogin}>
         <input placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
         <br /><br />
         <input placeholder="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
