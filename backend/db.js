@@ -8,12 +8,11 @@ const pool = new Pool({
 
 module.exports = pool;
 
-// Uncomment to test connection
-// Run with "node db.js"
-pool.query('SELECT NOW()', (err, res) => {
-  if (err) {
-    console.error('Database connection failed:', err);
-  } else {
-    console.log('Database connected at:', res.rows[0].now);
-  }
-});
+// Uncomment to test connection and run with "node db.js"
+// pool.query('SELECT NOW()', (err, res) => {
+//   if (err) {
+//     console.error('Database connection failed:', err);
+//   } else {
+//     console.log('Database connected at:', res.rows[0].now);
+//   }
+// });

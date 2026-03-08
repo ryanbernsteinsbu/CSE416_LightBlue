@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { createTeam } from "../api/api";
 
 // 24 positions from the excel sheet (non-editable, fixed rows)
 const POSITIONS = [
@@ -27,9 +28,17 @@ export default function LeagueDraftBoard({ league, onBack }) {
 
     // team management
 
-    const addTeam = () => {
+    const addTeam = async () => {
         const newTeam = makeEmptyTeam(teams.length);
         setTeams(prev => [...prev, newTeam]);
+
+        try {
+            await createTeam(newTeam.name, league.id); // save to DB
+        }
+        catch (err) {
+            console.error("Failed to save team: ", err);
+            alert("Error saving team to database.");
+        }
         setTimeout(() => {
             setEditingTeamId(newTeam.id);
             setEditTeamValue(newTeam.name);
