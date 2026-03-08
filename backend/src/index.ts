@@ -13,7 +13,7 @@ const allowedOrigins = [
 const app = express();
 app.use(express.json());
 app.use(cors({
-    origin: (origin: unknown, callback: unknown) => {
+    origin: origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
         if (!origin || allowedOrigins.includes(origin)) {
             callback(null, true);
         } else {
