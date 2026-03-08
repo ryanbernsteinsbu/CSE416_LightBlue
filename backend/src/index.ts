@@ -4,11 +4,20 @@ import sequelize from './config/database';
 import userRoutes from './routes/userRoutes'
 
 require('dotenv').config();
-
+const allowedOrigins = [
+  "https://catch23.vercel.app",
+  "https://catch23-api.vercel.app"
+];
 const app = express();
 app.use(express.json());
 app.use(cors({
-    origin: 'https://catch23.vercel.app/', // relink to actual server later
+    origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error("CORS origin not allowed"));
+        }
+    },
     credentials: true
 }));
 
