@@ -972,3 +972,357 @@ button {
   color: #111;
 }
 
+/* Draft Board Page */
+
+.db-header {
+  width: min(1300px, 92vw);
+  margin: 0 auto 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.db-header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.db-back-btn {
+  padding: 8px 16px;
+  border-radius: 10px;
+  border: 2px solid rgba(255,255,255,0.5);
+  background: transparent;
+  color: white;
+  font-family: "Trade Gothic", Arial, sans-serif;
+  font-weight: 800;
+  font-size: 15px;
+  cursor: pointer;
+  transition: 0.15s;
+  white-space: nowrap;
+}
+.db-back-btn:hover {
+  background: rgba(255,255,255,0.12);
+  border-color: white;
+}
+
+.db-league-name {
+  font-family: "Robson", Impact, sans-serif;
+  font-size: 26px;
+  color: white;
+  letter-spacing: 1px;
+  text-shadow: 0 2px 0 #000, 1px 0 0 #000, -1px 0 0 #000;
+}
+
+.db-league-meta {
+  font-family: "Trade Gothic", Arial, sans-serif;
+  font-size: 13px;
+  color: rgba(255,255,255,0.7);
+  margin-top: 2px;
+  font-weight: 600;
+}
+
+.db-header-right {
+  display: flex;
+  gap: 14px;
+}
+
+.db-stat {
+  background: rgba(255,255,255,0.1);
+  border-radius: 12px;
+  padding: 10px 18px;
+  text-align: center;
+  min-width: 64px;
+}
+.db-stat-num {
+  display: block;
+  font-family: "Robson", Impact, sans-serif;
+  font-size: 26px;
+  color: white;
+  line-height: 1;
+}
+.db-stat-label {
+  display: block;
+  font-family: "Trade Gothic", Arial, sans-serif;
+  font-size: 11px;
+  color: rgba(255,255,255,0.65);
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+/* Toolbar */
+.db-toolbar {
+  width: min(1300px, 92vw);
+  margin: 0 auto 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.db-toolbar-left { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.db-tool-btn {
+  padding: 9px 16px;
+  border-radius: 10px;
+  border: 2px solid rgba(255,255,255,0.35);
+  background: rgba(255,255,255,0.1);
+  color: white;
+  font-family: "Trade Gothic", Arial, sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  cursor: pointer;
+  transition: 0.15s;
+}
+.db-tool-btn:hover:not(:disabled) {
+  background: rgba(255,255,255,0.2);
+  border-color: white;
+}
+.db-tool-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.db-tool-primary {
+  background: #BD2522;
+  border-color: #BD2522;
+}
+.db-tool-primary:hover:not(:disabled) {
+  background: #d42b28;
+  border-color: #d42b28;
+}
+
+.db-progress-label {
+  font-family: "Trade Gothic", Arial, sans-serif;
+  font-size: 13px;
+  color: rgba(255,255,255,0.65);
+  font-weight: 700;
+}
+
+/* Table wrapper */
+.db-table-wrap {
+  width: min(1300px, 92vw);
+  margin: 0 auto 40px;
+}
+
+.db-scroll {
+  overflow-x: auto;
+  border-radius: 14px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.35);
+}
+
+/* Table */
+.db-table {
+  border-collapse: collapse;
+  background: #efefef;
+  border-radius: 14px;
+  overflow: hidden;
+  /* don't set width:100% — let it grow naturally with teams */
+}
+
+/* Sticky position column */
+.db-sticky-col {
+  position: sticky;
+  left: 0;
+  z-index: 3;
+}
+
+/* Header cells */
+.db-th {
+  padding: 10px 10px;
+  background: #2f3f89;
+  color: white;
+  font-family: "Robson", Impact, sans-serif;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+  text-align: center;
+  border-right: 1px solid rgba(255,255,255,0.12);
+  border-bottom: 1px solid rgba(255,255,255,0.12);
+  white-space: nowrap;
+}
+
+/* POS sticky header */
+.db-th-pos {
+  background: #1e2d6b;
+  min-width: 48px;
+  width: 48px;
+  font-size: 12px;
+  z-index: 4;
+  vertical-align: middle;
+  font-size: 15px;
+}
+
+/* Team name header (colspan=3) */
+.db-th-teamname {
+  background: #BD2522;
+  min-width: 320px;
+  border-right: 3px solid rgba(255,255,255,0.3);
+  font-size: 18px;
+}
+
+/* Sub-column headers */
+.db-th-sub {
+  background: #2f3f89;
+  font-size: 15px;
+  letter-spacing: 1px;
+  padding: 7px 8px;
+}
+.db-th-narrow {
+  min-width: 72px;
+  width: 72px;
+}
+
+/* team name inner flex */
+.db-th-team-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.db-team-name {
+  font-family: "Robson", Impact, sans-serif;
+  font-size: 16px;
+  letter-spacing: 1px;
+  cursor: pointer;
+}
+.db-team-name:hover { text-decoration: underline; }
+
+.db-team-input {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid white;
+  color: white;
+  font-family: "Robson", Impact, sans-serif;
+  font-size: 15px;
+  width: 140px;
+  outline: none;
+  padding: 2px 4px;
+  text-align: center;
+}
+
+.db-remove-team {
+  background: rgba(0,0,0,0.2);
+  border: none;
+  color: white;
+  border-radius: 6px;
+  width: 22px;
+  height: 22px;
+  font-size: 16px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.db-remove-team:hover { background: rgba(0,0,0,0.5); }
+
+/* Body rows */
+.db-row    { background: #efefef; }
+.db-row-alt { background: #e3e3e3; }
+
+.db-td {
+  border-right: 1px solid #d0d0d0;
+  border-bottom: 1px solid #d0d0d0;
+}
+
+/* Sticky position cell */
+.db-td-pos {
+  padding: 8px 6px;
+  font-family: "Robson", Impact, sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  color: #2f3f89;
+  text-align: center;
+  background: #dcdcdc;
+  min-width: 48px;
+  width: 48px;
+  border-right: 2px solid #bbb;
+}
+.db-row-alt .db-td-pos { background: #d0d0d0; }
+
+/* Editable pick cells */
+.db-td-pick {
+  min-width: 140px;
+  height: 36px;
+  cursor: pointer;
+  transition: background 0.1s;
+  padding: 0;
+}
+.db-td-narrow {
+  min-width: 72px !important;
+  width: 72px;
+}
+
+/* right border between teams (every 3rd pick cell) */
+.db-td-pick:nth-child(3n+1) {
+  border-right: 3px solid #bbb;
+}
+
+.db-td-pick:hover   { background: rgba(47,63,137,0.07) !important; }
+.db-td-filled       { background: rgba(47,63,137,0.04); }
+.db-td-editing      {
+  background: rgba(47,63,137,0.12) !important;
+  outline: 2px solid #2f3f89;
+  outline-offset: -2px;
+}
+
+.db-cell-input {
+  width: 100%;
+  height: 100%;
+  padding: 6px 8px;
+  border: none;
+  background: transparent;
+  font-family: "Trade Gothic", Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: #111;
+  box-sizing: border-box;
+  outline: none;
+}
+
+.db-cell-value {
+  display: block;
+  padding: 6px 8px;
+  font-family: "Trade Gothic", Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: #111;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.db-cell-empty { color: #c0c0c0; font-weight: 400; }
+
+/* Empty state */
+.db-empty {
+  background: rgba(255,255,255,0.08);
+  border-radius: 14px;
+  padding: 80px 40px;
+  text-align: center;
+  color: white;
+}
+.db-empty-icon  { font-size: 52px; margin-bottom: 14px; }
+.db-empty-title {
+  font-family: "Robson", Impact, sans-serif;
+  font-size: 28px;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+.db-empty-sub {
+  font-family: "Trade Gothic", Arial, sans-serif;
+  font-size: 16px;
+  opacity: 0.7;
+}
+
+/* League card hover */
+.league-card {
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.league-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 50px rgba(0,0,0,0.35);
+}
