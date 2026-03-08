@@ -1,14 +1,16 @@
 import { useState } from "react";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
 import CreateLeagueModal from "./CreateLeagueModal";
+import LeagueDraftBoard from "./LeagueDraftBoard";
 
 export default function Home() {
   // TODO: replace with backend data later
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [activeLeague, setActiveLeague] = useState(null); // track which league is open
 
   const [leagues, setLeagues] = useState([
-    // start empty to test "No leagues" state:
+    // start empty to test "No leagues" state:s
     // []
     {
       id: 1,
@@ -28,6 +30,15 @@ export default function Home() {
     },
   ]);
 
+  if (activeLeague) {
+    return (
+      <LeagueDraftBoard
+        league={activeLeague}
+        onBack={() => setActiveLeague(null)}
+      />
+    );
+  }
+
   const removeLeague = (id) => {
     setLeagues((prev) => prev.filter((l) => l.id !== id));
   };
@@ -46,11 +57,14 @@ export default function Home() {
       ) : (
         <div className="league-grid">
           {leagues.map((league) => (
-            <div className="league-card" key={league.id}>
-              <button
+            <div className="league-card" key={league.id} onClick={() => setActiveLeague(league)}> 
+             <button
                 className="league-close"
                 type="button"
-                onClick={() => setDeleteTarget({ id: league.id, name: league.name })}
+                onClick={(e) => {
+                  e.stopPropagation(); 
+                  setDeleteTarget({ id: league.id, name: league.name });
+                }}
                 aria-label="Remove league"
               >
                 ×

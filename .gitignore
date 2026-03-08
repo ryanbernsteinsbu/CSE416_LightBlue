@@ -36,5 +36,6 @@ application-dev.yml
 
 # ===== Node Modules =====
 node_modules/
-backend/node_modules/
+
+# ===== Build output =====
 dist/
