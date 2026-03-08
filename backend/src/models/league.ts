@@ -42,15 +42,15 @@ class League extends Model {
         draftSettings: Association<League, DraftSettings>;
     }
 
-    public static associate(models: any) {
-        League.belongsTo(models.User, { foreignKey: 'user_id', as: 'user' });
-        League.hasMany(models.Team, { foreignKey: 'league_id', as: 'teams' });
-        League.hasOne(models.DraftPrep, { foreignKey: 'league_id', as: 'draftPrep' });
-        League.hasOne(models.ScoringSettings, { foreignKey: 'league_id', as: 'scoringSettings' });
-        League.hasOne(models.PlayerSettings, { foreignKey: 'league_id', as: 'playerSettings' });
-        League.hasOne(models.RosterSettings, { foreignKey: 'league_id', as: 'rosterSettings' });
-        League.hasOne(models.DraftSettings, { foreignKey: 'league_id', as: 'draftSettings' });
-    }
+    // public static associate(models: any) {
+    //     League.belongsTo(models.User, { foreignKey: 'user_id', as: 'user' });
+    //     League.hasMany(models.Team, { foreignKey: 'league_id', as: 'teams' });
+    //     League.hasOne(models.DraftPrep, { foreignKey: 'league_id', as: 'draftPrep' });
+    //     League.hasOne(models.ScoringSettings, { foreignKey: 'league_id', as: 'scoringSettings' });
+    //     League.hasOne(models.PlayerSettings, { foreignKey: 'league_id', as: 'playerSettings' });
+    //     League.hasOne(models.RosterSettings, { foreignKey: 'league_id', as: 'rosterSettings' });
+    //     League.hasOne(models.DraftSettings, { foreignKey: 'league_id', as: 'draftSettings' });
+    // }
 
     public distributeBudget(): void {
         if (!this.draftSettings) return;

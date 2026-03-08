@@ -24,9 +24,9 @@ class RosterSettings extends Model {
         league: Association<RosterSettings, League>;
     }
 
-    public static associate (models: any) {
-        RosterSettings.belongsTo(models.League, { foreignKey: 'league_id', as: 'league' });
-    }
+    // public static associate (models: any) {
+    //     RosterSettings.belongsTo(models.League, { foreignKey: 'league_id', as: 'league' });
+    // }
 
     // Helper Methods
     public getTotalRosterSize(): number {
@@ -107,5 +107,7 @@ RosterSettings.init({
     tableName:'roster_settings',
     timestamps: false
 });
+
+RosterSettings.belongsTo(League, { foreignKey: 'league_id', as: 'league' });
 
 export default RosterSettings;

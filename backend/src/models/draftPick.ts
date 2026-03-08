@@ -28,10 +28,10 @@ class DraftPick extends Model {
         player: Association<DraftPick, Player>;
     }
     
-    public static associate (models: any) {
-        DraftPick.belongsTo(models.Team, { foreignKey: 'team_id', as: 'team' });
-        DraftPick.belongsTo(models.Player, { foreignKey: 'player_id', as: 'player' });
-    }
+    // public static associate (models: any) {
+    //     DraftPick.belongsTo(models.Team, { foreignKey: 'team_id', as: 'team' });
+    //     DraftPick.belongsTo(models.Player, { foreignKey: 'player_id', as: 'player' });
+    // }
 
 }
 
@@ -53,5 +53,8 @@ DraftPick.init({
     sequelize,
     tableName:'draft_pick'
 });
+
+DraftPick.belongsTo(Team, { foreignKey: 'team_id', as: 'team' });
+DraftPick.belongsTo(Player, { foreignKey: 'player_id', as: 'player' });
 
 export default DraftPick;

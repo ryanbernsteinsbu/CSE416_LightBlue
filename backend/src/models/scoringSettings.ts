@@ -31,9 +31,9 @@ class ScoringSettings extends Model {
         league: Association<ScoringSettings, League>;
     }
 
-    public static associate (models: any) {
-        ScoringSettings.belongsTo(models.League, { foreignKey: 'league_id', as: 'league' });
-    }
+    // public static associate (models: any) {
+    //     ScoringSettings.belongsTo(models.League, { foreignKey: 'league_id', as: 'league' });
+    // }
 }
 
 ScoringSettings.init({
@@ -101,5 +101,7 @@ ScoringSettings.init({
     tableName:'scoring_settings',
     timestamps: false
 });
+
+ScoringSettings.belongsTo(League, { foreignKey: 'league_id', as: 'league' });
 
 export default ScoringSettings;

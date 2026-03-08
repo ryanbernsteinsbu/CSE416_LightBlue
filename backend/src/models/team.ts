@@ -21,10 +21,10 @@ class Team extends Model {
         league: Association<Team, League>;
     }
 
-    public static associate (models: any) {
-        Team.belongsTo(models.League, { foreignKey: 'league_id', as: 'league' })
-        Team.hasMany(models.DraftPick, { foreignKey: 'team_id', as: 'players' });
-    }
+    // public static associate (models: any) {
+    //     Team.belongsTo(models.League, { foreignKey: 'league_id', as: 'league' })
+    //     Team.hasMany(models.DraftPick, { foreignKey: 'team_id', as: 'players' });
+    // }
 
     public getNumKeepers(): number {
         if(!this.players) return 0;
@@ -56,8 +56,10 @@ Team.init({
     }
 }, {
     sequelize,
-    tableName:'teams', 
-    timestamps: false
+    tableName:'teams'
 });
+
+Team.belongsTo(League, { foreignKey: 'league_id', as: 'league' })
+Team.hasMany(DraftPick, { foreignKey: 'team_id', as: 'players' });
 
 export default Team;
