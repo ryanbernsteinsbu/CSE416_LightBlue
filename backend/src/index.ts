@@ -4,6 +4,7 @@ import sequelize from './config/database';
 import userRoutes from './routes/userRoutes';
 import playerRoutes from './routes/playerRoutes'
 import leagueRoutes from './routes/leagueRoutes';
+import teamRoutes from './routes/teamRoutes';
 
 require('dotenv').config();
 
@@ -18,6 +19,7 @@ app.use(cors({
 app.use('/api/users', userRoutes);
 app.use('/api/players', playerRoutes);
 app.use('/api/leagues', leagueRoutes);
+app.use('/api/teams', teamRoutes);
 
 const PORT = process.env.PORT || 8000;
 
