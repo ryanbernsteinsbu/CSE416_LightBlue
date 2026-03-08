@@ -1,4 +1,4 @@
-import { DataTypes, Model, Association} from 'sequelize';
+import { DataTypes, Model, Association } from 'sequelize';
 import sequelize from '../config/database';
 import User from './user';
 import Team from './team';
@@ -42,9 +42,9 @@ class League extends Model {
         draftSettings: Association<League, DraftSettings>;
     }
 
-    public static associate (models: any) {
+    public static associate(models: any) {
         League.belongsTo(models.User, { foreignKey: 'user_id', as: 'user' });
-        League.hasMany(models.Team, {foreignKey: 'league_id', as: 'teams' });
+        League.hasMany(models.Team, { foreignKey: 'league_id', as: 'teams' });
         League.hasOne(models.DraftPrep, { foreignKey: 'league_id', as: 'draftPrep' });
         League.hasOne(models.ScoringSettings, { foreignKey: 'league_id', as: 'scoringSettings' });
         League.hasOne(models.PlayerSettings, { foreignKey: 'league_id', as: 'playerSettings' });
@@ -53,8 +53,8 @@ class League extends Model {
     }
 
     public distributeBudget(): void {
-        if(!this.draftSettings) return;
-        if(!this.teams) return;
+        if (!this.draftSettings) return;
+        if (!this.teams) return;
 
         this.teams.forEach(team => {
             team.budget = this.draftSettings!.budget;
@@ -74,20 +74,26 @@ League.init({
     },
     leagueIconUrl: {
         type: DataTypes.STRING,
-        allowNull: true
+        allowNull: true,
+        field: 'league_icon_url'
     },
     currRank: {
         type: DataTypes.INTEGER,
-        allowNull: true
+        allowNull: false,
+        defaultValue: 0,
+        field: 'curr_rank'
     },
     projectFinish: {
         type: DataTypes.INTEGER,
-        allowNull: true
+        allowNull: false,
+        defaultValue: 0,
+        field: 'project_finish'
     },
     dateMade: {
         type: DataTypes.DATEONLY,
         allowNull: false,
-        defaultValue: DataTypes.NOW
+        defaultValue: DataTypes.NOW,
+        field: 'date_made'
     },
     season: {
         type: DataTypes.INTEGER,
@@ -97,10 +103,21 @@ League.init({
     status: {
         type: DataTypes.ENUM(...Object.values(LeagueStatus)),
         allowNull: false
+    },
+    user_id: {
+        type: DataTypes.BIGINT,
+        allowNull: true, // fix later
     }
 }, {
     sequelize,
-    tableName:'league'
+    tableName: 'league',
+    timestamps: false
 });
+
+League.hasOne(ScoringSettings, { foreignKey: 'league_id', as: 'scoringSettings' });
+League.hasOne(PlayerSettings, { foreignKey: 'league_id', as: 'playerSettings' });
+League.hasOne(RosterSettings, { foreignKey: 'league_id', as: 'rosterSettings' });
+League.hasOne(DraftSettings, { foreignKey: 'league_id', as: 'draftSettings' });
+League.hasMany(Team, { foreignKey: 'league_id', as: 'teams' });
 
 export default League;

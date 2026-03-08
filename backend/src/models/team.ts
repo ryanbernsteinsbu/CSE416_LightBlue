@@ -56,7 +56,8 @@ Team.init({
     }
 }, {
     sequelize,
-    tableName:'teams'
+    tableName:'teams', 
+    timestamps: false
 });
 
 export default Team;

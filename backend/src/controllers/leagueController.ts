@@ -21,17 +21,7 @@ export const createLeague = async (req: Request, res: Response) => {
         await PlayerSettings.create({ league_id: league.id });
         await RosterSettings.create({ league_id: league.id });
         await DraftSettings.create({ league_id: league.id });
-
-        const leagueWithSettings = await League.findByPk(league.id, {
-            include: [
-                { association: 'scoringSettings' },
-                { association: 'playerSettings' },
-                { association: 'rosterSettings' },
-                { association: 'draftSettings' }
-            ]
-        });
-
-        res.status(201).json(leagueWithSettings);
+        res.status(201).json(league);
     } catch (error) {
         res.status(500).json({ message: 'Error creating league', error });
     }
@@ -76,8 +66,9 @@ export const getUserLeagues = async (req: Request, res: Response) => {
         });
 
         res.status(200).json(leagues);
-    } catch (error) {
-        res.status(500).json({ message: 'Error getting user leagues', error });
+    } catch (error: any) {  
+        console.error('Error getting user leagues:', error.message); 
+        res.status(500).json({ message: 'Error getting user leagues', error: error.message }); 
     }
 }
 
@@ -99,12 +90,17 @@ export const updateLeague = async (req: Request, res: Response) => {
 export const deleteLeague = async (req: Request, res: Response) => {
     try {
         const league = await League.findByPk(Number(req.params.id));
-        if(!league) throw new Error('League not found');
+        if (!league) throw new Error('League not found');
+        await ScoringSettings.destroy({ where: { league_id: league.id } });
+        await PlayerSettings.destroy({ where: { league_id: league.id } });
+        await RosterSettings.destroy({ where: { league_id: league.id } });
+        await DraftSettings.destroy({ where: { league_id: league.id } });
 
         await league.destroy();
 
-        res.status(200).json({ message: 'League deleted successfully '});
-    } catch (error) {
-        res.status(500).json({ message: 'Error deleting league', error });
+        res.status(200).json({ message: 'League deleted successfully' });
+    } catch (error: any) {
+        console.error('Error deleting league:', error.message);
+        res.status(500).json({ message: 'Error deleting league', error: error.message });
     }
 }
