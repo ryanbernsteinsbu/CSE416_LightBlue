@@ -18,7 +18,10 @@ export default function Catch23() {
     <>
       {showLoggedIn ? (
         <>
-          <Navbar onNavigate={setRoute} />
+          <Navbar onNavigate={setRoute} onProfileClick={() => {
+            localStorage.clear();
+            setLoggedIn(false);
+          }} />
           {route === "home" && <Home />}
           {route === "player" && <PlayerInformation />}
         </>
