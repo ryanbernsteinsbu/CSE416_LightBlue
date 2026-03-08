@@ -37,7 +37,7 @@ application-local.yml
 application-dev.properties
 application-dev.yml
 
-
+git 
 *.code-workspace
 
 
