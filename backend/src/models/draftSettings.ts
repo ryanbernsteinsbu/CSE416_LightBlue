@@ -15,9 +15,9 @@ class DraftSettings extends Model {
         league: Association<DraftSettings, League>;
     }
 
-    public static associate (models: any) {
-        DraftSettings.belongsTo(models.League, { foreignKey: 'league_id', as: 'league' });
-    }
+    // public static associate (models: any) {
+    //     DraftSettings.belongsTo(models.League, { foreignKey: 'league_id', as: 'league' });
+    // }
 }
 
 DraftSettings.init({

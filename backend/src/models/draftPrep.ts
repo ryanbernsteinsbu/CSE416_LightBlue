@@ -18,9 +18,9 @@ class DraftPrep extends Model {
         league: Association<DraftPrep, League>;
     }
 
-    public static associate (models: any) {
-        DraftPrep.belongsTo(models.League, { foreignKey: 'league_id', as: 'league' });
-    }
+    // public static associate (models: any) {
+    //     DraftPrep.belongsTo(models.League, { foreignKey: 'league_id', as: 'league' });
+    // }
 
     public getCompletedPercentage(): number {
         const count = (this.rankingsImported? 1: 0)
@@ -63,5 +63,7 @@ DraftPrep.init({
     sequelize,
     tableName:'draft_prep'
 });
+
+DraftPrep.belongsTo(League, { foreignKey: 'league_id', as: 'league' });
 
 export default DraftPrep;

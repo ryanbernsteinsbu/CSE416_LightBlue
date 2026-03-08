@@ -35,9 +35,9 @@ class PlayerSettings extends Model {
         league: Association<PlayerSettings, League>;
     }
 
-    public static associate (models: any) {
-        PlayerSettings.belongsTo(models.League, { foreignKey: 'league_id', as: 'league' });
-    }
+    // public static associate (models: any) {
+    //     PlayerSettings.belongsTo(models.League, { foreignKey: 'league_id', as: 'league' });
+    // }
 }
 
 PlayerSettings.init({
@@ -116,5 +116,7 @@ PlayerSettings.init({
     tableName:'player_settings',
     timestamps: false
 });
+
+PlayerSettings.belongsTo(League, { foreignKey: 'league_id', as: 'league' });
 
 export default PlayerSettings;
