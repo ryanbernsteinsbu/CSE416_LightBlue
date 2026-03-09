@@ -6,7 +6,7 @@ import sequelize from '../config/database';
 // Enums
 export enum Position {
     CATCHER = 'CATCHER', FIRST = 'FIRST', SECOND = 'SECOND', THIRD = 'THIRD',
-    SHORTSTOP = 'SHORTSTOP', OUTFIELD = 'OUTFIELD', PITCHER = 'PITCHER'
+    SHORTSTOP = 'SHORTSTOP', OUTFIELD = 'OUTFIELD', PITCHER = 'PITCHER', UTILITY = 'UTILITY'
 }
 
 export enum Status {
@@ -17,7 +17,7 @@ export enum Status {
 class Player extends Model {
     // Fields
     public id!: number;
-    public mlbPlayerId!: string; // use for syncing with MLB database
+    public mlbPlayerId!: number; // use for syncing with MLB database
     public firstName!: string;
     public lastName!: string;
     public isHitter!: boolean;
@@ -62,17 +62,14 @@ Player.init({
     },
     lastYearStats: {
         type: DataTypes.JSON,
-        allowNull: false,
         defaultValue: {}
     },
     threeYearAvg: {
         type: DataTypes.JSON,
-        allowNull: false,
         defaultValue: {}
     },
     projectedStats: {
         type: DataTypes.JSON,
-        allowNull: false,
         defaultValue: {}
     },
     status: {
