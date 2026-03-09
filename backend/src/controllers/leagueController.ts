@@ -4,6 +4,7 @@ import DraftSettings from '../models/draftSettings';
 import ScoringSettings from '../models/scoringSettings';
 import RosterSettings from '../models/rosterSettings';
 import PlayerSettings from '../models/playerSettings';
+import Team from '../models/team'; 
 
 // Used AI to help with dealing with associations
 
@@ -91,6 +92,7 @@ export const deleteLeague = async (req: Request, res: Response) => {
     try {
         const league = await League.findByPk(Number(req.params.id));
         if (!league) throw new Error('League not found');
+        await Team.destroy({ where: { league_id: league.id } });
         await ScoringSettings.destroy({ where: { league_id: league.id } });
         await PlayerSettings.destroy({ where: { league_id: league.id } });
         await RosterSettings.destroy({ where: { league_id: league.id } });
