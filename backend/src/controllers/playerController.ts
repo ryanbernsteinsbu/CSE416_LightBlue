@@ -28,10 +28,10 @@ export const create = async (req: Request, res: Response): Promise<void> => {
         const player = await playerService.createPlayer(name, mlbPlayerId, realTeam, isKeeper, seasonsLeft, status, playablePositions, 
             lastYearStats, threeYearAvg, projectedStats);
         res.status(201).json({
-            name: player.name,
+            //name: player.name,
             mlbPlayerId: player.mlbPlayerId,
             realTeam: player.realTeam,
-            isKeeper: player.isKeeper,
+            //isKeeper: player.isKeeper,
             seasonsLeft: player.seasonsLeft,
             status: player.status,
             playablePositions: player.playablePositions,
