@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
 import CreateLeagueModal from "./CreateLeagueModal";
 import LeagueDraftBoard from "./LeagueDraftBoard";
-import { getUserLeagues, deleteLeague } from "../api/api";
+import { getUserLeagues, deleteLeague, getLeagueTeams } from "../api/api";
 
 export default function Home() {
   // TODO: replace with backend data later
@@ -13,27 +13,32 @@ export default function Home() {
   const DEFAULT_LOGO = 'https://i.imgur.com/DxHxkuJ.png';
   const [leagues, setLeagues] = useState([]);
 
-  useEffect(() => {
-    const fetchLeagues = async () => {
-      try {
-        const user_id = localStorage.getItem('user_id');
-        console.log('fetching leagues for user_id:', user_id);
-        const { data } = await getUserLeagues(user_id);
-        console.log('leagues from DB:', data);
-        setLeagues(data);
-      } catch (err) {
-        console.error("Failed to fetch leagues:", err);
-      }
-    };
-    fetchLeagues();
-  }, []);
+  const fetchLeagues = async () => {
+    try {
+      const user_id = localStorage.getItem('user_id');
+      console.log('fetching leagues for user_id:', user_id);
+      const { data } = await getUserLeagues(user_id);
+      console.log('leagues from DB:', data);
+      const leaguesWithCounts = await Promise.all(
+        data.map(async (league) => {
+          const { data: teams } = await getLeagueTeams(league.id);
+          return { ...league, teamCount: teams.length };
+        })
+      );
+      setLeagues(leaguesWithCounts);
+    } catch (err) {
+      console.error("Failed to fetch leagues:", err);
+    }
+  };
+
+  useEffect(() => { fetchLeagues(); }, []);
 
 
   if (activeLeague) {
     return (
       <LeagueDraftBoard
         league={activeLeague}
-        onBack={() => setActiveLeague(null)}
+        onBack={() => { setActiveLeague(null); fetchLeagues(); }}
       />
     );
   }
@@ -62,7 +67,7 @@ export default function Home() {
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  setDeleteTarget({ id: league.id, name: league.name });
+                  setDeleteTarget({ id: league.id, name: league.title || league.name });
                 }}
                 aria-label="Remove league"
               >
@@ -77,7 +82,7 @@ export default function Home() {
 
               <div className="league-title">{league.title || league.name}</div>
               <div className="league-subtitle">
-                {league.format} • {league.teams?.length ?? league.teams} TEAMS • {league.season} SEASON
+                {league.format} • {league.teamCount ?? 0} TEAMS • {league.season} SEASON
               </div>
 
               <div className="league-season">Season {league.seasonNum}</div>
@@ -105,6 +110,7 @@ export default function Home() {
         isOpen={isCreateOpen}
         onClose={() => setIsCreateOpen(false)}
         onSave={(newLeague) => {
+          console.log('new league from modal:', newLeague);
           setLeagues((prev) => [newLeague, ...prev]);
         }}
       />
