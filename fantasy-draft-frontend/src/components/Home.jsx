@@ -77,7 +77,7 @@ export default function Home() {
 
               <div className="league-title">{league.title || league.name}</div>
               <div className="league-subtitle">
-                {league.format} • {league.teams} TEAMS • {league.season} SEASON
+                {league.format} • {league.teams?.length ?? league.teams} TEAMS • {league.season} SEASON
               </div>
 
               <div className="league-season">Season {league.seasonNum}</div>

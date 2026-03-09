@@ -8,30 +8,35 @@ create player, find all, find by id, find by mlb id, find by position,
 find by status, update a player, delete a player
 */
 /* 
-name: string, 
-    mlbPlayerId: string,
-    realTeam: string,
-    isKeeper: boolean,
-    seasonsLeft: number,
-    status: Status,
-    playablePositions: Position[],
-    lastYearStats: Record<string, number>,
-    threeYearAvg: Record<string, number>,
-    projectedStats: Record<string, number>
+    public id!: number; ignore
+    public mlbPlayerId!: string; // use for syncing with MLB database
+    public firstName!: string;
+    public lastName!: string;
+    public isHitter!: boolean;
+    public playablePositions!: Position[];
+    public lastYearStats!: Record<string, number>;
+    public threeYearAvg!: Record<string, number>;
+    public projectedStats!: Record<string, number>;
+    public status!: Status;
+    public seasonsLeft!: number; 
+    public realTeam!: string;
+    public realLeague!: string;
 */
 
 // POST /api/players/create
 export const create = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { name, mlbPlayerId, realTeam, isKeeper, seasonsLeft, status, playablePositions, 
-            lastYearStats, threeYearAvg, projectedStats } = req.body;
-        const player = await playerService.createPlayer(name, mlbPlayerId, realTeam, isKeeper, seasonsLeft, status, playablePositions, 
-            lastYearStats, threeYearAvg, projectedStats);
+        const { mlbPlayerId, firstName, lastName, isHitter, playablePositions, 
+            lastYearStats, threeYearAvg, projectedStats, status, seasonsLeft, realTeam, realLeague } = req.body;
+        const player = await playerService.createPlayer(mlbPlayerId, firstName, lastName, isHitter, playablePositions, 
+            lastYearStats, threeYearAvg, projectedStats, status, seasonsLeft, realTeam, realLeague);
         res.status(201).json({
-            name: player.name,
             mlbPlayerId: player.mlbPlayerId,
+            firstName: player.firstName,
+            lastName: player.lastName,
+            isHitter: player.isHitter,
             realTeam: player.realTeam,
-            isKeeper: player.isKeeper,
+            realLeague: player.realLeague,
             seasonsLeft: player.seasonsLeft,
             status: player.status,
             playablePositions: player.playablePositions,

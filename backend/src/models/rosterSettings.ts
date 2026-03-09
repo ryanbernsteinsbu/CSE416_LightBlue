@@ -17,7 +17,7 @@ class RosterSettings extends Model {
     public numPitchers!: number;
     public numTaxi!: number;
     public league_id!: number;
-    public league!: League;
+    //public league!: League;
 
     // Associations
     public static associations: {
