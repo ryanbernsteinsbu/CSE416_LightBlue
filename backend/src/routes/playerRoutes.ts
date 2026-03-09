@@ -10,10 +10,11 @@ find by status, update a player, delete a player
 // Routes
 router.post('/create', playerController.create);
 router.get('/all', playerController.getAllPlayers);
+router.get('/mlbId/:mlbPlayerId', playerController.getPlayerByMlbId);
+router.get('/position/:position', playerController.getPlayerByPosition);
+router.get('/status/:status', playerController.getPlayerByStatus);
+
 router.get('/:id', playerController.getPlayer);
-router.get('/mlbPlayerId', playerController.getPlayerByMlbId);
-router.get('/position', playerController.getPlayerByPosition);
-router.get('/status', playerController.getPlayerByStatus);
 router.put('/:id', playerController.updatePlayer);
 router.delete('/:id', playerController.deletePlayer);
 

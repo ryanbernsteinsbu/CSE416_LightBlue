@@ -17,7 +17,7 @@ class RosterSettings extends Model {
     public numPitchers!: number;
     public numTaxi!: number;
     public league_id!: number;
-    public league!: League;
+    //public league!: League;
 
     // Associations
     public static associations: {
@@ -108,6 +108,6 @@ RosterSettings.init({
     timestamps: false
 });
 
-RosterSettings.belongsTo(League, { foreignKey: 'league_id', as: 'league' });
+//RosterSettings.belongsTo(League, { foreignKey: 'league_id', as: 'league' });
 
 export default RosterSettings;

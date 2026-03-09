@@ -12,7 +12,8 @@ export const createTeam = async (req: Request, res: Response) => {
         })
 
         res.status(201).json(team);
-    } catch (error) {
+    } catch (error: any) {
+        console.error('Error creating team: ', error.message);
         res.status(500).json({ message: 'Error creating team', error });
     }
 }
@@ -42,13 +43,14 @@ export const getLeagueTeams = async (req: Request, res: Response) => {
 
         const teams = await Team.findAll({
             where: { league_id },
-            include: [
-                { association: 'players' },
-            ]
+            // include: [
+            //     { association: 'players' },
+            // ]
         });
 
         res.status(200).json(teams);
-    } catch (error) {
+    } catch (error: any) {
+        console.error('Error getting league teams:', error.message);
         res.status(500).json({ message: 'Error getting league teams', error });
     }
 }
@@ -80,7 +82,8 @@ export const deleteTeam = async (req: Request, res: Response) => {
         await team.destroy();
 
         res.status(200).json({ message: 'Team deleted successfully '});
-    } catch (error) {
+    } catch (error:any) {
+        console.error('Error deleting team:', error.message);
         res.status(500).json({ message: 'Error deleting team', error });
     }
 }

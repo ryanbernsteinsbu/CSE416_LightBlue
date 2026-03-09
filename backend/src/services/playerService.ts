@@ -8,22 +8,24 @@ find by status, update a player, delete a player
 
 // POST /api/players/create
 export const createPlayer = async (
-    name: string, 
     mlbPlayerId: string,
-    realTeam: string,
-    isKeeper: boolean,
-    seasonsLeft: number,
-    status: Status,
+    firstName: string,
+    lastName: string,
+    isHitter: boolean,
     playablePositions: Position[],
     lastYearStats: Record<string, number>,
     threeYearAvg: Record<string, number>,
-    projectedStats: Record<string, number>
+    projectedStats: Record<string, number>,
+    status: Status,
+    seasonsLeft: number,
+    realTeam: string,
+    realLeague: string
 ): Promise<Player> => {
     const existing = await playerRepository.findPlayerByMlbId(mlbPlayerId);
     if (existing) throw new Error('Player already exists');
 
-    return await playerRepository.createPlayer(name, mlbPlayerId, realTeam, isKeeper, 
-        seasonsLeft, status, playablePositions, lastYearStats, threeYearAvg, projectedStats);
+    return await playerRepository.createPlayer(mlbPlayerId, firstName, lastName, isHitter, playablePositions,
+        lastYearStats, threeYearAvg, projectedStats, status, seasonsLeft, realTeam, realLeague );
 }
 
 // GET /api/players/all

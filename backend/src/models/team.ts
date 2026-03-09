@@ -1,7 +1,7 @@
 import { DataTypes, Model, Association} from 'sequelize';
 import sequelize from '../config/database';
-import League from './league';
-import DraftPick from './draftPick';
+// import League from './league';
+// import DraftPick from './draftPick';
 
 // Used AI to assist with sytax/ code checking
 // Post MVP:
@@ -13,23 +13,13 @@ class Team extends Model {
     public name!: string;
     public budget!: number;
     public league_id!: number;
-    public readonly league?: League;
-    public readonly players?: DraftPick[];
+    // public readonly league?: League;
+    // public readonly players?: DraftPick[];
 
-    public static associations: {
-        players: Association<Team, DraftPick>;
-        league: Association<Team, League>;
-    }
-
-    // public static associate (models: any) {
-    //     Team.belongsTo(models.League, { foreignKey: 'league_id', as: 'league' })
-    //     Team.hasMany(models.DraftPick, { foreignKey: 'team_id', as: 'players' });
+    // public static associations: {
+    //     players: Association<Team, DraftPick>;
+    //     league: Association<Team, League>;
     // }
-
-    public getNumKeepers(): number {
-        if(!this.players) return 0;
-        return this.players.filter(pick => pick.player?.isKeeper).length;
-    }
 }
 
 Team.init({
@@ -56,10 +46,11 @@ Team.init({
     }
 }, {
     sequelize,
-    tableName:'teams'
+    tableName:'teams',
+    timestamps: false,
 });
 
-Team.belongsTo(League, { foreignKey: 'league_id', as: 'league' })
-Team.hasMany(DraftPick, { foreignKey: 'team_id', as: 'players' });
+// Team.belongsTo(League, { foreignKey: 'league_id', as: 'league' });
+// Team.hasMany(DraftPick, { foreignKey: 'team_id', as: 'players' });
 
 export default Team;

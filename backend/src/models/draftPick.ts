@@ -47,14 +47,16 @@ DraftPick.init({
     },
     rosterPosition: {
         type: DataTypes.ENUM(...Object.values(RosterPosition)),
-        allowNull: false
+        allowNull: false,
+        field: 'roster_position'
     }
 }, {
     sequelize,
-    tableName:'draft_pick'
+    tableName:'draft_pick',
+    timestamps: false,
 });
 
-DraftPick.belongsTo(Team, { foreignKey: 'team_id', as: 'team' });
+//DraftPick.belongsTo(Team, { foreignKey: 'team_id', as: 'team' });
 DraftPick.belongsTo(Player, { foreignKey: 'player_id', as: 'player' });
 
 export default DraftPick;

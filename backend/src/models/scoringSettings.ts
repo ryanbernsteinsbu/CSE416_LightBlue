@@ -1,6 +1,6 @@
 import { DataTypes, Model, Association} from 'sequelize';
 import sequelize from '../config/database';
-import League from './league';
+//import League from './league';
 
 //     /* POST MVP TASKS:
 //         * add in more data beyond the standard stats
@@ -24,12 +24,12 @@ class ScoringSettings extends Model {
         public useSaves!: boolean;
 
     public league_id!: number;
-    public league!: League;
+    //public league!: League;
 
     // Associations
-    public static associations: {
-        league: Association<ScoringSettings, League>;
-    }
+    // public static associations: {
+    //     league: Association<ScoringSettings, League>;
+    // }
 
     // public static associate (models: any) {
     //     ScoringSettings.belongsTo(models.League, { foreignKey: 'league_id', as: 'league' });
@@ -102,6 +102,6 @@ ScoringSettings.init({
     timestamps: false
 });
 
-ScoringSettings.belongsTo(League, { foreignKey: 'league_id', as: 'league' });
+//ScoringSettings.belongsTo(League, { foreignKey: 'league_id', as: 'league' });
 
 export default ScoringSettings;
