@@ -9,8 +9,8 @@ import teamRoutes from './routes/teamRoutes';
 require('dotenv').config();
 
 const allowedOrigins = [
-    "https://catch23-api.vercel.app/",
-    "https://catch23.vercel.app/"
+    "https://catch23-api.vercel.app",
+    "https://catch23.vercel.app"
 ]
 
 const app = express();
