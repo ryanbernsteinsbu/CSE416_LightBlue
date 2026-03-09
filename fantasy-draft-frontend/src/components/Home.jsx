@@ -67,7 +67,7 @@ export default function Home() {
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  setDeleteTarget({ id: league.id, name: league.name });
+                  setDeleteTarget({ id: league.id, name: league.title || league.name });
                 }}
                 aria-label="Remove league"
               >
