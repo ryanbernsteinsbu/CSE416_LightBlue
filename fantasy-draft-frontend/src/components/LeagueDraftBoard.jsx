@@ -1,5 +1,5 @@
-import { useState, useRef } from "react";
-import { createTeam } from "../api/api";
+import React, { useEffect, useState, useRef } from "react";
+import { createTeam, getLeagueTeams, deleteTeam } from "../api/api";
 
 // 24 positions from the excel sheet (non-editable, fixed rows)
 const POSITIONS = [
@@ -17,6 +17,9 @@ function makeEmptyTeam(index) {
 }
 
 export default function LeagueDraftBoard({ league, onBack }) {
+
+    console.log('league object:', league);
+    console.log('league.id:', league.id);
     const [teams, setTeams] = useState([]);
     const [editingCell, setEditingCell] = useState(null); // { teamId, rowIndex, field }
     const [editValue, setEditValue] = useState("");
@@ -26,30 +29,56 @@ export default function LeagueDraftBoard({ league, onBack }) {
     const cellInputRef = useRef(null);
     const teamInputRef = useRef(null);
 
+    useEffect(() => {
+        const fetchTeams = async () => {
+            try {
+                const { data } = await getLeagueTeams(league.id);
+                const loaded = data.map(t => ({
+                    id: Number(t.id),
+                    name: t.name,
+                    rows: POSITIONS.map(() => ({ player: "", season: "", price: "" }))
+                }));
+                setTeams(loaded);
+            } catch (err) {
+                console.error("Failed to load teams:", err);
+            }
+        };
+        fetchTeams();
+    }, [league.id]);
+
     // team management
 
     const addTeam = async () => {
-        const newTeam = makeEmptyTeam(teams.length);
+    const newTeam = makeEmptyTeam(teams.length);
+    
+    try {
+        const { data } = await createTeam(newTeam.name, league.id); 
+        newTeam.id = Number(data.id);
         setTeams(prev => [...prev, newTeam]);
+    }
+    catch (err) {
+        console.error("Failed to save team: ", err);
+        alert("Error saving team to database.");
+        return; 
+    }
 
+    setTimeout(() => {
+        setEditingTeamId(newTeam.id);
+        setEditTeamValue(newTeam.name);
+        setTimeout(() => teamInputRef.current?.focus(), 0);
+    }, 0);
+};
+
+    const removeTeam = async (teamId) => {
+        console.log('deleting teamId:', teamId, typeof teamId);
         try {
-            await createTeam(newTeam.name, league.id); // save to DB
+            await deleteTeam(teamId);
+            setTeams(prev => prev.filter(t => t.id !== teamId));
+        } catch (err) {
+            console.error("Failed to delete team:", err);
+            alert("Error deleting team.");
         }
-        catch (err) {
-            console.error("Failed to save team: ", err);
-            alert("Error saving team to database.");
-        }
-        setTimeout(() => {
-            setEditingTeamId(newTeam.id);
-            setEditTeamValue(newTeam.name);
-            setTimeout(() => teamInputRef.current?.focus(), 0);
-        }, 0);
     };
-
-    const removeTeam = (teamId) => {
-        setTeams(prev => prev.filter(t => t.id !== teamId));
-    };
-
     // team name editing 
 
     const startEditTeam = (team) => {
@@ -116,7 +145,7 @@ export default function LeagueDraftBoard({ league, onBack }) {
                     <div>
                         <div className="db-league-name">{league?.name || "LEAGUE"}</div>
                         <div className="db-league-meta">
-                            {league?.format} • {league?.teams} TEAMS • {league?.season} SEASON
+                            {league?.format} • {Array.isArray(league?.teams) ? league.teams.length : league?.teams} TEAMS • {league?.season} SEASON
                         </div>
                     </div>
                 </div>
@@ -200,11 +229,11 @@ export default function LeagueDraftBoard({ league, onBack }) {
                                 {/* Row 2: sub-column headers */}
                                 <tr>
                                     {teams.map(team => (
-                                        <>
-                                            <th key={`${team.id}-p`}  className="db-th db-th-sub">PLAYER</th>
-                                            <th key={`${team.id}-s`}  className="db-th db-th-sub db-th-narrow">SEASON</th>
+                                        <React.Fragment key={team.id}>
+                                            <th key={`${team.id}-p`} className="db-th db-th-sub">PLAYER</th>
+                                            <th key={`${team.id}-s`} className="db-th db-th-sub db-th-narrow">SEASON</th>
                                             <th key={`${team.id}-pr`} className="db-th db-th-sub db-th-narrow">PRICE</th>
-                                        </>
+                                        </React.Fragment>
                                     ))}
                                 </tr>
                             </thead>
@@ -222,7 +251,7 @@ export default function LeagueDraftBoard({ league, onBack }) {
                                         {teams.map(team => {
                                             const row = team.rows[rowIndex];
                                             return (
-                                                <>
+                                                <React.Fragment key={`${team.id}-${rowIndex}`}>
                                                     {/* PLAYER */}
                                                     <td
                                                         key={`${team.id}-player-${rowIndex}`}
@@ -300,7 +329,7 @@ export default function LeagueDraftBoard({ league, onBack }) {
                                                             </span>
                                                         )}
                                                     </td>
-                                                </>
+                                                </React.Fragment>
                                             );
                                         })}
                                     </tr>
@@ -313,3 +342,6 @@ export default function LeagueDraftBoard({ league, onBack }) {
         </div>
     );
 }
+
+// For Evelyn
+// DELETE FROM teams;

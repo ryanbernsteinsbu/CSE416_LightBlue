@@ -1,6 +1,6 @@
 import { DataTypes, Model, Association} from 'sequelize';
 import sequelize from '../config/database';
-import League from './league';
+//import League from './league';
 
 // Enums
 export enum Division {
@@ -28,12 +28,12 @@ class PlayerSettings extends Model {
     public ohtaniRule!: OhtaniRule;
     public division!: Division;
     public league_id!: number;
-    public league!: League;
+    //public league!: League;
 
     // Associations
-    public static associations: {
-        league: Association<PlayerSettings, League>;
-    }
+    // public static associations: {
+    //     league: Association<PlayerSettings, League>;
+    // }
 
     // public static associate (models: any) {
     //     PlayerSettings.belongsTo(models.League, { foreignKey: 'league_id', as: 'league' });
@@ -117,6 +117,6 @@ PlayerSettings.init({
     timestamps: false
 });
 
-PlayerSettings.belongsTo(League, { foreignKey: 'league_id', as: 'league' });
+//PlayerSettings.belongsTo(League, { foreignKey: 'league_id', as: 'league' });
 
 export default PlayerSettings;
