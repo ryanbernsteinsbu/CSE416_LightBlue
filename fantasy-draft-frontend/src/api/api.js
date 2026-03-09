@@ -38,10 +38,24 @@ export const getUserLeagues = (userId) =>
 // Teams
 
 export const createTeam = (name, leagueId) => 
-  axios.post('/api/teams', {
+  axios.post('/api/teams/create', {
     name,
-    leagueId
+    league_id: leagueId,
+    budget: 260 // default
   });
+
+export const getLeagueTeams = (leagueId) =>
+  axios.get(`/api/teams/league/${leagueId}`);
+
+export const getTeam = (id) =>                
+  axios.get(`/api/teams/${id}`);
+
+export const updateTeam = (id, data) =>            
+  axios.put(`/api/teams/${id}`, data);
+
+export const deleteTeam = (id) =>                
+  axios.delete(`/api/teams/${id}`);
+
 
 
 
