@@ -41,7 +41,7 @@ Player.init({
     mlbPlayerId: {
         type: DataTypes.STRING,
         allowNull: false,
-        unique: true
+        unique: true,
     },
     firstName: {
         type: DataTypes.STRING,
@@ -90,7 +90,8 @@ Player.init({
     },
 }, {
     sequelize,
-    tableName:'player'
+    tableName:'player',
+    timestamps: false,
 });
 
 export default Player;

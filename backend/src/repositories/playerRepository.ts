@@ -2,19 +2,21 @@ import Player, { Position, Status } from '../models/player';
 
 // Create a new player
 export const createPlayer = async (
-    name: string, 
     mlbPlayerId: string, 
-    realTeam: string,
-    isKeeper: boolean, 
-    seasonsLeft: number, 
-    status: Status, 
-    playablePositions: Position[], 
+    firstName: string,
+    lastName: string,
+    isHitter: boolean,
+    playablePositions: Position[],
     lastYearStats: Record<string, number>,
     threeYearAvg: Record<string, number>,
-    projectedStats: Record<string, number>
+    projectedStats: Record<string, number>,
+    status: Status,
+    seasonsLeft: number,
+    realTeam: string,
+    realLeague: String
 ): Promise<Player> => {
-    return await Player.create({ name, mlbPlayerId, realTeam, isKeeper, seasonsLeft,
-        status, playablePositions, lastYearStats, threeYearAvg, projectedStats });
+    return await Player.create({ mlbPlayerId, firstName, lastName, isHitter, playablePositions,
+        lastYearStats, threeYearAvg, projectedStats, status, seasonsLeft, realTeam, realLeague });
 }
 
 // Find all players
