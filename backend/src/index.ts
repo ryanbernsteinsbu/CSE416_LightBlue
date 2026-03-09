@@ -8,10 +8,21 @@ import teamRoutes from './routes/teamRoutes';
 
 require('dotenv').config();
 
+const allowedOrigins = [
+    "https://catch23-api.vercel.app/",
+    "https://catch23.vercel.app/"
+]
+
 const app = express();
 app.use(express.json());
 app.use(cors({
-    origin: 'http://localhost:5173', // relink to actual server later
+    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("CORS origin not allowed"));
+    }
+  },
     credentials: true
 }));
 
