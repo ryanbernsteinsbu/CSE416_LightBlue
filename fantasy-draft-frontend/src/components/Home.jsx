@@ -13,34 +13,32 @@ export default function Home() {
   const DEFAULT_LOGO = 'https://i.imgur.com/DxHxkuJ.png';
   const [leagues, setLeagues] = useState([]);
 
-  useEffect(() => {
-    const fetchLeagues = async () => {
-      try {
-        const user_id = localStorage.getItem('user_id');
-        console.log('fetching leagues for user_id:', user_id);
-        const { data } = await getUserLeagues(user_id);
-        console.log('leagues from DB:', data);
+  const fetchLeagues = async () => {
+    try {
+      const user_id = localStorage.getItem('user_id');
+      console.log('fetching leagues for user_id:', user_id);
+      const { data } = await getUserLeagues(user_id);
+      console.log('leagues from DB:', data);
+      const leaguesWithCounts = await Promise.all(
+        data.map(async (league) => {
+          const { data: teams } = await getLeagueTeams(league.id);
+          return { ...league, teamCount: teams.length };
+        })
+      );
+      setLeagues(leaguesWithCounts);
+    } catch (err) {
+      console.error("Failed to fetch leagues:", err);
+    }
+  };
 
-        const leaguesWithCounts = await Promise.all(
-          data.map(async (league) => {
-            const { data: teams } = await getLeagueTeams(league.id);
-            return { ...league, teamCount: teams.length };
-          })
-        );
-        setLeagues(leaguesWithCounts);
-      } catch (err) {
-        console.error("Failed to fetch leagues:", err);
-      }
-    };
-    fetchLeagues();
-  }, []);
+  useEffect(() => { fetchLeagues(); }, []);
 
 
   if (activeLeague) {
     return (
       <LeagueDraftBoard
         league={activeLeague}
-        onBack={() => setActiveLeague(null)}
+        onBack={() => { setActiveLeague(null); fetchLeagues(); }}
       />
     );
   }
