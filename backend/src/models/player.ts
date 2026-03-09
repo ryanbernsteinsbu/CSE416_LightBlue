@@ -93,7 +93,9 @@ Player.init({
     },
 }, {
     sequelize,
-    tableName:'player'
+    tableName:'player',
+    timestamps: false,
+    underscored: true
 });
 
 export default Player;
