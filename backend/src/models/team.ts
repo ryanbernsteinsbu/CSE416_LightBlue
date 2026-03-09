@@ -59,7 +59,7 @@ Team.init({
     tableName:'teams'
 });
 
-Team.belongsTo(League, { foreignKey: 'league_id', as: 'league' })
-Team.hasMany(DraftPick, { foreignKey: 'team_id', as: 'players' });
+// Team.belongsTo(League, { foreignKey: 'league_id', as: 'league' })
+// Team.hasMany(DraftPick, { foreignKey: 'team_id', as: 'players' });
 
 export default Team;

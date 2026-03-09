@@ -118,5 +118,4 @@ PlayerSettings.init({
 });
 
 PlayerSettings.belongsTo(League, { foreignKey: 'league_id', as: 'league' });
-
 export default PlayerSettings;

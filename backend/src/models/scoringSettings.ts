@@ -102,6 +102,6 @@ ScoringSettings.init({
     timestamps: false
 });
 
-ScoringSettings.belongsTo(League, { foreignKey: 'league_id', as: 'league' });
+// ScoringSettings.belongsTo(League, { foreignKey: 'league_id', as: 'league' });
 
 export default ScoringSettings;

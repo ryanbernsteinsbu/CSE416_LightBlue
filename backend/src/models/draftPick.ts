@@ -54,7 +54,7 @@ DraftPick.init({
     tableName:'draft_pick'
 });
 
-DraftPick.belongsTo(Team, { foreignKey: 'team_id', as: 'team' });
+// DraftPick.belongsTo(Team, { foreignKey: 'team_id', as: 'team' });
 DraftPick.belongsTo(Player, { foreignKey: 'player_id', as: 'player' });
 
 export default DraftPick;
