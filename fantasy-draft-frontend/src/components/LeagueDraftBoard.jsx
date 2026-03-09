@@ -145,7 +145,7 @@ export default function LeagueDraftBoard({ league, onBack }) {
                     <div>
                         <div className="db-league-name">{league?.name || "LEAGUE"}</div>
                         <div className="db-league-meta">
-                            {league?.format} • {Array.isArray(league?.teams) ? league.teams.length : league?.teams} TEAMS • {league?.season} SEASON
+                            {league?.format} • {teams.length} TEAMS • {league?.season} SEASON
                         </div>
                     </div>
                 </div>
