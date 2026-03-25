@@ -22,24 +22,36 @@ export const createDraftPick = async (req: Request, res: Response) => {
 
 // Save all the picks from a draft session at once
 
-export const bulkCreateDraftPicks = async (req: Request, res: Response) => {
+export const saveDraftPicks = async (req: Request, res: Response) => {
     try {
         const { picks } = req.body;
-        const created = await DraftPick.bulkCreate(picks, {validate: true});
+
+        if (!Array.isArray(picks)) {
+            return res.status(400).json({ error: 'picks must be an array' });
+        }
+
+        const teamIds = [...new Set(picks.map((p: any) => p.team_id))];
+
+        await DraftPick.destroy({
+            where: { team_id: teamIds }
+        });
+
+        const created = await DraftPick.bulkCreate(picks, { validate: true });
 
         res.status(201).json(created);
     } catch (err) {
-        res.status(500).json({error: 'Failed to save draft picks', details: err });
+        console.error('Failed to save draft picks:', err);
+        res.status(500).json({ error: 'Failed to save draft picks', details: err });
     }
 };
 
 export const getTeamDraftPicks = async(req: Request, res: Response) => {
     try {
-        const { teamId } = req.params;
+        const { id } = req.params;
 
         const picks = await DraftPick.findAll({
-            where: {team_id: teamId},
-            include: [{model: Player, as: 'player'}], // joins player data
+            where: { team_id: id },
+            include: [{ model: Player, as: 'player' }],
         });
 
         res.status(200).json(picks);

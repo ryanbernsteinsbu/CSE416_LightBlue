@@ -58,7 +58,7 @@ DraftPick.init({
     player_id: {
         type: DataTypes.BIGINT,
         allowNull: false,
-        references: { model: 'players', key: 'id'}
+        references: { model: 'player', key: 'id'}
     }
 }, {
     sequelize,
@@ -66,7 +66,7 @@ DraftPick.init({
     timestamps: false,
 });
 
-DraftPick.belongsTo(Team, { foreignKey: 'team_id', as: 'team' });
-DraftPick.belongsTo(Player, { foreignKey: 'player_id', as: 'player' });
+//DraftPick.belongsTo(Team, { foreignKey: 'team_id', as: 'team' });
+//DraftPick.belongsTo(Player, { foreignKey: 'player_id', as: 'player' });
 
 export default DraftPick;
