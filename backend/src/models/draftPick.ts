@@ -49,6 +49,16 @@ DraftPick.init({
         type: DataTypes.ENUM(...Object.values(RosterPosition)),
         allowNull: false,
         field: 'roster_position'
+    },
+    team_id: {
+        type: DataTypes.BIGINT,
+        allowNull: false,
+        references: { model: 'teams', key: 'id'}
+    },
+    player_id: {
+        type: DataTypes.BIGINT,
+        allowNull: false,
+        references: { model: 'players', key: 'id'}
     }
 }, {
     sequelize,
@@ -56,7 +66,7 @@ DraftPick.init({
     timestamps: false,
 });
 
-//DraftPick.belongsTo(Team, { foreignKey: 'team_id', as: 'team' });
+DraftPick.belongsTo(Team, { foreignKey: 'team_id', as: 'team' });
 DraftPick.belongsTo(Player, { foreignKey: 'player_id', as: 'player' });
 
 export default DraftPick;

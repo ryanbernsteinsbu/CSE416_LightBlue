@@ -61,18 +61,35 @@ export const deleteTeam = (id) =>
 
 export const getAllPlayers = () => 
   axios.get('/api/players/all');
+
 export const getPlayer = (id) => 
   axios.get(`/api/players/${id}`);
+
 export const getPlayerByMlbId = (mlbPlayerId) => 
   axios.get(`/api/players/mlbId/${mlbPlayerId}`);
+
 export const getPlayersByPosition = (position) => 
   axios.get(`/api/players/position/${position}`);
+
 export const createPlayer = (data) => 
   axios.post('/api/players/create', data);
+
 export const updatePlayer = (id, data) => 
   axios.put(`/api/players/${id}`, data);
+
 export const deletePlayer = (id) => 
   axios.delete(`/api/players/${id}`);
+
+
+// Draft Pick
+
+export const createDraftPick = (data) =>
+  axios.post('/api/draft-picks/create', data);
+
+// save multiple picks at once
+export const saveDraftPicks = (picks) => {
+  axios.post('/api/draft-picks/bulk', { picks });
+}
 
 
  
