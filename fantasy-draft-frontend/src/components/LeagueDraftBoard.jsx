@@ -437,12 +437,7 @@ export default function LeagueDraftBoard({ league, onBack }) {
                                                                                     .slice(0, 8)
                                                                         );
                                                                     }}
-                                                                    onBlur={() => {
-                                                                        setTimeout(() => {
-                                                                            commitCellEdit();
-                                                                            setSuggestions([]);
-                                                                        }, 150);
-                                                                    }}
+                                                                    onBlur={commitCellEdit}
                                                                     onKeyDown={handleCellKeyDown}
                                                                 />
 
@@ -452,9 +447,9 @@ export default function LeagueDraftBoard({ league, onBack }) {
                                                                             <li
                                                                                 key={p.id}
                                                                                 className="db-suggestion-item"
-                                                                                onMouseDown={() => {
+                                                                                onMouseDown={(e) => {
                                                                                     e.preventDefault();
-                                                                                    
+
                                                                                     const displayName = getPlayerDisplayName(p);
 
                                                                                     setTeams(prev =>
