@@ -453,6 +453,8 @@ export default function LeagueDraftBoard({ league, onBack }) {
                                                                                 key={p.id}
                                                                                 className="db-suggestion-item"
                                                                                 onMouseDown={() => {
+                                                                                    e.preventDefault();
+                                                                                    
                                                                                     const displayName = getPlayerDisplayName(p);
 
                                                                                     setTeams(prev =>
