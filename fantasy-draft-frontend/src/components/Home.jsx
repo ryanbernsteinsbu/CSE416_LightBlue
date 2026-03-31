@@ -110,6 +110,7 @@ export default function Home() {
         isOpen={isCreateOpen}
         onClose={() => setIsCreateOpen(false)}
         onSave={(newLeague) => {
+          console.log('new league from modal:', newLeague);
           setLeagues((prev) => [newLeague, ...prev]);
         }}
       />

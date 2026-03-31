@@ -82,8 +82,8 @@ export default function CreateLeagueModal({ isOpen, onClose, onSave }) {
             logoFile,
         }
         try {
-            await createLeague(newLeague);
-            onSave?.(newLeague);
+            const { data } = await createLeague(newLeague);
+            onSave?.({ ...newLeague, id: Number(data.id), title: data.title });
             handleClose();
         } catch (err) {
             console.error("Failed to create league:", err);
