@@ -1,7 +1,7 @@
 import { DataTypes, Model, Association} from 'sequelize';
 import sequelize from '../config/database';
-// import League from './league';
-// import DraftPick from './draftPick';
+import League from './league';
+import DraftPick from './draftPick';
 
 // Used AI to assist with sytax/ code checking
 // Post MVP:
@@ -13,8 +13,8 @@ class Team extends Model {
     public name!: string;
     public budget!: number;
     public league_id!: number;
-    // public readonly league?: League;
-    // public readonly players?: DraftPick[];
+    public readonly league?: League;
+    public readonly players?: DraftPick[];
 
     // public static associations: {
     //     players: Association<Team, DraftPick>;
@@ -50,7 +50,7 @@ Team.init({
     timestamps: false,
 });
 
-// Team.belongsTo(League, { foreignKey: 'league_id', as: 'league' });
-// Team.hasMany(DraftPick, { foreignKey: 'team_id', as: 'players' });
+//Team.belongsTo(League, { foreignKey: 'league_id', as: 'league' });
+//Team.hasMany(DraftPick, { foreignKey: 'team_id', as: 'players' });
 
 export default Team;

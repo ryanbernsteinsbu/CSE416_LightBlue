@@ -247,7 +247,6 @@ export default function PlayerInformation() {
           </div>
         </div>
 
-        {/* ✅ ONLY CHANGE IS HERE */}
         {loading ? (
           <div className="pi-tableCard">
             <div className="pi-empty">Loading players...</div>
