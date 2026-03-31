@@ -32,6 +32,7 @@ const positionToEnum = (pos, index) => {
     return map[pos] || pos;
 };
 
+// filter players given the position
 const playerMatchesRowPosition = (player, rowPos) => {
     const positions = player?.playablePositions || [];
 
@@ -55,6 +56,7 @@ const playerMatchesRowPosition = (player, rowPos) => {
     return false;
 };
 
+// initialize empty rows 
 function makeEmptyTeam(index) {
     return {
         id: crypto.randomUUID(),
@@ -63,9 +65,12 @@ function makeEmptyTeam(index) {
     };
 }
 
+
+// get player display name
 const getPlayerDisplayName = (p) =>
     `${p?.firstName ?? ""} ${p?.lastName ?? ""}`.trim();
 
+// unify player names
 const getPlayerName = (p) =>
     getPlayerDisplayName(p).toLowerCase();
 
@@ -130,6 +135,7 @@ export default function LeagueDraftBoard({ league, onBack }) {
 
         fetchTeams();
     }, [league.id]);
+
     useEffect(() => {
         getAllPlayers()
             .then(({ data }) => {
@@ -160,6 +166,7 @@ export default function LeagueDraftBoard({ league, onBack }) {
         console.log("sending picks:", picks);
 
         try {
+            // save draft picks to the database
             await saveDraftPicks(picks);
             alert("Draft saved!");
         } catch (err) {
@@ -168,7 +175,10 @@ export default function LeagueDraftBoard({ league, onBack }) {
         }
     };
 
+    // adding a new team
     const addTeam = async () => {
+
+        // initialize column
         const newTeam = makeEmptyTeam(teams.length);
 
         try {
@@ -188,6 +198,7 @@ export default function LeagueDraftBoard({ league, onBack }) {
         }, 0);
     };
 
+    // deleting a team
     const removeTeam = async (teamId) => {
         try {
             await deleteTeam(teamId);
@@ -198,6 +209,7 @@ export default function LeagueDraftBoard({ league, onBack }) {
         }
     };
 
+    // editing a team
     const startEditTeam = (team) => {
         setEditingTeamId(team.id);
         setEditTeamValue(team.name);
