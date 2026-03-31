@@ -25,21 +25,22 @@ import Player from '../models/player';
 
 export const saveDraftPicks = async (req: Request, res: Response) => {
     try {
-        const { picks } = req.body;
+        const { picks, teamIds } = req.body; 
 
-        if (!Array.isArray(picks)) {
-            return res.status(400).json({ error: 'picks must be an array' });
+        if (!Array.isArray(picks) || !Array.isArray(teamIds)) {
+            return res.status(400).json({ error: 'picks and teamIds must be arrays' });
         }
 
-        const teamIds = [...new Set(picks.map((p: any) => p.team_id))];
+        //const teamIds = [...new Set(picks.map((p: any) => p.team_id))];
 
         await DraftPick.destroy({
             where: { team_id: teamIds }
         });
 
-        const created = await DraftPick.bulkCreate(picks, { validate: true });
-
-        res.status(201).json(created);
+        if (picks.length > 0) {
+            await DraftPick.bulkCreate(picks, { validate: true });
+        }
+        res.status(201).json({success: true});
     } catch (err) {
         console.error('Failed to save draft picks:', err);
         res.status(500).json({ error: 'Failed to save draft picks', details: err });

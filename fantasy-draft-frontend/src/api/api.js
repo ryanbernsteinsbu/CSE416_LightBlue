@@ -87,8 +87,8 @@ export const deletePlayer = (id) =>
 //   axios.post('/api/draft-picks/create', data);
 
 // save multiple picks at once
-export const saveDraftPicks = (picks) => 
-  axios.post('/api/draft-picks/bulk', { picks });
+export const saveDraftPicks = (payload) => 
+    axios.post('/api/draft-picks/bulk', payload);
 
 export const getTeamDraftPicks = (teamId) =>
   axios.get(`/api/draft-picks/team/${teamId}`);

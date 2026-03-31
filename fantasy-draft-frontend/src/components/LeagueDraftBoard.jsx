@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import { createTeam, getLeagueTeams, deleteTeam, getAllPlayers, saveDraftPicks, getTeamDraftPicks } from "../api/api";
 
 // 24 positions from the excel sheet (non-editable, fixed rows)
@@ -86,6 +86,12 @@ export default function LeagueDraftBoard({ league, onBack }) {
     const cellInputRef = useRef(null);
     const teamInputRef = useRef(null);
 
+    // get all already-drafted player ids across every team
+    const draftedIds = useMemo(() =>
+        // flat map loops through every team and grabs the player_id from every row, filter removes null values
+        new Set(teams.flatMap(t => t.rows.map(r => r.player_id).filter(Boolean)))
+    , [teams]);
+
     useEffect(() => {
         const fetchTeams = async () => {
             try {
@@ -167,8 +173,10 @@ export default function LeagueDraftBoard({ league, onBack }) {
 
         try {
             // save draft picks to the database
-            await saveDraftPicks(picks);
-            alert("Draft saved!");
+            await saveDraftPicks({
+            picks,
+            teamIds: teams.map(t => t.id)  
+        });
         } catch (err) {
             console.error("Failed to save draft:", err);
             alert("Error saving draft.");
@@ -265,10 +273,14 @@ export default function LeagueDraftBoard({ league, onBack }) {
                             p => getPlayerName(p) === editValue.trim().toLowerCase()
                         );
 
+                        // invalid if: doesn't exist OR already drafted by another team
+                        const isValid = matched && !draftedIds.has(matched.id);
+
+
                         return {
                             ...row,
-                            player: matched ? getPlayerDisplayName(matched) : "", // null if not an existing player 
-                            player_id: matched ? matched.id : null
+                            player:  isValid ? getPlayerDisplayName(matched) : "", // null if not an existing player 
+                            player_id: isValid ? matched.id : null
                         };
                     }
 
@@ -446,6 +458,7 @@ export default function LeagueDraftBoard({ league, onBack }) {
                                                                                 : allPlayers
                                                                                     .filter(p => playerMatchesRowPosition(p, pos))
                                                                                     .filter(p => getPlayerName(p).includes(q))
+                                                                                    .filter(p => !draftedIds.has(p.id)) // exclude players that are already drafted
                                                                                     .slice(0, 8)
                                                                         );
                                                                     }}
