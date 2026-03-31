@@ -3,24 +3,6 @@ import { Request, Response } from 'express'
 import DraftPick from '../models/draftPick';
 import Player from '../models/player';
 
-// Don't need this as of now
-// export const createDraftPick = async (req: Request, res: Response) => {
-//     try {
-//         const { cost, rosterPosition, team_id, player_id } = req.body;
-
-//         const pick = await DraftPick.create({
-//             cost,
-//             rosterPosition,
-//             team_id,
-//             player_id,
-//         });
-
-//         res.status(201).json(pick);
-//     } catch (err) {
-//         res.status(500).json({error: 'Failed to create draft pick', details: err });
-//     }
-// };
-
 // Save all the picks from a draft session at once
 
 export const saveDraftPicks = async (req: Request, res: Response) => {
