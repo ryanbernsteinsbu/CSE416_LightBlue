@@ -15,9 +15,9 @@ class DraftSettings extends Model {
         league: Association<DraftSettings, League>;
     }
 
-    public static associate (models: any) {
-        DraftSettings.belongsTo(models.League, { foreignKey: 'league_id', as: 'league' });
-    }
+    // public static associate (models: any) {
+    //     DraftSettings.belongsTo(models.League, { foreignKey: 'league_id', as: 'league' });
+    // }
 }
 
 DraftSettings.init({
@@ -28,15 +28,19 @@ DraftSettings.init({
     },
     budget: {
         type: DataTypes.DECIMAL(10, 2),
-        allowNull: false
+        allowNull: false,
+        defaultValue: 260
     },
     numTeams: {
         type: DataTypes.INTEGER,
-        allowNull: false
+        allowNull: false,
+        defaultValue: 12,
+        field: 'num_teams'
     }
 }, {
     sequelize,
-    tableName:'draft_settings'
+    tableName:'draft_settings',
+    timestamps: false
 });
 
 export default DraftSettings;

@@ -16,20 +16,10 @@ class Team extends Model {
     public readonly league?: League;
     public readonly players?: DraftPick[];
 
-    public static associations: {
-        players: Association<Team, DraftPick>;
-        league: Association<Team, League>;
-    }
-
-    public static associate (models: any) {
-        Team.belongsTo(models.League, { foreignKey: 'league_id', as: 'league' })
-        Team.hasMany(models.DraftPick, { foreignKey: 'team_id', as: 'players' });
-    }
-
-    public getNumKeepers(): number {
-        if(!this.players) return 0;
-        return this.players.filter(pick => pick.player?.isKeeper).length;
-    }
+    // public static associations: {
+    //     players: Association<Team, DraftPick>;
+    //     league: Association<Team, League>;
+    // }
 }
 
 Team.init({
@@ -40,15 +30,27 @@ Team.init({
     },
     name: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: true
     },
     budget: {
         type: DataTypes.DECIMAL(10, 2),
-        allowNull: false
+        allowNull: true
+    },
+    league_id: {
+        type: DataTypes.BIGINT,
+        allowNull: true,
+        references: {
+            model: 'leagues',
+            key: 'id'
+        }
     }
 }, {
     sequelize,
-    tableName:'teams'
+    tableName:'teams',
+    timestamps: false,
 });
+
+//Team.belongsTo(League, { foreignKey: 'league_id', as: 'league' });
+//Team.hasMany(DraftPick, { foreignKey: 'team_id', as: 'players' });
 
 export default Team;

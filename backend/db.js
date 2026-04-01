@@ -8,8 +8,6 @@ const pool = new Pool({
 
 module.exports = pool;
 
-// Uncomment to test connection
-// Run with "node db.js"
 pool.query('SELECT NOW()', (err, res) => {
   if (err) {
     console.error('Database connection failed:', err);

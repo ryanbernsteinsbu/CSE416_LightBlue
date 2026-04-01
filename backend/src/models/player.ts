@@ -6,7 +6,7 @@ import sequelize from '../config/database';
 // Enums
 export enum Position {
     CATCHER = 'CATCHER', FIRST = 'FIRST', SECOND = 'SECOND', THIRD = 'THIRD',
-    SHORTSTOP = 'SHORTSTOP', OUTFIELD = 'OUTFIELD', PITCHER = 'PITCHER'
+    SHORTSTOP = 'SHORTSTOP', OUTFIELD = 'OUTFIELD', PITCHER = 'PITCHER', UTILITY = 'UTILITY'
 }
 
 export enum Status {
@@ -17,17 +17,20 @@ export enum Status {
 class Player extends Model {
     // Fields
     public id!: number;
-    public name!: string;
-    public mlbPlayerId!: string; // use for syncing with MLB database
-    public realTeam!: string;
-    public isKeeper!: boolean;
-    public seasonsLeft!: number; // only relevant if isKeeper is true
-    public status!: Status;
+    public mlbPlayerId!: number; // use for syncing with MLB database
+    public firstName!: string;
+    public lastName!: string;
+    public isHitter!: boolean;
     public playablePositions!: Position[];
     public lastYearStats!: Record<string, number>;
     public threeYearAvg!: Record<string, number>;
     public projectedStats!: Record<string, number>;
+    public status!: Status;
+    public seasonsLeft!: number; 
+    public realTeam!: string;
+    public realLeague!: string;
 }
+
 
 Player.init({
     id: {
@@ -35,28 +38,21 @@ Player.init({
         primaryKey: true,
         autoIncrement: true
     },
-    name: {
-        type: DataTypes.STRING,
-        allowNull: false
-    },
     mlbPlayerId: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: false,
+        unique: true,
     },
-    realTeam: {
+    firstName: {
         type: DataTypes.STRING,
         allowNull: false
     },
-    isKeeper: {
+    lastName: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    isHitter: {
         type: DataTypes.BOOLEAN,
-        allowNull: false
-    },
-    seasonsLeft: {
-        type: DataTypes.INTEGER,
-        allowNull: false
-    },
-    status: {
-        type: DataTypes.ENUM(...Object.values(Status)),
         allowNull: false
     },
     playablePositions: {
@@ -66,22 +62,36 @@ Player.init({
     },
     lastYearStats: {
         type: DataTypes.JSON,
-        allowNull: false,
         defaultValue: {}
     },
     threeYearAvg: {
         type: DataTypes.JSON,
-        allowNull: false,
         defaultValue: {}
     },
     projectedStats: {
         type: DataTypes.JSON,
-        allowNull: false,
         defaultValue: {}
-    }
+    },
+    status: {
+        type: DataTypes.ENUM(...Object.values(Status)),
+        allowNull: false
+    },
+    seasonsLeft: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+    },
+    realTeam: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    realLeague: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
 }, {
     sequelize,
-    tableName:'player'
+    tableName:'player',
+    timestamps: false,
 });
 
 export default Player;

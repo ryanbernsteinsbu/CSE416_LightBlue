@@ -15,9 +15,9 @@ class User extends Model {
         leagues: Association<User, League>;
     };
 
-    public static associate(models: any) {
-        User.hasMany(models.League, { foreignKey: 'user_id', as: 'leagues' });
-    }
+    // public static associate(models: any) {
+    //     User.hasMany(models.League, { foreignKey: 'user_id', as: 'leagues' });
+    // }
 }
 
 User.init({
@@ -47,25 +47,6 @@ User.init({
     timestamps: false
 });
 
+User.hasMany(League, { foreignKey: 'user_id', as: 'leagues' });
+
 export default User;
-
-//     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-//     private List<League> leagues = new ArrayList<>();
-
-//     // Constructors
-//     public User() {}
-
-//     // Getters
-//     public Long getId() { return id; }
-//     public String getEmail() { return email; }
-//     public String getHashedPassword() { return hashedPassword; }
-//     public String getDisplayName() { return displayName; }
-//     public List<League> getLeagues() { return leagues; }
-
-//     // Setters
-//     public void setId(Long id) { this.id = id; }
-//     public void setEmail(String email) { this.email = email; }
-//     public void setHashedPassword(String hashedPassword) { this.hashedPassword = hashedPassword; }
-//     public void setDisplayName(String displayName) { this.displayName = displayName; }
-//     public void setLeagues(List<League> leagues) { this.leagues = leagues; }
-// }

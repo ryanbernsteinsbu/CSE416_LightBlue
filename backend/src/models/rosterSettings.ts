@@ -17,16 +17,16 @@ class RosterSettings extends Model {
     public numPitchers!: number;
     public numTaxi!: number;
     public league_id!: number;
-    public league!: League;
+    //public league!: League;
 
     // Associations
     public static associations: {
         league: Association<RosterSettings, League>;
     }
 
-    public static associate (models: any) {
-        RosterSettings.belongsTo(models.League, { foreignKey: 'league_id', as: 'league' });
-    }
+    // public static associate (models: any) {
+    //     RosterSettings.belongsTo(models.League, { foreignKey: 'league_id', as: 'league' });
+    // }
 
     // Helper Methods
     public getTotalRosterSize(): number {
@@ -44,51 +44,70 @@ RosterSettings.init({
     },
     numCatchers: {
         type: DataTypes.INTEGER,
-        defaultValue: 2
+        defaultValue: 2,
+        field: 'num_catchers'
     },
     numFirstBase: {
         type: DataTypes.INTEGER,
-        defaultValue: 1
+        defaultValue: 1,
+        field: 'num_first_base'
     },
     numSecondBase: {
         type: DataTypes.INTEGER,
-        defaultValue: 1
+        defaultValue: 1,
+        field: 'num_second_base'
     },
     numThirdBase: {
         type: DataTypes.INTEGER,
-        defaultValue: 1
+        defaultValue: 1,
+        field: 'num_third_base'
     }, 
     numShortstop: {
         type: DataTypes.INTEGER,
-        defaultValue: 1
+        defaultValue: 1,
+        field: 'num_shortstop'
     },
     numCornerInfield: {
         type: DataTypes.INTEGER,
-        defaultValue: 1
+        defaultValue: 1,
+        field: 'num_corner_infield'
     },
     numMiddleInfield: {
         type: DataTypes.INTEGER,
-        defaultValue: 1
+        defaultValue: 1,
+        field: 'num_middle_infield'
     },
     numOutfield: {
         type: DataTypes.INTEGER,
-        defaultValue: 5
+        defaultValue: 5,
+        field: 'num_outfield'
     },
     numUtility: {
         type: DataTypes.INTEGER,
-        defaultValue: 1
+        defaultValue: 1,
+        field: 'num_utility'
     },
     numPitchers: {
         type: DataTypes.INTEGER,
-        defaultValue: 9
+        defaultValue: 9,
+        field: 'num_pitchers'
     },
     numTaxi: {
         type: DataTypes.INTEGER,
-        defaultValue: 8
+        defaultValue: 8,
+        field: 'num_taxi'
+    },
+    league_id: {
+        type: DataTypes.BIGINT,
+        allowNull: true
     }
+
 }, {
     sequelize,
-    tableName:'roster_settings'
+    tableName:'roster_settings',
+    timestamps: false
 });
+
+// RosterSettings.belongsTo(League, { foreignKey: 'league_id', as: 'league' });
 
 export default RosterSettings;
