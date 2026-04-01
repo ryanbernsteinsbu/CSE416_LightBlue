@@ -79,6 +79,7 @@ export const deleteTeam = async (req: Request, res: Response) => {
         const team = await Team.findByPk(Number(req.params.id));
         if(!team) throw new Error('Team not found');
 
+        await DraftPick.destroy({ where: { team_id: team.id } });
         await team.destroy();
 
         res.status(200).json({ message: 'Team deleted successfully '});
