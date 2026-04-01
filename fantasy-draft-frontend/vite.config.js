@@ -31,7 +31,7 @@ export default defineConfig({
     },
     proxy: {
       '/api': {
-        target: 'http://localhost:8000',
+        target: 'https://catch23-api.vercel.app/',
         changeOrigin: true,
       }
     }
