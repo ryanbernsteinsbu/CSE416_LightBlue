@@ -273,7 +273,6 @@ export default function LeagueDraftBoard({ league, onBack }) {
                         if (editValue.trim().toLowerCase() === row.player.toLowerCase()) {
                             return row;
                         }
-                        
                         const matched = allPlayers.find(
                             p => getPlayerName(p) === editValue.trim().toLowerCase()
                         );
