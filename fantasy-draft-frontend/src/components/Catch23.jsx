@@ -6,6 +6,7 @@ import runner from "../assets/images/reddude.png";
 import Navbar from "./Navbar";
 import Home from "./Home";
 import PlayerInformation from "./PlayerInformation";
+import UserProfile from "./UserProfile"
 import { jwtDecode } from 'jwt-decode'; // npm install jwt-decode
 
 export default function Catch23() {
@@ -18,12 +19,12 @@ export default function Catch23() {
     <>
       {showLoggedIn ? (
         <>
-          <Navbar onNavigate={setRoute} onProfileClick={() => {
-            localStorage.clear();
-            setLoggedIn(false);
-          }} />
+          <Navbar onNavigate={setRoute} 
+            onProfileClick={() => setRoute("profile")}
+          />
           {route === "home" && <Home />}
           {route === "player" && <PlayerInformation />}
+          {route === "profile" && <UserProfile />}
         </>
       ) : (
         <div className="landing">
