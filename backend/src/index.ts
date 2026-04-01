@@ -5,6 +5,8 @@ import userRoutes from './routes/userRoutes';
 import playerRoutes from './routes/playerRoutes'
 import leagueRoutes from './routes/leagueRoutes';
 import teamRoutes from './routes/teamRoutes';
+import requireAuth from './middleware/requireAuth';
+import publicRoutes from './routes/publicRoutes'
 
 require('dotenv').config();
 
@@ -20,6 +22,8 @@ app.use('/api/users', userRoutes);
 app.use('/api/players', playerRoutes);
 app.use('/api/leagues', leagueRoutes);
 app.use('/api/teams', teamRoutes);
+app.use('/api/public', requireAuth);
+app.use('/api/public', publicRoutes);
 
 const PORT = process.env.PORT || 8000;
 
