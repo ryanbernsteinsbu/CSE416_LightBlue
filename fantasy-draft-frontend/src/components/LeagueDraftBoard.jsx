@@ -2,15 +2,28 @@ import React, { useEffect, useState, useRef, useMemo } from "react";
 import { createTeam, getLeagueTeams, deleteTeam, getAllPlayers, saveDraftPicks, getTeamDraftPicks } from "../api/api";
 
 // 24 positions from the excel sheet (non-editable, fixed rows)
-const POSITIONS = [
-    "C", "C", "1B", "3B", "CI", "2B", "SS", "MI",
-    "OF", "OF", "OF", "OF", "OF", "OF", "U",
-    "P", "P", "P", "P", "P", "P", "P", "P", "P"
-];
+// const POSITIONS = buildPositions(league.rosterSettings);
 
 // helper functions
 
-const positionToEnum = (pos, index) => {
+const buildPositions = (rosterSettings) => {
+    if(!rosterSettings) return [];
+
+    return [
+        ...Array(rosterSettings.numCatchers).fill("C"),
+        ...Array(rosterSettings.numFirstBase).fill("1B"),
+        ...Array(rosterSettings.numSecondBase).fill("2B"),
+        ...Array(rosterSettings.numThirdBase).fill("3B"),
+        ...Array(rosterSettings.numShortstop).fill("SS"),
+        ...Array(rosterSettings.numCornerInfield).fill("CI"),
+        ...Array(rosterSettings.numMiddleInfield).fill("MI"),
+        ...Array(rosterSettings.numOutfield).fill("OF"),
+        ...Array(rosterSettings.numUtility).fill("U"),
+        ...Array(rosterSettings.numPitchers).fill("P"),
+    ]
+}
+
+const positionToEnum = (pos, index, POSITIONS) => {
     const counts = {};
     for (let i = 0; i <= index; i++) {
         const p = POSITIONS[i];
@@ -57,7 +70,7 @@ const playerMatchesRowPosition = (player, rowPos) => {
 };
 
 // initialize empty rows 
-function makeEmptyTeam(index) {
+function makeEmptyTeam(index, POSITIONS) {
     return {
         id: crypto.randomUUID(),
         name: `Team ${index + 1}`,
@@ -75,6 +88,8 @@ const getPlayerName = (p) =>
     getPlayerDisplayName(p).toLowerCase();
 
 export default function LeagueDraftBoard({ league, onBack }) {
+    const POSITIONS = buildPositions(league.rosterSettings)
+
     const [teams, setTeams] = useState([]);
     const [editingCell, setEditingCell] = useState(null); // { teamId, rowIndex, field }
     const [editValue, setEditValue] = useState("");
@@ -82,6 +97,7 @@ export default function LeagueDraftBoard({ league, onBack }) {
     const [editTeamValue, setEditTeamValue] = useState("");
     const [allPlayers, setAllPlayers] = useState([]);
     const [suggestions, setSuggestions] = useState([]);
+    const [teamBudgets, setTeamBudgets] = useState({});
 
     const cellInputRef = useRef(null);
     const teamInputRef = useRef(null);
@@ -91,6 +107,19 @@ export default function LeagueDraftBoard({ league, onBack }) {
         // flat map loops through every team and grabs the player_id from every row, filter removes null values
         new Set(teams.flatMap(t => t.rows.map(r => r.player_id).filter(Boolean)))
     , [teams]);
+
+    const remainingBudgets = useMemo(() => { // Used AI to help with this function
+        const result = {};
+        teams.forEach(team => {
+            const spent = (team.rows?? []).reduce((sum, row) => {
+                const price = parseFloat(row.price);
+                return sum + (isNaN(price) ? 0: price);
+            }, 0);
+            console.log("league:", league);
+            result[team.id] = (league.draftSettings.budget ?? 0) - spent;
+        })
+        return result;
+    }, [teams, league.draftSettings.budget]);
 
     useEffect(() => {
         const fetchTeams = async () => {
@@ -110,7 +139,7 @@ export default function LeagueDraftBoard({ league, onBack }) {
 
                         picks.forEach((pick) => {
                             const rowIndex = POSITIONS.findIndex((pos, idx) =>
-                                positionToEnum(pos, idx) === pick.rosterPosition
+                                positionToEnum(pos, idx, POSITIONS) === pick.rosterPosition
                             );
 
                             if (rowIndex !== -1) {
@@ -162,7 +191,7 @@ export default function LeagueDraftBoard({ league, onBack }) {
 
                 picks.push({
                     cost: parseFloat(row.price) || 0,
-                    rosterPosition: positionToEnum(POSITIONS[i], i),
+                    rosterPosition: positionToEnum(POSITIONS[i], i, POSITIONS),
                     team_id: team.id,
                     player_id: row.player_id,
                 });
@@ -187,7 +216,7 @@ export default function LeagueDraftBoard({ league, onBack }) {
     const addTeam = async () => {
 
         // initialize column
-        const newTeam = makeEmptyTeam(teams.length);
+        const newTeam = makeEmptyTeam(teams.length, POSITIONS);
 
         try {
             const { data } = await createTeam(newTeam.name, league.id);
@@ -402,6 +431,14 @@ export default function LeagueDraftBoard({ league, onBack }) {
                                                     ×
                                                 </button>
                                             </div>
+
+                                            {league.draftSettings.budget != null && ( // Used AI
+                                                <div
+                                                    className="db-team-budget"
+                                                >
+                                                    ${remainingBudgets[team.id]?.toFixed(0)} left
+                                                </div>
+                                            )}
                                         </th>
                                     ))}
                                 </tr>
