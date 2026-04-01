@@ -3,7 +3,7 @@ import { jwtDecode } from "jwt-decode";
 
 export default function UserProfile() {
   const token = localStorage.getItem("token");
-  const [logoutHover, setLogoutHover] = useState(false);
+  const [logoutHover, setLogoutHover, editHover, setEditHover] = useState(false);
 
   let user = {};
   try {
@@ -43,6 +43,22 @@ export default function UserProfile() {
 
         {/* BOTTOM */}
         <div className="profile-actions">
+          <button
+            className="profile-btn"
+            onMouseEnter={() => setEditHover(true)}
+            onMouseLeave={() => setEditHover(false)}
+            style={{
+              background: editHover
+                ? "rgba(255,255,255,0.18)"
+                : undefined,
+            }}
+            onClick={() => {
+            //   localStorage.clear();
+            //   window.location.reload();
+            }}
+          >
+            Edit Profile
+          </button>
           <button
             className="profile-btn profile-logout"
             onMouseEnter={() => setLogoutHover(true)}
