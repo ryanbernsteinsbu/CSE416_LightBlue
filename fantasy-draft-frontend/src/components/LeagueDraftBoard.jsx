@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef, useMemo } from "react";
 import { createTeam, getLeagueTeams, deleteTeam, getAllPlayers, saveDraftPicks, getTeamDraftPicks } from "../api/api";
+import ConfirmDeleteModal from "./ConfirmDeleteModal";
 
 // 24 positions from the excel sheet (non-editable, fixed rows)
 // const POSITIONS = buildPositions(league.rosterSettings);
@@ -7,7 +8,7 @@ import { createTeam, getLeagueTeams, deleteTeam, getAllPlayers, saveDraftPicks, 
 // helper functions
 
 const buildPositions = (rosterSettings) => {
-    if(!rosterSettings) return [];
+    if (!rosterSettings) return [];
 
     return [
         ...Array(rosterSettings.numCatchers).fill("C"),
@@ -97,7 +98,9 @@ export default function LeagueDraftBoard({ league, onBack }) {
     const [editTeamValue, setEditTeamValue] = useState("");
     const [allPlayers, setAllPlayers] = useState([]);
     const [suggestions, setSuggestions] = useState([]);
-    const [teamBudgets, setTeamBudgets] = useState({});
+    const [teamDeleteTarget, setTeamDeleteTarget] = useState(null);
+    //const [teamBudgets, setTeamBudgets] = useState({});
+
 
     const cellInputRef = useRef(null);
     const teamInputRef = useRef(null);
@@ -106,14 +109,14 @@ export default function LeagueDraftBoard({ league, onBack }) {
     const draftedIds = useMemo(() =>
         // flat map loops through every team and grabs the player_id from every row, filter removes null values
         new Set(teams.flatMap(t => t.rows.map(r => r.player_id).filter(Boolean)))
-    , [teams]);
+        , [teams]);
 
     const remainingBudgets = useMemo(() => { // Used AI to help with this function
         const result = {};
         teams.forEach(team => {
-            const spent = (team.rows?? []).reduce((sum, row) => {
+            const spent = (team.rows ?? []).reduce((sum, row) => {
                 const price = parseFloat(row.price);
-                return sum + (isNaN(price) ? 0: price);
+                return sum + (isNaN(price) ? 0 : price);
             }, 0);
             console.log("league:", league);
             result[team.id] = (league.draftSettings.budget ?? 0) - spent;
@@ -203,9 +206,9 @@ export default function LeagueDraftBoard({ league, onBack }) {
         try {
             // save draft picks to the database
             await saveDraftPicks({
-            picks,
-            teamIds: teams.map(t => t.id)  
-        });
+                picks,
+                teamIds: teams.map(t => t.id)
+            });
         } catch (err) {
             console.error("Failed to save draft:", err);
             alert("Error saving draft.");
@@ -237,13 +240,8 @@ export default function LeagueDraftBoard({ league, onBack }) {
 
     // deleting a team
     const removeTeam = async (teamId) => {
-        try {
-            await deleteTeam(teamId);
-            setTeams(prev => prev.filter(t => t.id !== teamId));
-        } catch (err) {
-            console.error("Failed to delete team:", err);
-            alert("Error deleting team.");
-        }
+        await deleteTeam(teamId);
+        setTeams(prev => prev.filter(t => t.id !== teamId));
     };
 
     // editing a team
@@ -312,7 +310,7 @@ export default function LeagueDraftBoard({ league, onBack }) {
 
                         return {
                             ...row,
-                            player:  isValid ? getPlayerDisplayName(matched) : "", // null if not an existing player 
+                            player: isValid ? getPlayerDisplayName(matched) : "", // null if not an existing player 
                             player_id: isValid ? matched.id : null
                         };
                     }
@@ -429,11 +427,25 @@ export default function LeagueDraftBoard({ league, onBack }) {
                                                 )}
                                                 <button
                                                     className="db-remove-team"
-                                                    onClick={() => removeTeam(team.id)}
+                                                    onClick={() => setTeamDeleteTarget({ id: team.id, name: team.name })}
                                                     title="Remove team"
                                                 >
                                                     ×
                                                 </button>
+                                                <ConfirmDeleteModal
+                                                    isOpen={!!teamDeleteTarget}
+                                                    leagueName={teamDeleteTarget?.name || ""}
+                                                    onCancel={() => setTeamDeleteTarget(null)}
+                                                    onConfirm={async () => {
+                                                        try {
+                                                            await removeTeam(teamDeleteTarget.id);
+                                                            setTeamDeleteTarget(null);
+                                                        } catch (err) {
+                                                            console.error("Failed to delete team:", err);
+                                                            alert("Error deleting team.");
+                                                        }
+                                                    }}
+                                                />
                                             </div>
 
                                             {league.draftSettings.budget != null && ( // Used AI
