@@ -99,6 +99,7 @@ export default function LeagueDraftBoard({ league, onBack }) {
     const [allPlayers, setAllPlayers] = useState([]);
     const [suggestions, setSuggestions] = useState([]);
     const [teamDeleteTarget, setTeamDeleteTarget] = useState(null);
+    const [saveBanner, setSaveBanner] = useState(false);
     //const [teamBudgets, setTeamBudgets] = useState({});
 
 
@@ -209,6 +210,10 @@ export default function LeagueDraftBoard({ league, onBack }) {
                 picks,
                 teamIds: teams.map(t => t.id)
             });
+
+            setSaveBanner(true);
+            setTimeout(() => setSaveBanner(false), 3000);
+
         } catch (err) {
             console.error("Failed to save draft:", err);
             alert("Error saving draft.");
@@ -346,6 +351,9 @@ export default function LeagueDraftBoard({ league, onBack }) {
 
     return (
         <div className="home" style={{ paddingTop: 80 }}>
+            <div className={`save-banner ${saveBanner ? "save-banner--visible" : ""}`}>
+                ✅ Draft saved!
+            </div>
             <div className="db-header">
                 <div className="db-header-left">
                     <button className="db-back-btn" onClick={onBack}>← Back</button>
@@ -432,20 +440,6 @@ export default function LeagueDraftBoard({ league, onBack }) {
                                                 >
                                                     ×
                                                 </button>
-                                                <ConfirmDeleteModal
-                                                    isOpen={!!teamDeleteTarget}
-                                                    leagueName={teamDeleteTarget?.name || ""}
-                                                    onCancel={() => setTeamDeleteTarget(null)}
-                                                    onConfirm={async () => {
-                                                        try {
-                                                            await removeTeam(teamDeleteTarget.id);
-                                                            setTeamDeleteTarget(null);
-                                                        } catch (err) {
-                                                            console.error("Failed to delete team:", err);
-                                                            alert("Error deleting team.");
-                                                        }
-                                                    }}
-                                                />
                                             </div>
 
                                             {league.draftSettings.budget != null && ( // Used AI
@@ -635,6 +629,22 @@ export default function LeagueDraftBoard({ league, onBack }) {
                     </div>
                 )}
             </div>
+
+            <ConfirmDeleteModal
+                isOpen={!!teamDeleteTarget}
+                leagueName={teamDeleteTarget?.name || ""}
+                onCancel={() => setTeamDeleteTarget(null)}
+                onConfirm={async () => {
+                    try {
+                        await removeTeam(teamDeleteTarget.id);
+                        setTeamDeleteTarget(null);
+                    } catch (err) {
+                        console.error("Failed to delete team:", err);
+                        alert("Error deleting team.");
+                    }
+                }}
+            />
+
         </div>
     );
 }
