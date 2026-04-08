@@ -53,6 +53,13 @@ export default function Home() {
 
   return (
     <div className="home">
+      <div className="home-header">
+        <h1 className="home-leagues-title">Leagues</h1>
+        <div className="tooltip-wrap" data-tip="Create a new league">
+          <button className="create-league-btn" onClick={onCreateLeague}>+</button>
+        </div>
+      </div>
+
       {leagues.length === 0 ? (
         <div className="home-empty">
           <h2>No leagues yet.</h2>
@@ -114,10 +121,6 @@ export default function Home() {
           setLeagues((prev) => [newLeague, ...prev]);
         }}
       />
-
-      <button className="create-league-btn" type="button" onClick={onCreateLeague} aria-label="Create league">
-        +
-      </button>
     </div>
   );
 }
