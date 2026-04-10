@@ -1,5 +1,5 @@
 import React from "react";
-import { TABS } from "./createLeagueHelpers";
+import { TABS } from "./CreateLeagueHelpers.jsx";
 
 export default function CreateLeagueSettings({
   activeTab,
