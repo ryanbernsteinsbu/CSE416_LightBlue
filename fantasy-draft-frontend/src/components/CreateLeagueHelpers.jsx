@@ -1,0 +1,117 @@
+export const TABS = [
+  { key: "draft", label: "Draft" },
+  { key: "players", label: "Players" },
+  { key: "roster", label: "Roster" },
+  { key: "scoring", label: "Scoring" },
+];
+
+export const INITIAL_PLAYER_SETTINGS = {
+  positionEligibilityRule: true,
+  multiPositionEnabled: false,
+  prospectEligibility: false,
+  rookieStatusFilter: false,
+  prospects: false,
+  minorLeaguePlayers: false,
+  freeAgents: false,
+  twoWayPlayerSplit: false,
+  injuredPlayersDraftable: false,
+  autoInjuryRiskIndicator: false,
+  hideLongTermIL: false,
+};
+
+export const INITIAL_ROSTER_SETTINGS = {
+  numCatchers: 2,
+  numFirstBase: 1,
+  numSecondBase: 1,
+  numThirdBase: 1,
+  numShortstop: 1,
+  numCornerInfield: 1,
+  numMiddleInfield: 1,
+  numOutfield: 5,
+  numUtility: 1,
+  numPitchers: 9,
+  numTaxi: 8,
+};
+
+export const INITIAL_SCORING_SETTINGS = {
+  useAvg: true,
+  useHr: true,
+  useRbi: true,
+  useSb: true,
+  useRuns: true,
+  useEra: true,
+  useWhip: true,
+  useWins: true,
+  useStrikeouts: true,
+  useSaves: true,
+};
+
+export const INITIAL_DRAFT_SETTINGS = {
+  budget: 260,
+  numTeams: 0,
+};
+
+export function buildLeaguePayload({
+  leagueName,
+  logoPreview,
+  logoFile,
+  draftSettings,
+  scoringSettings,
+  playerSettings,
+  rosterSettings,
+}) {
+  return {
+    id: crypto.randomUUID(),
+    name: leagueName.trim(),
+    logoUrl: logoPreview || "",
+    currRank: 0,
+    projectFinish: 0,
+    dateMade: new Date(),
+    season: new Date().getFullYear(),
+    status: "ACTIVE",
+    draftSettings: {
+      budget: draftSettings.budget,
+      numTeams: draftSettings.numTeams,
+    },
+    scoringSettings: {
+      useAvg: scoringSettings.useAvg,
+      useHr: scoringSettings.useHr,
+      useRbi: scoringSettings.useRbi,
+      useSb: scoringSettings.useSb,
+      useRuns: scoringSettings.useRuns,
+      useEra: scoringSettings.useEra,
+      useWhip: scoringSettings.useWhip,
+      useWins: scoringSettings.useWins,
+      useStrikeouts: scoringSettings.useStrikeouts,
+      useSaves: scoringSettings.useSaves,
+    },
+    playerSettings: {
+      positionEligibility: playerSettings.positionEligibilityRule,
+      multiPositionEnabled: playerSettings.multiPositionEnabled,
+      prospectEligibility: playerSettings.prospectEligibility,
+      rookieStatusFilter: playerSettings.rookieStatusFilter,
+      mlbOnly: playerSettings.mlbOnly,
+      mlbPlusProspects: playerSettings.mlbPlusProspects,
+      minorLeaguePlayers: playerSettings.minorLeaguePlayers,
+      freeAgents: playerSettings.freeAgents,
+      draftInjuredPlayers: playerSettings.draftInjuredPlayers,
+      autoInjuryRisk: playerSettings.autoInjuryRiskIndicator,
+      hideLongTermIL: playerSettings.hideLongTermIL,
+      ohtaniRule: playerSettings.ohtaniRule,
+    },
+    rosterSettings: {
+      numCatchers: rosterSettings.numCatchers,
+      numFirstBase: rosterSettings.numFirstBase,
+      numSecondBase: rosterSettings.numSecondBase,
+      numThirdBase: rosterSettings.numThirdBase,
+      numShortstop: rosterSettings.numShortstop,
+      numCornerInfield: rosterSettings.numCornerInfield,
+      numMiddleInfield: rosterSettings.numMiddleInfield,
+      numOutfield: rosterSettings.numOutfield,
+      numUtility: rosterSettings.numUtility,
+      numPitchers: rosterSettings.numPitchers,
+      numTaxi: rosterSettings.numTaxi,
+    },
+    logoFile,
+  };
+}
