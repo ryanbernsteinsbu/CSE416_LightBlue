@@ -3,9 +3,6 @@ import { createTeam, getLeagueTeams, deleteTeam, getAllPlayers, saveDraftPicks, 
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
 import { PositionPlayersModal, playerMatchesRowPosition } from "./PositionPlayersModal";
 
-// 24 positions from the excel sheet (non-editable, fixed rows)
-// const POSITIONS = buildPositions(league.rosterSettings);
-
 // helper functions
 
 const buildPositions = (rosterSettings) => {
