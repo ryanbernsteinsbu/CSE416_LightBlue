@@ -57,58 +57,22 @@ export function PositionPlayersModal({ isOpen, onClose, position, players, draft
     return (
         <>
             {/* Backdrop */}
-            <div
-                onClick={onClose}
-                style={{
-                    position: "fixed", inset: 0,
-                    background: "rgba(0,0,0,0.5)",
-                    zIndex: 999,
-                }}
-            />
+            <div className="ppm-backdrop" onClick={onClose} />
 
             {/* Panel */}
-            <div style={{
-                position: "fixed",
-                top: 0, right: 0, bottom: 0,
-                width: "50%",
-                background: "#3d4a8a",
-                border: "3px solid #5060b0",
-                borderRight: "none",
-                borderRadius: "16px 0 0 16px",
-                zIndex: 1000,
-                transform: visible ? "translateX(0)" : "translateX(100%)",
-                transition: "transform 0.35s cubic-bezier(0.32, 0.72, 0, 1)",
-                display: "flex",
-                flexDirection: "column",
-                fontFamily: "'Bebas Neue', 'Impact', sans-serif",
-                overflowY: "auto",
-            }}>
+            <div className={`ppm-panel ${visible ? "ppm-panel--visible" : ""}`}>
 
                 {/* Header */}
-                <div style={{
-                    display: "flex", justifyContent: "space-between", alignItems: "center",
-                    padding: "24px 28px",
-                    borderBottom: "2px solid #5060b0",
-                }}>
+                <div className="ppm-header">
                     <div>
-                        <span style={{ fontSize: "26px", letterSpacing: "0.08em", color: "#fff" }}>
-                            TOP AVAILABLE
-                        </span>
-                        <span style={{
-                            marginLeft: "12px", fontSize: "26px",
-                            letterSpacing: "0.08em", color: "#e03030"
-                        }}>
+                        <span className="ppm-header-title">TOP AVAILABLE</span>
+                        <span className="ppm-header-position">
                             {POSITION_LABELS[position] ?? position}
                         </span>
                     </div>
                     <button
                         onClick={onClose}
-                        style={{
-                            background: "#2e3a7a", border: "none", borderRadius: "8px",
-                            color: "#fff", width: "36px", height: "36px",
-                            fontSize: "18px", cursor: "pointer",
-                            fontFamily: "sans-serif",
-                        }}
+                        className="ppm-close-btn"
                         onMouseEnter={e => e.target.style.background = "#3a4890"}
                         onMouseLeave={e => e.target.style.background = "#2e3a7a"}
                     >
@@ -117,20 +81,15 @@ export function PositionPlayersModal({ isOpen, onClose, position, players, draft
                 </div>
 
                 {/* Column labels */}
-                <div style={{
-                    display: "flex", justifyContent: "space-between",
-                    padding: "10px 28px",
-                    borderBottom: "1px solid #5060b0",
-                    fontSize: "11px", color: "#aab0d0", letterSpacing: "0.1em",
-                }}>
+                <div className="ppm-col-labels">
                     <span>PLAYER</span>
                     <span>TEAM</span>
                 </div>
 
                 {/* Player rows */}
-                <div style={{ padding: "8px 0", display: "flex", flexDirection: "column" }}>
+                <div className="ppm-player-list">
                     {ranked.length === 0 ? (
-                        <div style={{ padding: "24px 28px", color: "#aab0d0", fontSize: "14px" }}>
+                        <div className="ppm-empty">
                             No available players for this position.
                         </div>
                     ) : (
@@ -140,38 +99,23 @@ export function PositionPlayersModal({ isOpen, onClose, position, players, draft
                             return (
                                 <div
                                     key={p.id}
-                                    style={{
-                                        display: "flex", justifyContent: "space-between", alignItems: "center",
-                                        padding: "12px 28px",
-                                        borderBottom: "1px solid #5060b0",
-                                        opacity: isDrafted ? 0.4 : 1,
-                                    }}
+                                    className={`ppm-player-row ${isDrafted ? "ppm-player-row--drafted" : ""}`}
                                 >
                                     {/* Rank + Name */}
-                                    <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-                                        <span style={{
-                                            fontSize: "13px", color: "#aab0d0",
-                                            minWidth: "22px", textAlign: "right"
-                                        }}>
-                                            {i + 1}
-                                        </span>
+                                    <div className="ppm-player-left">
+                                        <span className="ppm-rank">{i + 1}</span>
                                         <div>
-                                            <div style={{
-                                                fontSize: "18px", color: isDrafted ? "#aab0d0" : "#fff",
-                                                letterSpacing: "0.05em"
-                                            }}>
+                                            <div className={`ppm-player-name ${isDrafted ? "ppm-player-name--drafted" : ""}`}>
                                                 {fullName}
                                             </div>
                                             {isDrafted && (
-                                                <div style={{ fontSize: "10px", color: "#e03030", letterSpacing: "0.08em" }}>
-                                                    DRAFTED
-                                                </div>
+                                                <div className="ppm-drafted-label">DRAFTED</div>
                                             )}
                                         </div>
                                     </div>
 
                                     {/* Team */}
-                                    <span style={{ fontSize: "14px", color: "#aab0d0", letterSpacing: "0.08em" }}>
+                                    <span className="ppm-team">
                                         {p.realTeam ?? p.real_team ?? "—"}
                                     </span>
                                 </div>
@@ -181,11 +125,7 @@ export function PositionPlayersModal({ isOpen, onClose, position, players, draft
                 </div>
 
                 {/* Footer note */}
-                <div style={{
-                    marginTop: "auto", padding: "16px 28px",
-                    borderTop: "1px solid #5060b0",
-                    fontSize: "11px", color: "#5060b0", letterSpacing: "0.08em",
-                }}>
+                <div className="ppm-footer">
                     SORTED ALPHABETICALLY • SWAP rankPlayers() FOR SCORING EQUATION
                 </div>
             </div>
