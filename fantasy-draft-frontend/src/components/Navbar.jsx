@@ -25,7 +25,7 @@ export default function Navbar({
     return (
         <header className="navbar">
             <div className="navbar-left" ref={menuRef}>
-                <div className="tooltip-wrap" data-tip="Menu">
+                <div className="tooltip-wrap tooltip-right" data-tip="Menu">
                     <button
                         className="navbar-iconbtn"
                         type="button"
@@ -69,7 +69,7 @@ export default function Navbar({
                 )}
             </div>
             
-            <div className="tooltip-wrap" data-tip="View Profile">
+            <div className="tooltip-wrap tooltip-left" data-tip="View Profile">
                 <button
                     className="navbar-iconbtn"
                     type="button"
