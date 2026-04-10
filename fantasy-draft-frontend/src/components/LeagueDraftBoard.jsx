@@ -453,7 +453,9 @@ export default function LeagueDraftBoard({ league, onBack }) {
                                             style={{ cursor: "pointer" }}
                                             onClick={() => setSelectedPosition(pos)}
                                         >
-                                            {pos}
+                                            <div className="tooltip-wrap" data-tip="Click to view available players">
+                                                {pos}
+                                            </div>
                                         </td>
 
                                         {teams.map(team => {

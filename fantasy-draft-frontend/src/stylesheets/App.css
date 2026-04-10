@@ -1130,8 +1130,7 @@ button {
   border-collapse: collapse;
   background: #efefef;
   border-radius: 14px;
-  overflow: hidden;
-  /* don't set width:100% — let it grow naturally with teams */
+  overflow: visible;
 }
 
 /* Sticky position column */
@@ -1627,15 +1626,12 @@ button {
 
 .tooltip-wrap {
   position: relative;
-  display: inline-flex;
+  display: inline-block;
 }
 
 .tooltip-wrap::after {
   content: attr(data-tip);
   position: absolute;
-  top: calc(100% + 8px);
-  left: 50%;
-  transform: translateX(-50%);
 
   background: #1e2d6b;
   color: white;
@@ -1649,12 +1645,39 @@ button {
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.15s ease;
-
-  z-index: 5000;
+  z-index: 9999;
 }
 
 .tooltip-wrap:hover::after {
   opacity: 1;
+}
+
+/* top */
+.tooltip-top::after {
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* right */
+.tooltip-right::after {
+  top: 50%;
+  left: calc(100% + 10px);
+  transform: translateY(-50%);
+}
+
+/* left */
+.tooltip-left::after {
+  top: 50%;
+  right: calc(100% + 10px);
+  transform: translateY(-50%);
+}
+
+/* bottom */
+.tooltip-bottom::after {
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 /* Save banner */
