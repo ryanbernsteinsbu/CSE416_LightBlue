@@ -25,15 +25,18 @@ export default function Navbar({
     return (
         <header className="navbar">
             <div className="navbar-left" ref={menuRef}>
-                <button
-                    className="navbar-iconbtn"
-                    type="button"
-                    onClick={() => setOpen((v) => !v)}
-                    aria-label="Menu"
-                    aria-expanded={open}
-                >
-                    <i className="fa-solid fa-bars" />
-                </button>
+                <div className="tooltip-wrap tooltip-right" data-tip="Menu">
+                    <button
+                        className="navbar-iconbtn"
+                        type="button"
+                        onClick={() => setOpen((v) => !v)}
+                        aria-label="Menu"
+                        aria-expanded={open}
+                    >
+                        <i className="fa-solid fa-bars" />
+                    </button>
+                </div>
+
 
                 <div
                     className="navbar-brand"
@@ -54,26 +57,28 @@ export default function Navbar({
                         >
                             Home
                         </button>
-                        <button
-                            className="navmenu-item"
-                            type="button"
-                            onClick={() => go("player")}
-                            role="menuitem"
-                        >
-                            Player Information
-                        </button>
+                            <button
+                                className="navmenu-item"
+                                type="button"
+                                onClick={() => go("player")}
+                                role="menuitem"
+                            >
+                                Player Information
+                            </button>
                     </div>
                 )}
             </div>
-
-            <button
-                className="navbar-iconbtn"
-                type="button"
-                onClick={onProfileClick}
-                aria-label="Profile"
-            >
-                <i className="fa-solid fa-user" />
-            </button>
+            
+            <div className="tooltip-wrap tooltip-left" data-tip="View Profile">
+                <button
+                    className="navbar-iconbtn"
+                    type="button"
+                    onClick={onProfileClick}
+                    aria-label="Profile"
+                >
+                    <i className="fa-solid fa-user" />
+                </button>
+            </div>
         </header>
     );
 }

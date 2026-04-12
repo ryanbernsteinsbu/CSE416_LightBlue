@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { getAllPlayers } from "../api/api";
+import { PlayerProfileModal } from "./PlayerProfileModal";
+
 
 // dummy data for now
 // const MOCK_PLAYERS = [
@@ -99,6 +101,9 @@ export default function PlayerInformation() {
 
   // pick the right column set based on the active tab 
   const columns = mode === "hitting" ? HITTING_COLUMNS : PITCHING_COLUMNS;
+
+  // player selected
+  const [selectedPlayer, setSelectedPlayer] = useState(null);
 
   const [players, setPlayers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -247,7 +252,6 @@ export default function PlayerInformation() {
           </div>
         </div>
 
-        {/* ✅ ONLY CHANGE IS HERE */}
         {loading ? (
           <div className="pi-tableCard">
             <div className="pi-empty">Loading players...</div>
@@ -288,7 +292,19 @@ export default function PlayerInformation() {
                       <tr key={p.id} className="pi-row">
                         {columns.map((col) => {
                           let val = "—";
-                          if (col.key === "name") val = `${p.firstName} ${p.lastName}`;
+                          if (col.key === "name") {
+                            const fullName = `${p.firstName} ${p.lastName}`;
+                            return (
+                              <td key={col.key} className="pi-td">
+                                <span
+                                  onClick={() => setSelectedPlayer(p)}
+                                  style={{ cursor: "pointer", color: "#e03030", fontWeight: "bold" }}
+                                >
+                                  {fullName}
+                                </span>
+                              </td>
+                            );
+                          }
                           else if (col.stat) val = p.stats?.[col.stat] ?? "—";
                           else val = p[col.key] ?? "—";
                           return (
@@ -336,6 +352,20 @@ export default function PlayerInformation() {
           </div>
         </div>
       </div>
+      <PlayerProfileModal
+        isOpen={!!selectedPlayer}
+        onClose={() => setSelectedPlayer(null)}
+        player={{
+          username: `${selectedPlayer?.firstName} ${selectedPlayer?.lastName}`,
+          role: selectedPlayer?.pos,
+          games: "—",
+          wins: selectedPlayer?.stats?.W ?? "—",
+          losses: "—",
+          winRate: selectedPlayer?.stats?.AVG ?? "—",
+          team: selectedPlayer?.team,
+          stats: selectedPlayer?.stats,
+        }}
+      />
     </div>
   );
 }
