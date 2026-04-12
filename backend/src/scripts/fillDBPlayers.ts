@@ -3,7 +3,8 @@ import { parse } from "csv-parse/sync";
 import readline from "readline";
 import csv from "csv-parser";
 import fs from "fs";
-
+// run with npx ts-node src/scripts/fillDBPlayers.ts
+//from backend dir only
 interface CreatePlayerInput {
     mlbPlayerId: number;
     firstName: string;

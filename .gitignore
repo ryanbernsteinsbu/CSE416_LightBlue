@@ -22,6 +22,9 @@ out/
 .classpath
 .settings/
 
+# ===== Scripts =====
+backend/python/data.csv
+backend/python/pdata.csv
 
 # ===== Logs / temp =====
 *.log
