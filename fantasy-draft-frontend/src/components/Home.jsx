@@ -55,7 +55,7 @@ export default function Home() {
     <div className="home">
       <div className="home-header">
         <h1 className="home-leagues-title">Leagues</h1>
-        <div className="tooltip-wrap" data-tip="Create a new league">
+        <div className="tooltip-wrap tooltip-right" data-tip="Create a new league">
           <button className="create-league-btn" onClick={onCreateLeague}>+</button>
         </div>
       </div>

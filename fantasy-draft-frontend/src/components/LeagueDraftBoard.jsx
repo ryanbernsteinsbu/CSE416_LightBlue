@@ -1,9 +1,7 @@
 import React, { useEffect, useState, useRef, useMemo } from "react";
 import { createTeam, getLeagueTeams, deleteTeam, getAllPlayers, saveDraftPicks, getTeamDraftPicks } from "../api/api";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
-
-// 24 positions from the excel sheet (non-editable, fixed rows)
-// const POSITIONS = buildPositions(league.rosterSettings);
+import { PositionPlayersModal, playerMatchesRowPosition } from "./PositionPlayersModal";
 
 // helper functions
 
@@ -46,30 +44,6 @@ const positionToEnum = (pos, index, POSITIONS) => {
     return map[pos] || pos;
 };
 
-// filter players given the position
-const playerMatchesRowPosition = (player, rowPos) => {
-    const positions = player?.playablePositions || [];
-
-    if (rowPos === "C") return positions.includes("CATCHER");
-    if (rowPos === "1B") return positions.includes("FIRST");
-    if (rowPos === "2B") return positions.includes("SECOND");
-    if (rowPos === "3B") return positions.includes("THIRD");
-    if (rowPos === "SS") return positions.includes("SHORTSTOP");
-    if (rowPos === "OF") return positions.includes("OUTFIELD");
-    if (rowPos === "P") return positions.includes("PITCHER");
-    if (rowPos === "U") return player?.isHitter === true;
-
-    if (rowPos === "CI") {
-        return positions.includes("FIRST") || positions.includes("THIRD");
-    }
-
-    if (rowPos === "MI") {
-        return positions.includes("SECOND") || positions.includes("SHORTSTOP");
-    }
-
-    return false;
-};
-
 // initialize empty rows 
 function makeEmptyTeam(index, POSITIONS) {
     return {
@@ -100,6 +74,7 @@ export default function LeagueDraftBoard({ league, onBack }) {
     const [suggestions, setSuggestions] = useState([]);
     const [teamDeleteTarget, setTeamDeleteTarget] = useState(null);
     const [saveBanner, setSaveBanner] = useState(false);
+    const [selectedPosition, setSelectedPosition] = useState(null);
     //const [teamBudgets, setTeamBudgets] = useState({});
 
 
@@ -470,7 +445,15 @@ export default function LeagueDraftBoard({ league, onBack }) {
                                         key={rowIndex}
                                         className={rowIndex % 2 === 0 ? "db-row" : "db-row db-row-alt"}
                                     >
-                                        <td className="db-td db-td-pos db-sticky-col">{pos}</td>
+                                        <td
+                                            className="db-td db-td-pos db-sticky-col"
+                                            style={{ cursor: "pointer" }}
+                                            onClick={() => setSelectedPosition(pos)}
+                                        >
+                                            <div className="tooltip-wrap" data-tip="Click to view available players">
+                                                {pos}
+                                            </div>
+                                        </td>
 
                                         {teams.map(team => {
                                             const row = team.rows[rowIndex];
@@ -644,6 +627,15 @@ export default function LeagueDraftBoard({ league, onBack }) {
                     }
                 }}
             />
+
+            <PositionPlayersModal
+                isOpen={!!selectedPosition}
+                onClose={() => setSelectedPosition(null)}
+                position={selectedPosition}
+                players={allPlayers.filter(p => playerMatchesRowPosition(p, selectedPosition ?? ""))}
+                draftedIds={draftedIds}
+            />
+
 
         </div>
     );
