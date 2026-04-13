@@ -120,7 +120,7 @@ export default function PlayerInformation() {
           lastName: p.lastName || p.last_name,
           team: p.realTeam || p.real_team,
           pos: p.playablePositions?.[0] || "—",
-          age: "—",  // not in DB yet
+          age: p.age,// not in DB yet
           stats: {
             HR: 0, RBI: 0, SB: 0, AVG: 0, R: 0, OBP: 0,
             W: 0, SV: 0, K: 0, ERA: 0, WHIP: 0,

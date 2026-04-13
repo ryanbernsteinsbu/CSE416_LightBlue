@@ -7,6 +7,7 @@ import fs from "fs";
 //from backend dir only
 interface CreatePlayerInput {
     mlbPlayerId: number;
+    age: number;
     firstName: string;
     lastName: string;
     isHitter: boolean;
@@ -25,6 +26,7 @@ async function addPlayer(data: CreatePlayerInput): Promise<Player| null> {
 
         const player = await Player.create({
             mlbPlayerId: data.mlbPlayerId,
+            age: data.age,
             firstName: data.firstName,
             lastName: data.lastName,
             isHitter: data.isHitter,
@@ -43,7 +45,7 @@ async function addPlayer(data: CreatePlayerInput): Promise<Player| null> {
         }
         return player;
     } catch (error) {
-        console.error("Error creating player:", error);
+        // console.error("Error creating player:", error);
         throw error;
     }
 }
@@ -61,6 +63,17 @@ function mapPosition(pos: string): Position {
   return map[pos] ?? Position.UTILITY;
 }
 
+const fixEncoding = (str: string) => { //used AI for this function
+  return str
+    .replace(/\\x([0-9A-Fa-f]{2})/g, (_, hex) =>
+      String.fromCharCode(parseInt(hex, 16))
+    )
+    .split('')
+    .map(c => c.charCodeAt(0))
+    .reduce((buf, byte) => Buffer.concat([buf, Buffer.from([byte])]), Buffer.alloc(0))
+    .toString('utf8');
+};
+
 async function ingestHitters(csvPath: string) {
   const players: any[] = [];
 
@@ -70,11 +83,14 @@ async function ingestHitters(csvPath: string) {
       .on("data", (row) => {
         try {
           // Split name
-          const [firstName, ...rest] = row.Name.split(" ");
+          const name = fixEncoding(row.Name)
+          console.log(name)
+          const [firstName, ...rest] = name.split(" ");
           const lastName = rest.join(" ");
 
           const playerData: CreatePlayerInput = {
             mlbPlayerId: Number(row.mlbID),
+            age: Number(row.Age),
             firstName,
             lastName,
             isHitter: true,
@@ -143,7 +159,7 @@ async function ingestHitters(csvPath: string) {
 
           players.push(playerData);
         } catch (err) {
-          console.error("Error parsing row:", row, err);
+          // console.error("Error parsing row:", row, err);
         }
       })
       .on("end", async () => {
@@ -153,7 +169,7 @@ async function ingestHitters(csvPath: string) {
           try {
             await addPlayer(p);
           } catch (err) {
-            console.error("Failed to insert player:", p.firstName, p.lastName);
+            // console.error("Failed to insert player:", p.firstName, p.lastName);
           }
         }
 
@@ -172,11 +188,13 @@ async function ingestPitchers(csvPath: string) {
       .on("data", (row) => {
         try {
           // Split name
-          const [firstName, ...rest] = row.Name.split(" ");
+          const name = fixEncoding(row.Name)
+          const [firstName, ...rest] = name.split(" ");
           const lastName = rest.join(" ");
 
           const pitcherData: CreatePlayerInput = {
             mlbPlayerId: Number(row.mlbID),
+            age: Number(row.Age),
             firstName,
             lastName,
             isHitter: false,
