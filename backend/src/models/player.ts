@@ -17,6 +17,7 @@ export enum Status {
 class Player extends Model {
     // Fields
     public id!: number;
+    public age?: number;
     public mlbPlayerId!: number; // use for syncing with MLB database
     public firstName!: string;
     public lastName!: string;
@@ -37,6 +38,10 @@ Player.init({
         type: DataTypes.BIGINT,
         primaryKey: true,
         autoIncrement: true
+    },
+    age: {
+        type: DataTypes.INTEGER,
+        allowNull: true
     },
     mlbPlayerId: {
         type: DataTypes.STRING,

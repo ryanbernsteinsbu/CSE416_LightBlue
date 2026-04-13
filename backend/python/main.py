@@ -65,7 +65,7 @@ data["1B"] = data["H"] - data["2B"] - data["3B"] - data["HR"] # add existing lab
 #names contain escape codes
 final_data = data[ # get required fields
     [
-        "Name", "mlbID", "Lev","Tm", "Age", "PA",
+        "Name", "Age", "mlbID", "Lev","Tm", "Age", "PA",
         "AB", "R", "H", "1B", "2B", "3B", "HR",
         "RBI", "BB", "K", "SB", "CS",
         "AVG", "OBP", "SLG"
@@ -100,7 +100,7 @@ pitching_data = pitching_stats_range(start_dt="2023-04-01", end_dt="2026-04-11")
 # )
 final_pitching_data = pitching_data[
     [
-        "Name", "mlbID", "Lev","Tm", "Age", "G",
+        "Name", "Age", "mlbID", "Lev","Tm", "Age", "G",
         "GS", "W", "SV", "IP", "H", "ER",
         "BB", "SO", "HR", "ERA", "WHIP",
         "BF", "SO/W", "SB", "PO"
