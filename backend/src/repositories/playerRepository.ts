@@ -1,3 +1,4 @@
+import { Op } from 'sequelize';
 import Player, { Position, Status } from '../models/player';
 
 // Create a new player
@@ -37,7 +38,7 @@ export const findPlayerByMlbId = async (mlbPlayerId: string): Promise<Player | n
 
 // Find a player by Position
 export const findPlayerByPosition = async (position: Position): Promise<Player[]> => {
-    return await Player.findAll({ where: { position } });
+    return await Player.findAll({where: { playablePositions: { [Op.contains]: [position] }}});
 };
 
 // Find a player by Status

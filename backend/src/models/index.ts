@@ -19,3 +19,18 @@ DraftPick.belongsTo(Team, { foreignKey: 'team_id', as: 'team' });
 
 Player.hasMany(DraftPick, { foreignKey: 'player_id', as: 'draftPicks' });
 DraftPick.belongsTo(Player, { foreignKey: 'player_id', as: 'player' });
+
+export {
+    sequelize,
+    ApiUser,
+    User,
+    DraftPick,
+    League,
+    Team,
+    Player,
+    DraftPrep,
+    DraftSettings,
+    PlayerSettings,
+    RosterSettings,
+    ScoringSettings
+}
