@@ -5,12 +5,14 @@ import userRoutes from './routes/userRoutes';
 import playerRoutes from './routes/playerRoutes'
 import leagueRoutes from './routes/leagueRoutes';
 import teamRoutes from './routes/teamRoutes';
+import requireAuth from './middleware/requireAuth';
+import publicRoutes from './routes/publicRoutes'
 import draftPickRoutes from './routes/draftPickRoutes';
 import Team from './models/team';
 import Player from './models/player';
 import DraftPick from './models/draftPick';
 import League from './models/league';
-
+const ApiUser = require('./models/apiUser') //i have no idea why import and require are mixed here
 // associations
 Team.belongsTo(League, { foreignKey: 'league_id', as: 'league' });
 
@@ -25,7 +27,7 @@ require('dotenv').config();
 const app = express();
 app.use(express.json());
 app.use(cors({
-    origin: 'http://localhost:5173', // relink to actual server later
+    origin: 'http://localhost:3000', // relink to actual server later
     credentials: true
 }));
 
@@ -34,10 +36,12 @@ app.use('/api/users', userRoutes);
 app.use('/api/players', playerRoutes);
 app.use('/api/leagues', leagueRoutes);
 app.use('/api/teams', teamRoutes);
+app.use('/api/public', requireAuth, publicRoutes);
 app.use('/api/draft-picks', draftPickRoutes);
 
 const PORT = process.env.PORT || 8000;
-
+// console.log(Object.keys(sequelize.models));
+// console.log(sequelize.models.ApiUser);
 sequelize.sync().then(() => {
     app.listen(PORT, () => {
         console.log(`Server running on port ${PORT}`);
