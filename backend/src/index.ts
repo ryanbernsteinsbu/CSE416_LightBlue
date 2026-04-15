@@ -12,7 +12,7 @@ import Team from './models/team';
 import Player from './models/player';
 import DraftPick from './models/draftPick';
 import League from './models/league';
-
+const ApiUser = require('./models/apiUser') //i have no idea why import and require are mixed here
 // associations
 Team.belongsTo(League, { foreignKey: 'league_id', as: 'league' });
 
@@ -40,7 +40,8 @@ app.use('/api/public', requireAuth, publicRoutes);
 app.use('/api/draft-picks', draftPickRoutes);
 
 const PORT = process.env.PORT || 8000;
-
+// console.log(Object.keys(sequelize.models));
+// console.log(sequelize.models.ApiUser);
 sequelize.sync().then(() => {
     app.listen(PORT, () => {
         console.log(`Server running on port ${PORT}`);
