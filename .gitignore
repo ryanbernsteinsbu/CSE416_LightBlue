@@ -22,6 +22,10 @@ out/
 .classpath
 .settings/
 
+# ===== Scripts =====
+backend/python/data.csv
+backend/python/pdata.csv
+backend/python/.venv/
 
 # ===== Logs / temp =====
 *.log
