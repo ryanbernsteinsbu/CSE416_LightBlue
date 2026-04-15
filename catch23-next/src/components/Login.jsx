@@ -3,57 +3,80 @@ import React, { useState } from 'react';
 import { loginUser } from '../lib/api';
 
 export default function Login({ onLoginSuccess, handleError, onShowRegister }) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [errorBanner, setErrorBanner] = useState("");
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
+    const showError = (msg) => {
+        setErrorBanner(msg);
+        setTimeout(() => setErrorBanner(""), 3000);
+    };
 
-    if (!email) {
-      alert("Please enter email");
-      return;
-    }
+    const handleLogin = async (e) => {
+        e.preventDefault();
 
-    try {
-      const { data } = await loginUser(email, password);
-      console.log("LOGIN:", data);
-      onLoginSuccess?.(data);
-    } catch (err) {
-      if (err.response?.status === 404) {
-        alert("User not found.");
-      } else if (err.response?.status === 401) {
-        alert("Password entered incorrectly.");
-      } else {
-        alert("An error has occurred.");
-        console.error(err);
-        handleError?.(err);
-      }
-    }
-  };
+        if (!email) {
+            alert("Please enter email");
+            return;
+        }
 
-  return (
-    <div id="login_setup">
-      <form id="login_form" onSubmit={handleLogin}>
-        <input
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <br /><br />
-        <input
-          placeholder="Password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        <br /><br />
+        try {
+            const { data } = await loginUser(email, password);
+            console.log("LOGIN:", data);
+            onLoginSuccess?.(data);
+        } catch (err) {
+            const backendMsg = err.response?.data?.error?.message;
 
-        <button id="submit_login" type="submit">Sign in</button>
+            if (
+                backendMsg === "User not found" ||
+                backendMsg === "Invalid password"
+            ) {
+                showError("Invalid user credentials");
+            } else {
+                showError("An error has occurred.");
+                console.error(err);
+                handleError?.(err);
+            }
+        }
+    };
 
-        <button id="go_register" type="button" onClick={onShowRegister}>
-          Register
-        </button>
-      </form>
-    </div>
-  );
+    return (
+        <div id="login_setup">
+
+            {errorBanner && (
+                <div
+                    className="save-banner save-banner--visible"
+                    style={{
+                        transform: "translateX(-50%) translateY(0)",
+                        background: "#BD2522",
+                    }}
+                >
+                    ❌ {errorBanner}
+                </div>
+            )}
+
+            <form id="login_form" onSubmit={handleLogin}>
+                <input
+                    placeholder="Email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                />
+                <br /><br />
+                <input
+                    placeholder="Password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                />
+                <br /><br />
+
+                <button id="submit_login" type="submit">Sign in</button>
+
+                <button id="go_register" type="button" onClick={onShowRegister}>
+                    Register
+                </button>
+            </form>
+        </div>
+    );
 }
+

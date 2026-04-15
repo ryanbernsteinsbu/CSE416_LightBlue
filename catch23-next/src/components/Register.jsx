@@ -1,9 +1,6 @@
 'use client';
 import React, { useState } from "react";
-import { registerUser } from '../lib/api';
-import axios from "axios"
-axios.defaults.withCredentials = true;
-axios.defaults.baseURL = 'http://localhost:8000';
+import { registerUser } from "../lib/api";
 
 export default function Register({ onCreateUserClick, onShowLogin }) {
     const [email, setEmail] = useState("");
@@ -53,13 +50,12 @@ export default function Register({ onCreateUserClick, onShowLogin }) {
             showBanner();
             setTimeout(() => onCreateUserClick(), 1500);
         } catch (err) {
-            const status = err.response?.status;
-            const code = err.response?.data?.error;
+            console.error("REGISTER ERROR:", err);
 
-            if (status === 409) {
-                if (code === "EMAIL_TAKEN") showError("There's already an account associated with that email");
-                else if (code === "DISPLAYNAME_TAKEN") showError("That display name is already taken");
-                else showError("Error creating user. Please try again later.");
+            const backendMsg = err.response?.data?.error?.message;
+
+            if (backendMsg === "Email is connected to existing account") {
+                showError("There's already an account associated with that email");
             } else {
                 showError("Error creating user. Please try again later.");
             }
