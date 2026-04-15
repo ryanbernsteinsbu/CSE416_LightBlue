@@ -58,7 +58,9 @@ export default function UserProfile() {
                     <div className="profile-avatar-ring">
                         <i className="fa-solid fa-user" />
                     </div>
-                    <h1 className="profile-name">{user.email || "User"}</h1>
+                    <h2 className="profile-name">
+            {user.username || user.name || "Player"}
+          </h2>
                 </div>
 
                 <div className="profile-info-grid">
