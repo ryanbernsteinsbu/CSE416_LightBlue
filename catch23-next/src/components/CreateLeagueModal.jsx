@@ -80,7 +80,9 @@ export default function CreateLeagueModal({ isOpen, onClose, onSave }) {
     });
 
     try {
-      const { data } = await createLeague(newLeague);
+        console.log("payload being sent:", newLeague);
+        const { data } = await createLeague(newLeague);
+        console.log("response from backend:", data);
       onSave?.({ ...newLeague, id: Number(data.id), title: data.title });
       handleClose();
     } catch (err) {
