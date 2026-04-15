@@ -48,6 +48,14 @@ application-dev.yml
 # ===== Node Modules =====
 node_modules/
 
+# ===== Next.js =====
+.next/
+out/
+
 
 # ===== Build output =====
 dist/
+
+# AI / local tooling
+AGENTS.md
+CLAUDE.md
