@@ -120,10 +120,10 @@ export const getHittingScore = (playerStats: Record<string, Record<string, numbe
                         + (normalizedStats[statSet].H) * 0.075
                         + (normalizedStats[statSet].BB) * 0.060
                         // + (normalizedStats[statSet].SBR) * 0.055
-                        + (normalizedStats[statSet]._2B) * 0.025,
+                        + (normalizedStats[statSet]['2B']) * 0.025
                         + (normalizedStats[statSet].AB) * 0.020
                         // + (1-normalizedStats[statSet].SO) * 0.020;
-                        + (normalizedStats[statSet]._3B) * 0.015;
+                        + (normalizedStats[statSet]['3B']) * 0.015;
     }
 
 //     final_data = data[ # get required fields
@@ -137,42 +137,23 @@ export const getHittingScore = (playerStats: Record<string, Record<string, numbe
     return score;
 }
 
-export const getPlayerRank = async(id: number): Promise<number> => {
-    const {type, lastYearStats, threeYearAvg, projectedStats } = await getPlayerStats(id);
-    const playerStats: Record<string, Record<string, number>> = {
-        'lastYearStats': lastYearStats,
-        'threeYearAvg': threeYearAvg,
-        'projectedStats': projectedStats
-    }
+// Getting all the player ranks
+export const getAllPlayerRanks = async(): Promise<{id: number, rank: number}[]> => {
+    const players = await findAllPlayers();
     const leagueStats = await getLeagueStats();
 
-    if (type === 'hitter'){
-        const score = getHittingScore(playerStats, leagueStats.hitters);
-        const baseScore = 0.5 * score['lastYearStats'] + 0.3 * score['threeYearAvg'] + 0.2 * score['projectedStats'];
-        
-        // const score: Record<string, number> = getHittingScore();
-        // get old stats
-        // average stats
-        // apply adjustments based on the data
-        // get last year stats
-        // get three year average stats
-        // get projected stats
+    return Promise.all(players.map(async player => {
+        const playerStats = {
+            lastYearStats: player.lastYearStats,
+            threeYearAvg: player.threeYearAvg,
+            projectedStats: player.projectedStats
+        };
 
-        // return lastYearStas * 0.5 + threeYearAvg * 0.3 + projected stats * 0.2;
-        return baseScore;
-    } else {
-        const score = getPitchingScore(playerStats, leagueStats.pitchers);
-        const baseScore = 0.5 * score['lastYearStats'] + 0.3 * score['threeYearAvg'] + 0.2 * score['projectedStats'];
+        const score = player.isHitter
+            ? getHittingScore(playerStats, leagueStats.hitters)
+            : getPitchingScore(playerStats, leagueStats.pitchers);
         
-        // const score: Record<string, number> = getHittingScore();
-        // get old stats
-        // average stats
-        // apply adjustments based on the data
-        // get last year stats
-        // get three year average stats
-        // get projected stats
-
-        // return lastYearStas * 0.5 + threeYearAvg * 0.3 + projected stats * 0.2;
-        return baseScore;
-    }
+        const rank = 0.5 * score['lastYearStats'] + 0.3 * score['threeYearAvg'] + 0.2 * score['projectedStats'];
+        return { id: player.id, rank };
+    }))
 }

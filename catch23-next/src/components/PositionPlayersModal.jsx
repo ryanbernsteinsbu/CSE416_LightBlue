@@ -1,16 +1,23 @@
 'use client';
 import React, { useEffect, useState } from "react";
+import { getRankedPlayers } from "../lib/api";
+import axios from 'axios';
 
-/**
- * RANKING FUNCTION — replace this later with your real scoring equation.
- * Receives the full player object and returns a numeric score (higher = better).
- */
-export function rankPlayers(players) {
-    // Placeholder: alphabetical by last name, then first name
-    return [...players].sort((a, b) => {
-        const last = (a.lastName ?? "").localeCompare(b.lastName ?? "");
-        return last !== 0 ? last : (a.firstName ?? "").localeCompare(b.firstName ?? "");
-    });
+
+// RANKING FUNCTION
+export async function rankPlayers(players) {
+    // Grab rank
+    const response = await axios.get('/api/ranking/rank');
+    const rankData = Object.values(response.data);
+    const rankMap = new Map(rankData.map(r => [String(r.id), r.rank]));
+    
+    const sorted = [...players].map(p=>({...p, rank: rankMap.get(String(p.id)) ?? -1 }))
+                .sort((a,b) => b.rank - a.rank);
+    
+    console.log("sorted players:", sorted.map(p => `${p.firstName} ${p.lastName}: ${p.rank}`));
+    console.log("sorted:", sorted.map(p => `${p.firstName}: ${p.rank}`));
+
+    return sorted;
 }
 
 export const playerMatchesRowPosition = (player, rowPos) => {
@@ -45,15 +52,22 @@ const POSITION_LABELS = {
 
 export function PositionPlayersModal({ isOpen, onClose, position, players, draftedIds = new Set() }) {
     const [visible, setVisible] = useState(false);
+    const [ranked, setRanked] = useState([]);
 
     useEffect(() => {
         if (isOpen) setTimeout(() => setVisible(true), 10);
         else setVisible(false);
     }, [isOpen]);
 
+    useEffect(() => {
+        if(!isOpen || !players?.length) return;
+        console.log("players passed in:", players); // check this isn't empty
+        rankPlayers(players).then(result => setRanked(result.slice(0,10)));
+    }, [isOpen, players])
+
     if (!isOpen) return null;
 
-    const ranked = rankPlayers(players).slice(0, 10);
+    // const ranked = rankPlayers(players).slice(0, 10);
 
     return (
         <>
@@ -123,11 +137,6 @@ export function PositionPlayersModal({ isOpen, onClose, position, players, draft
                             );
                         })
                     )}
-                </div>
-
-                {/* Footer note */}
-                <div className="ppm-footer">
-                    SORTED ALPHABETICALLY • SWAP rankPlayers() FOR SCORING EQUATION
                 </div>
             </div>
         </>

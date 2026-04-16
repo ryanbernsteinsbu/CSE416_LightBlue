@@ -97,4 +97,9 @@ export const saveDraftPicks = (payload) =>
 
 export const getTeamDraftPicks = (teamId) =>
   axios.get(`/api/draft-picks/team/${teamId}`);
+
+
+// Getting Ranked Players
+export const getRankedPlayers = () =>
+  axios.get(`/api/ranking/rank`);
  
