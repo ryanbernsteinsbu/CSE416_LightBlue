@@ -29,29 +29,31 @@ export const register = async (req: Request, res: Response) => {
 
 // Login user
 export const login = async (req: Request, res: Response) => {
-    try{
+    try {
         const { email, password } = req.body;
-        
-        // Finding user
+
         const user = await User.findOne({ where: { email } });
-        if (!user) throw new Error('User not found');
+        if (!user) {
+            return res.status(401).json({ message: 'Invalid user credentials' });
+        }
 
-        // Checking if password is correct
         const valid = await bcrypt.compare(password, user.hashedPassword);
-        if (!valid) throw new Error('Invalid password');
+        if (!valid) {
+            return res.status(401).json({ message: 'Invalid user credentials' });
+        }
 
-        // Getting token
         const token = jwt.sign(
             { id: user.id, email: user.email },
             process.env.JWT_SECRET as string,
-            { expiresIn: '75d'}
+            { expiresIn: '75d' }
         );
 
         res.status(200).json(token);
     } catch (error) {
-        res.status(500).json({ message: 'Error logging-in user', error });
+        console.error('Error logging in user:', error);
+        res.status(500).json({ message: 'An error has occurred.' });
     }
-}
+};
 
 // Getting User
 export const getUser = async (req: Request, res: Response): Promise<void> => {
