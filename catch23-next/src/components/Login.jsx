@@ -25,12 +25,9 @@ export default function Login({ onLoginSuccess, handleError, onShowRegister }) {
             console.log("LOGIN:", data);
             onLoginSuccess?.(data);
         } catch (err) {
-            const backendMsg = err.response?.data?.error?.message;
+             const backendMsg = err.response?.data?.message;
 
-            if (
-                backendMsg === "User not found" ||
-                backendMsg === "Invalid password"
-            ) {
+            if (backendMsg === "Invalid user credentials") {
                 showError("Invalid user credentials");
             } else {
                 showError("An error has occurred.");

@@ -21,13 +21,18 @@ export const loginUser = (email, password) =>
 
 // League
 export const createLeague = (leagueData) =>
-    axios.post('/api/leagues/create', {
-        title: leagueData.name,
-        season: leagueData.season,
-        status: 'PRE_DRAFT',
-        leagueIconUrl: 'https://i.imgur.com/DxHxkuJ.png',
-        user_id: typeof window !== "undefined" ? localStorage.getItem("user_id") : null,
-    });
+  axios.post('/api/leagues/create', {
+    title: leagueData.name,
+    season: leagueData.season,
+    status: 'PRE_DRAFT',
+    leagueIconUrl: 'https://i.imgur.com/DxHxkuJ.png',
+    user_id: typeof window !== "undefined" ? localStorage.getItem("user_id") : null,
+
+    draftSettings: leagueData.draftSettings,
+    rosterSettings: leagueData.rosterSettings,
+    playerSettings: leagueData.playerSettings,
+    scoringSettings: leagueData.scoringSettings,
+  });
 
 export const deleteLeague = (id) =>
     axios.delete(`/api/leagues/${id}`);

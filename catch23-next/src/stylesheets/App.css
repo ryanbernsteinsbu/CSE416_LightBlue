@@ -255,15 +255,17 @@ button {
 
   background: #efefef;
   border-radius: 12px;
-  padding: 8px;
+  padding: 4px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
   z-index: 200;
 }
 
 .navmenu-item {
+  display: flex;
+  align-items: center;
   width: 100%;
   text-align: left;
-  padding: 12px 12px;
+  padding: 12px 6px;
   border: none;
   background: transparent;
   border-radius: 10px;
@@ -272,6 +274,8 @@ button {
   font-family: "Trade Gothic", Arial, sans-serif;
   font-weight: 800;
   font-size: 16px;
+
+  box-sizing: border-box;
 }
 
 .navmenu-item:hover {
