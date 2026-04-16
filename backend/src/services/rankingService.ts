@@ -58,6 +58,24 @@ export const getNormalizeStats = (playerStats: Record<string, Record<string, num
     return normalized;
 }
 
+// Compute Average Player (for deciding on monetary value)
+export const getAveragePlayer = (leagueSummary: Record<string, Record<string, {min: number; max: number; avg: number}>>) : Record<string, Record<string, number>> => {
+    const average: Record<string, Record<string, number>> = {}
+    const statSets = ['lastYearStats', 'threeYearAvg', 'projectedStats'] as const;
+
+    for(const statSet of statSets){
+        const statLabels = Object.keys(leagueSummary[statSet])
+        
+        average[statSet] = {};
+
+        for(const statLabel of statLabels){
+            average[statSet][statLabel] = leagueSummary[statSet][statLabel].avg;
+        }
+    }
+
+    return average;
+}
+
 // IL Adjustments
 
 // Age Adjustments
@@ -92,14 +110,6 @@ export const getPitchingScore = (playerStats: Record<string, Record<string, numb
                         // + (1-normalizedStats[statSet].HB) * 0.011;
     }
 
-//     final_pitching_data = pitching_data[
-//     [
-//         "Name", "Age", "mlbID", "Lev","Tm", "Age", "G",
-//         "GS", "W", "SV", "IP", "H", "ER",
-//         "BB", "SO", "HR", "ERA", "WHIP",
-//         "BF", "SO/W", "SB", "PO"
-//     ]
-// ]
     return score;
 }
 
@@ -126,14 +136,6 @@ export const getHittingScore = (playerStats: Record<string, Record<string, numbe
                         + (normalizedStats[statSet]['3B']) * 0.015;
     }
 
-//     final_data = data[ # get required fields
-//     [
-//         "Name", "Age", "mlbID", "Lev","Tm", "Age", "PA",
-//         "AB", "R", "H", "1B", "2B", "3B", "HR",
-//         "RBI", "BB", "K", "SB", "CS",
-//         "AVG", "OBP", "SLG"
-//     ]
-// ]
     return score;
 }
 
@@ -153,7 +155,17 @@ export const getAllPlayerRanks = async(): Promise<{id: number, rank: number}[]> 
             ? getHittingScore(playerStats, leagueStats.hitters)
             : getPitchingScore(playerStats, leagueStats.pitchers);
         
-        const rank = 0.5 * score['lastYearStats'] + 0.3 * score['threeYearAvg'] + 0.2 * score['projectedStats'];
+        var rank = 0.4 * score['lastYearStats'] + 0.2 * score['threeYearAvg'] + 0.4 * score['projectedStats'];
+
+        if(player.age !=null && player.age<=22)
+            rank *= 1.1;
+        else if(player.age !=null && player.age > 22 && player.age<=25)
+            rank *= 1.05;
+        else if(player.age !=null && player.age > 31 && player.age<=35)
+            rank *= 0.95;
+        else if(player.age !=null && player.age > 35)
+            rank *= 0.90
+        
         return { id: player.id, rank };
     }))
 }
