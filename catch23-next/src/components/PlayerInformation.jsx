@@ -4,38 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import { getAllPlayers } from "../lib/api";
 import { PlayerProfileModal } from "./PlayerProfileModal";
 
-
-// dummy data for now
-// const MOCK_PLAYERS = [
-//   {
-//     id: "p1",
-//     firstName: "Edwin",
-//     lastName: "Díaz",
-//     team: "LAD",
-//     pos: "RP",
-//     age: 30,
-//     stats: { W: 6, SV: 28, K: 98, AVG: 0.164, ERA: 1.63, WHIP: 0.87, HR: 0, RBI: 0, SB: 0, R: 0, OBP: 0.0 },
-//   },
-//   {
-//     id: "p2",
-//     firstName: "José",
-//     lastName: "Ramírez",
-//     team: "CLE",
-//     pos: "3B",
-//     age: 32,
-//     stats: { HR: 30, RBI: 85, SB: 44, AVG: 0.283, R: 103, OBP: 0.36, W: 0, SV: 0, K: 0, ERA: 0.0, WHIP: 0.0 },
-//   },
-//   {
-//     id: "p3",
-//     firstName: "Mookie",
-//     lastName: "Betts",
-//     team: "LAD",
-//     pos: "RF",
-//     age: 31,
-//     stats: { HR: 22, RBI: 67, SB: 14, AVG: 0.301, R: 98, OBP: 0.392, W: 0, SV: 0, K: 0, ERA: 0.0, WHIP: 0.0 },
-//   },
-// ];
-
 // Base columns (shared columns that appear both hitting and pitching views)
 const BASE_COLUMNS = [
     { key: "name", label: "PLAYER", sortable: true },
