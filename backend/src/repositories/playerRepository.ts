@@ -59,3 +59,18 @@ export const deletePlayer = async (id: number): Promise<boolean> => {
     await player.destroy();
     return true;
 };
+
+// Get player stats
+export const getPlayerStats = async (id: number) => {
+    const player = await findPlayerById(id);
+
+    if(player == null){
+        throw new Error("Player is null.")
+    }
+    return {
+        type: player.isHitter ? 'hitter' : 'pitcher',
+        lastYearStats: player.lastYearStats,
+        threeYearAvg: player.threeYearAvg,
+        projectedStats: player.projectedStats
+    };
+};
