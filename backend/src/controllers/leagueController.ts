@@ -1,33 +1,80 @@
 import { Request, Response } from 'express';
-import League, {LeagueStatus} from '../models/league';
+import League, { LeagueStatus } from '../models/league';
 import DraftSettings from '../models/draftSettings';
 import ScoringSettings from '../models/scoringSettings';
 import RosterSettings from '../models/rosterSettings';
 import PlayerSettings from '../models/playerSettings';
-import Team from '../models/team'; 
+import Team from '../models/team';
 import DraftPick from '../models/draftPick';
 
 // Used AI to help with dealing with associations
 
 // Create League
 export const createLeague = async (req: Request, res: Response) => {
-    try{
-        const { title, leagueIconUrl, season, status, user_id  } = req.body
+    try {
+        const {
+            title,
+            leagueIconUrl,
+            season,
+            status,
+            user_id,
+            draftSettings,
+            rosterSettings,
+            playerSettings,
+            scoringSettings,
+        } = req.body;
 
         const league = await League.create({
-            title, leagueIconUrl, season, user_id,
+            title,
+            leagueIconUrl,
+            season,
+            user_id,
             status: status || LeagueStatus.PRE_DRAFT,
         });
 
-        await ScoringSettings.create({ league_id: league.id });
-        await PlayerSettings.create({ league_id: league.id });
-        await RosterSettings.create({ league_id: league.id });
-        await DraftSettings.create({ league_id: league.id });
-        res.status(201).json(league);
+        await ScoringSettings.create({
+            league_id: league.id,
+            ...scoringSettings,
+        });
+
+        await PlayerSettings.create({
+            league_id: league.id,
+            ...playerSettings,
+        });
+
+        await RosterSettings.create({
+            league_id: league.id,
+            ...rosterSettings,
+        });
+
+        await DraftSettings.create({
+            league_id: league.id,
+            ...draftSettings,
+        });
+
+        for (let i = 0; i < (draftSettings?.numTeams ?? 0); i++) {
+            await Team.create({
+                league_id: league.id,
+                name: `Team ${i + 1}`,
+                budget: draftSettings?.budget ?? null,
+            });
+        }
+
+        const createdLeague = await League.findByPk(league.id, {
+            include: [
+                { model: ScoringSettings, as: 'scoringSettings' },
+                { model: PlayerSettings, as: 'playerSettings' },
+                { model: RosterSettings, as: 'rosterSettings' },
+                { model: DraftSettings, as: 'draftSettings' },
+            ],
+        });
+
+
+        res.status(201).json(createdLeague);
     } catch (error) {
         res.status(500).json({ message: 'Error creating league', error });
     }
-}
+};
 
 // Get League
 export const getLeague = async (req: Request, res: Response) => {
@@ -68,9 +115,9 @@ export const getUserLeagues = async (req: Request, res: Response) => {
         });
 
         res.status(200).json(leagues);
-    } catch (error: any) {  
-        console.error('Error getting user leagues:', error.message); 
-        res.status(500).json({ message: 'Error getting user leagues', error: error.message }); 
+    } catch (error: any) {
+        console.error('Error getting user leagues:', error.message);
+        res.status(500).json({ message: 'Error getting user leagues', error: error.message });
     }
 }
 
@@ -78,7 +125,7 @@ export const getUserLeagues = async (req: Request, res: Response) => {
 export const updateLeague = async (req: Request, res: Response) => {
     try {
         const league = await League.findByPk(Number(req.params.id));
-        if(!league) throw new Error('League not found');
+        if (!league) throw new Error('League not found');
 
         await league.update(req.body);
 
@@ -94,12 +141,12 @@ export const deleteLeague = async (req: Request, res: Response) => {
         const league = await League.findByPk(Number(req.params.id));
         if (!league) throw new Error('League not found');
 
-        const teams = await Team.findAll({ where: {league_id: league.id }});
+        const teams = await Team.findAll({ where: { league_id: league.id } });
         const teamIds = teams.map(t => t.id);
 
         // delete fraft picks for all teams in the league
-        if (teamIds.length > 0){
-            await DraftPick.destroy({ where: {team_id: teamIds }})
+        if (teamIds.length > 0) {
+            await DraftPick.destroy({ where: { team_id: teamIds } })
         }
         await Team.destroy({ where: { league_id: league.id } });
         await ScoringSettings.destroy({ where: { league_id: league.id } });

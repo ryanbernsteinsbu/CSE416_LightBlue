@@ -3,9 +3,11 @@ import { parse } from "csv-parse/sync";
 import readline from "readline";
 import csv from "csv-parser";
 import fs from "fs";
-
+// run with npx ts-node src/scripts/fillDBPlayers.ts
+//from backend dir only
 interface CreatePlayerInput {
     mlbPlayerId: number;
+    age: number;
     firstName: string;
     lastName: string;
     isHitter: boolean;
@@ -20,8 +22,11 @@ interface CreatePlayerInput {
 }
 async function addPlayer(data: CreatePlayerInput): Promise<Player| null> {
     try {
+        const now = new Date();
+
         const player = await Player.create({
             mlbPlayerId: data.mlbPlayerId,
+            age: data.age,
             firstName: data.firstName,
             lastName: data.lastName,
             isHitter: data.isHitter,
@@ -32,7 +37,7 @@ async function addPlayer(data: CreatePlayerInput): Promise<Player| null> {
             status: data.status,
             seasonsLeft: data.seasonsLeft,
             realTeam: data.realTeam,
-            realLeague: data.realLeague
+            realLeague: data.realLeague,
         });
         if(!player){
             console.log("issue")
@@ -40,18 +45,9 @@ async function addPlayer(data: CreatePlayerInput): Promise<Player| null> {
         }
         return player;
     } catch (error) {
-        console.error("Error creating player:", error);
+        // console.error("Error creating player:", error);
         throw error;
     }
-}
-function mapLeague(team: string): string {
-  const AL = [
-    "NYY","BOS","TOR","BAL","TB",
-    "CLE","DET","MIN","KC","CWS",
-    "HOU","SEA","LAA","TEX","OAK"
-  ];
-
-  return AL.includes(team) ? "AL" : "NL";
 }
 function mapPosition(pos: string): Position {
   const map: Record<string, Position> = {
@@ -64,91 +60,231 @@ function mapPosition(pos: string): Position {
     P: Position.PITCHER,
     U: Position.UTILITY,
   };
-  return map[pos];
+  return map[pos] ?? Position.UTILITY;
 }
-const nameURL = "https://statsapi.mlb.com/api/v1/people/search?names=";
 
-async function getMLB(lastName: string): Promise<number | null> {
-    try {
-        const response = await fetch(nameURL + encodeURIComponent(lastName));
-        if (!response.ok) {
-            return null;
+const fixEncoding = (str: string) => { //used AI for this function
+  return str
+    .replace(/\\x([0-9A-Fa-f]{2})/g, (_, hex) =>
+      String.fromCharCode(parseInt(hex, 16))
+    )
+    .split('')
+    .map(c => c.charCodeAt(0))
+    .reduce((buf, byte) => Buffer.concat([buf, Buffer.from([byte])]), Buffer.alloc(0))
+    .toString('utf8');
+};
+
+async function ingestHitters(csvPath: string) {
+  const players: any[] = [];
+
+  return new Promise<void>((resolve, reject) => {
+    fs.createReadStream(csvPath)
+      .pipe(csv())
+      .on("data", (row) => {
+        try {
+          // Split name
+          const name = fixEncoding(row.Name)
+          console.log(name)
+          const [firstName, ...rest] = name.split(" ");
+          const lastName = rest.join(" ");
+
+          const playerData: CreatePlayerInput = {
+            mlbPlayerId: Number(row.mlbID),
+            age: Number(row.Age),
+            firstName,
+            lastName,
+            isHitter: true,
+            playablePositions: [mapPosition(row.position)],
+
+            lastYearStats: {
+              PA: Number(row.PA),
+              AB: Number(row.AB),
+              R: Number(row.R),
+              H: Number(row.H),
+              "1B": Number(row["1B"]),
+              "2B": Number(row["2B"]),
+              "3B": Number(row["3B"]),
+              HR: Number(row.HR),
+              RBI: Number(row.RBI),
+              BB: Number(row.BB),
+              K: Number(row.K),
+              SB: Number(row.SB),
+              CS: Number(row.CS),
+              AVG: Number(row.AVG),
+              OBP: Number(row.OBP),
+              SLG: Number(row.SLG),
+            },
+            threeYearAvg: {
+                PA: Number(row.PA),
+                AB: Number(row.AB),
+                R: Number(row.R),
+                H: Number(row.H),
+                "1B": Number(row["1B"]),
+                "2B": Number(row["2B"]),
+                "3B": Number(row["3B"]),
+                HR: Number(row.HR),
+                RBI: Number(row.RBI),
+                BB: Number(row.BB),
+                K: Number(row.K),
+                SB: Number(row.SB),
+                CS: Number(row.CS),
+                AVG: Number(row.AVG),
+                OBP: Number(row.OBP),
+                SLG: Number(row.SLG),
+            }, 
+            projectedStats: {
+                PA: Number(row.PA),
+                AB: Number(row.AB),
+                R: Number(row.R),
+                H: Number(row.H),
+                "1B": Number(row["1B"]),
+                "2B": Number(row["2B"]),
+                "3B": Number(row["3B"]),
+                HR: Number(row.HR),
+                RBI: Number(row.RBI),
+                BB: Number(row.BB),
+                K: Number(row.K),
+                SB: Number(row.SB),
+                CS: Number(row.CS),
+                AVG: Number(row.AVG),
+                OBP: Number(row.OBP),
+                SLG: Number(row.SLG),
+            }, 
+            status: Status.ACTIVE, 
+            seasonsLeft: 1, // placeholder (you can adjust later)
+
+            realTeam: row.team_abbr,
+            realLeague: row.Lev === "Maj-AL" ? "AL" : "NL",
+          };
+
+          players.push(playerData);
+        } catch (err) {
+          // console.error("Error parsing row:", row, err);
+        }
+      })
+      .on("end", async () => {
+        console.log(`Parsed ${players.length} players`);
+
+        for (const p of players) {
+          try {
+            await addPlayer(p);
+          } catch (err) {
+            // console.error("Failed to insert player:", p.firstName, p.lastName);
+          }
         }
 
-        const data: { people: { id: number }[] } = await response.json();
-
-        if (!data.people || data.people.length === 0) {
-            return null;
-        }
-
-        return data.people[0].id;
-    } catch (error) {
-        return null;
-    }
-}
-function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-//AI was used to write this function
-async function parseRow(row: string): Promise<CreatePlayerInput | null>{
-  const [fields] = parse(row, {
-    relax_quotes: true,
-    skip_empty_lines: true,
-  }) as string[][];
-    console.log();
-  // const fields = Object.values(row);
-  if(!fields || fields.length === 0){return null};
-
-  const playerField = fields[0].trim().replace(/^"|"$/g, "");
-  const [nameAndPos, team] = playerField.split("|").map(s => s.trim());
-
-  const parts = nameAndPos.split(" ");
-  // console.log(parts);
-  const firstName = parts.slice(0, parts.length - 2).join(" "); // works for multi-word first names
-  const lastName = parts[parts.length - 2];
-  console.log(firstName + " " + lastName);
-  const positions = parts[parts.length - 1].split(",").map(mapPosition); // last part is positions
-
-  const statsNumbers = fields.slice(1).map(Number);
-
-  const [
-    AB, R, H, _1B, _2B, _3B,
-    HR, RBI, BB, K, SB, CS,
-    AVG, OBP, SLG, FPTS
-  ] = statsNumbers;
-  const mlbID = await getMLB(firstName + " " + lastName);
-  if (!mlbID){
-      return null;
-  }
-  return {
-    mlbPlayerId: mlbID, // fill after API lookup
-    firstName,
-    lastName,
-    isHitter: true,
-    playablePositions: positions,
-    lastYearStats: { AB,R,H,"1B":_1B,"2B":_2B,"3B":_3B,HR,RBI,BB,K,SB,CS,AVG,OBP,SLG,FPTS },
-    threeYearAvg: { AB,R,H,"1B":_1B,"2B":_2B,"3B":_3B,HR,RBI,BB,K,SB,CS,AVG,OBP,SLG,FPTS },
-    projectedStats: { AB,R,H,"1B":_1B,"2B":_2B,"3B":_3B,HR,RBI,BB,K,SB,CS,AVG,OBP,SLG,FPTS },
-    status: Status.ACTIVE,
-    seasonsLeft: 0,
-    realTeam: team,
-    realLeague: mapLeague(team)
-  };
-}
-
-const fileStream = fs.createReadStream("players.csv");
-
-  const rl = readline.createInterface({
-    input: fileStream,
-    crlfDelay: Infinity
+        console.log("Done inserting players");
+        resolve();
+      })
+      .on("error", reject);
   });
+}
+async function ingestPitchers(csvPath: string) {
+  const pitchers: CreatePlayerInput[] = [];
 
-  for await (const line of rl) {
-      await (async () => {
-          
-          // const entry = await parseRow(line);
-          // console.log(entry)
-          // if (!entry) return;
-          // await addPlayer(entry);
-      })();
-  }
+  return new Promise<void>((resolve, reject) => {
+    fs.createReadStream(csvPath)
+      .pipe(csv())
+      .on("data", (row) => {
+        try {
+          // Split name
+          const name = fixEncoding(row.Name)
+          const [firstName, ...rest] = name.split(" ");
+          const lastName = rest.join(" ");
+
+          const pitcherData: CreatePlayerInput = {
+            mlbPlayerId: Number(row.mlbID),
+            age: Number(row.Age),
+            firstName,
+            lastName,
+            isHitter: false,
+            playablePositions: [Position.PITCHER], // All pitchers
+
+            lastYearStats: {
+              G: Number(row.G),
+              GS: Number(row.GS),
+              W: Number(row.W),
+              SV: Number(row.SV),
+              IP: parseFloat(row.IP) || 0,
+              H: Number(row.H),
+              ER: Number(row.ER),
+              BB: Number(row.BB),
+              SO: Number(row.SO),
+              HR: Number(row.HR),
+              ERA: parseFloat(row.ERA) || 0,
+              WHIP: parseFloat(row.WHIP) || 0,
+              BF: Number(row.BF),
+              "SO/W": parseFloat(row["SO/W"]) || 0,
+              SB: Number(row.SB),
+              PO: Number(row.PO),
+            },
+            threeYearAvg: {
+              G: Number(row.G),
+              GS: Number(row.GS),
+              W: Number(row.W),
+              SV: Number(row.SV),
+              IP: parseFloat(row.IP) || 0,
+              H: Number(row.H),
+              ER: Number(row.ER),
+              BB: Number(row.BB),
+              SO: Number(row.SO),
+              HR: Number(row.HR),
+              ERA: parseFloat(row.ERA) || 0,
+              WHIP: parseFloat(row.WHIP) || 0,
+              BF: Number(row.BF),
+              "SO/W": parseFloat(row["SO/W"]) || 0,
+              SB: Number(row.SB),
+              PO: Number(row.PO),
+            },
+            projectedStats: {
+              G: Number(row.G),
+              GS: Number(row.GS),
+              W: Number(row.W),
+              SV: Number(row.SV),
+              IP: parseFloat(row.IP) || 0,
+              H: Number(row.H),
+              ER: Number(row.ER),
+              BB: Number(row.BB),
+              SO: Number(row.SO),
+              HR: Number(row.HR),
+              ERA: parseFloat(row.ERA) || 0,
+              WHIP: parseFloat(row.WHIP) || 0,
+              BF: Number(row.BF),
+              "SO/W": parseFloat(row["SO/W"]) || 0,
+              SB: Number(row.SB),
+              PO: Number(row.PO),
+            },
+            status: Status.ACTIVE,
+            seasonsLeft: 1, // placeholder
+            realTeam: row.team_abbr,
+            realLeague: row.Lev === "Maj-AL" ? "AL" : "NL",
+          };
+
+          pitchers.push(pitcherData);
+        } catch (err) {
+          console.error("Error parsing row:", row, err);
+        }
+      })
+      .on("end", async () => {
+        console.log(`Parsed ${pitchers.length} pitchers`);
+
+        for (const p of pitchers) {
+          try {
+            await addPlayer(p);
+          } catch (err) {
+            console.error("Failed to insert pitcher:", p.firstName, p.lastName, err);
+          }
+        }
+
+        console.log("Done inserting pitchers");
+        resolve();
+      })
+      .on("error", reject);
+  });
+}
+ingestHitters("./python/data.csv")
+  .then(() => console.log("Done"))
+  .catch((err) => console.error("Error:", err));
+ingestPitchers("./python/pdata.csv")
+  .then(() => console.log("Done"))
+  .catch((err) => console.error("Error:", err));

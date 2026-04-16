@@ -9,6 +9,7 @@ find by status, update a player, delete a player
 // POST /api/players/create
 export const createPlayer = async (
     mlbPlayerId: string,
+    age: number,
     firstName: string,
     lastName: string,
     isHitter: boolean,
@@ -24,7 +25,7 @@ export const createPlayer = async (
     const existing = await playerRepository.findPlayerByMlbId(mlbPlayerId);
     if (existing) throw new Error('Player already exists');
 
-    return await playerRepository.createPlayer(mlbPlayerId, firstName, lastName, isHitter, playablePositions,
+    return await playerRepository.createPlayer(mlbPlayerId, age, firstName, lastName, isHitter, playablePositions,
         lastYearStats, threeYearAvg, projectedStats, status, seasonsLeft, realTeam, realLeague );
 }
 

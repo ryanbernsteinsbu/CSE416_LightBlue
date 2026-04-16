@@ -22,6 +22,10 @@ out/
 .classpath
 .settings/
 
+# ===== Scripts =====
+backend/python/data.csv
+backend/python/pdata.csv
+backend/python/.venv/
 
 # ===== Logs / temp =====
 *.log
@@ -44,6 +48,14 @@ application-dev.yml
 # ===== Node Modules =====
 node_modules/
 
+# ===== Next.js =====
+.next/
+out/
+
 
 # ===== Build output =====
 dist/
+
+# AI / local tooling
+AGENTS.md
+CLAUDE.md

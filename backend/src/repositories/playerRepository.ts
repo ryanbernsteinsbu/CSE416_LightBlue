@@ -3,6 +3,7 @@ import Player, { Position, Status } from '../models/player';
 // Create a new player
 export const createPlayer = async (
     mlbPlayerId: string, 
+    age: number,
     firstName: string,
     lastName: string,
     isHitter: boolean,
@@ -15,7 +16,7 @@ export const createPlayer = async (
     realTeam: string,
     realLeague: String
 ): Promise<Player> => {
-    return await Player.create({ mlbPlayerId, firstName, lastName, isHitter, playablePositions,
+    return await Player.create({ mlbPlayerId, age, firstName, lastName, isHitter, playablePositions,
         lastYearStats, threeYearAvg, projectedStats, status, seasonsLeft, realTeam, realLeague });
 }
 
@@ -57,4 +58,19 @@ export const deletePlayer = async (id: number): Promise<boolean> => {
     if (!player) return false;
     await player.destroy();
     return true;
+};
+
+// Get player stats
+export const getPlayerStats = async (id: number) => {
+    const player = await findPlayerById(id);
+
+    if(player == null){
+        throw new Error("Player is null.")
+    }
+    return {
+        type: player.isHitter ? 'hitter' : 'pitcher',
+        lastYearStats: player.lastYearStats,
+        threeYearAvg: player.threeYearAvg,
+        projectedStats: player.projectedStats
+    };
 };
