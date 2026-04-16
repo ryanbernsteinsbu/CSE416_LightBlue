@@ -12,6 +12,8 @@ import Team from './models/team';
 import Player from './models/player';
 import DraftPick from './models/draftPick';
 import League from './models/league';
+import rankingRoutes from './routes/rankingRoutes';
+
 const ApiUser = require('./models/apiUser') //i have no idea why import and require are mixed here
 // associations
 Team.belongsTo(League, { foreignKey: 'league_id', as: 'league' });
@@ -38,6 +40,7 @@ app.use('/api/leagues', leagueRoutes);
 app.use('/api/teams', teamRoutes);
 app.use('/api/public', requireAuth, publicRoutes);
 app.use('/api/draft-picks', draftPickRoutes);
+app.use('/api/ranking', rankingRoutes);
 
 const PORT = process.env.PORT || 8000;
 // console.log(Object.keys(sequelize.models));
