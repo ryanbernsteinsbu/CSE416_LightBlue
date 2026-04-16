@@ -1642,6 +1642,8 @@ button {
   color: #ff9090;
 }
 
+
+
 /* Tooltip */
 
 .tooltip-wrap {
@@ -1729,7 +1731,9 @@ button {
   transform: translateX(-50%) translateY(64px); /* slides to just below navbar */
 }
 
-/* Position Player Modal*
+/* */
+
+/* Position Player Modal */
 
 /* Darkened backdrop behind the panel */
 .ppm-backdrop {
@@ -1884,4 +1888,117 @@ button {
   font-size: 11px;
   color: #5060b0;
   letter-spacing: 0.08em;
+}
+
+/* Backdrop */
+.pprof-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 999;
+}
+
+/* Panel */
+.pprof-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 50%;
+  background: #3d4a8a;
+  border: 3px solid #5060b0;
+  border-right: none;
+  border-radius: 16px 0 0 16px;
+  z-index: 1000;
+
+  transform: translateX(100%);
+  transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+
+  font-family: 'Bebas Neue', 'Impact', sans-serif;
+}
+
+.pprof-visible {
+  transform: translateX(0);
+}
+
+/* Header */
+.pprof-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 28px;
+  border-bottom: 2px solid #5060b0;
+}
+
+.pprof-title {
+  font-size: 26px;
+  letter-spacing: 0.08em;
+  color: #fff;
+}
+
+/* Close Button */
+.pprof-close {
+  background: #2e3a7a;
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  width: 36px;
+  height: 36px;
+  font-size: 18px;
+  cursor: pointer;
+  font-family: sans-serif;
+  transition: background 0.2s;
+}
+
+.pprof-close:hover {
+  background: #3a4890;
+}
+
+/* Body */
+.pprof-body {
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Name Section */
+.pprof-name-section {
+  text-align: center;
+}
+
+.pprof-name {
+  font-size: 36px;
+  color: #e03030;
+  letter-spacing: 0.08em;
+}
+
+.pprof-sub {
+  font-size: 16px;
+  color: #aab0d0;
+  letter-spacing: 0.1em;
+}
+
+/* Rows */
+.pprof-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #5060b0;
+}
+
+/* Existing classes (kept) */
+.pprof-hitpitch {
+  font-size: 18px;
+  margin-bottom: 8px;
+  color: #fff;
+}
+
+.pprof-team {
+  color: #aab0d0;
 }
