@@ -40,7 +40,7 @@ Team.init({
         type: DataTypes.BIGINT,
         allowNull: true,
         references: {
-            model: 'leagues',
+            model: 'league',
             key: 'id'
         }
     }

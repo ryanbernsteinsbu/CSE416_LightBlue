@@ -52,6 +52,14 @@ export const createLeague = async (req: Request, res: Response) => {
             ...draftSettings,
         });
 
+        for (let i = 0; i < (draftSettings?.numTeams ?? 0); i++) {
+            await Team.create({
+                league_id: league.id,
+                name: `Team ${i + 1}`,
+                budget: draftSettings?.budget ?? null,
+            });
+        }
+
         const createdLeague = await League.findByPk(league.id, {
             include: [
                 { model: ScoringSettings, as: 'scoringSettings' },
@@ -60,6 +68,7 @@ export const createLeague = async (req: Request, res: Response) => {
                 { model: DraftSettings, as: 'draftSettings' },
             ],
         });
+
 
         res.status(201).json(createdLeague);
     } catch (error) {
