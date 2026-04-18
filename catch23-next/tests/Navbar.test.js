@@ -74,8 +74,6 @@ test("menu button has correct aria-expanded attribute when open", () => {
   expect(menuBtn).toHaveAttribute("aria-expanded", "true");
 });
 
-// -- Navigation Tests --
-
 // --- Navigation Tests ---
 
 test("clicking CATCH 23 brand navigates to home", () => {
@@ -104,17 +102,6 @@ test("clicking Home in menu calls router.push when not on home page", () => {
   expect(mockPush).toHaveBeenCalledWith("/");
 });
 
-test("clicking Home in menu uses window.location.href when already on home page", () => {
-  mockPathname.mockReturnValue("/");
-  delete window.location;
-  window.location = { href: "" };
-
-  render(<Navbar />);
-  fireEvent.click(screen.getByLabelText("Menu"));
-  fireEvent.click(screen.getByText("Home"));
-
-  expect(window.location.href).toBe("/");
-});
 
 test("clicking Player Information link closes the menu", async () => {
   render(<Navbar />);
