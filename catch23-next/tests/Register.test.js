@@ -17,6 +17,7 @@ beforeEach(() => {
     },
     writable: true,
   });
+  jest.clearAllMocks();
 });
 
 // -- Helpers --

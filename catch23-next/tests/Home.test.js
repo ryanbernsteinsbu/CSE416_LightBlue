@@ -19,6 +19,7 @@ beforeEach(() => {
     },
     writable: true,
   });
+  jest.clearAllMocks();
 });
 
 test("renders empty state when no leagues exist", async () => {
