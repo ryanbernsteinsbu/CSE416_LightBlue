@@ -63,5 +63,3 @@ CLAUDE.md
 # Jest coverage reports
 coverage/
 
-# Jest cache
-jest.config.js
