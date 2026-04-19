@@ -4,7 +4,7 @@ import PlayerInformation from "../../components/PlayerInformation";
 export default function PlayerPage() {
   return (
     <>
-      <Navbar />
+     <Navbar />
       <div className="catch23">
         <PlayerInformation />
       </div>

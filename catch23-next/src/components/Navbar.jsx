@@ -2,12 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const menuRef = useRef(null);
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     const onDocClick = (e) => {
@@ -45,19 +46,23 @@ export default function Navbar() {
 
         {open && (
           <div className="navmenu" role="menu" aria-label="Navigation menu">
-            <Link
+            <button
               className="navmenu-item"
-              href="/"
-              onClick={() => setOpen(false)}
+              type="button"
+              onClick={() => {
+                setOpen(false);
+
+                if (pathname === "/") {
+                  window.location.href = "/";
+                } else {
+                  router.push("/");
+                }
+              }}
             >
               Home
-            </Link>
+            </button>
 
-            <Link
-              className="navmenu-item"
-              href="/player"
-              onClick={() => setOpen(false)}
-            >
+            <Link className="navmenu-item" href="/player" onClick={() => setOpen(false)}>
               Player Information
             </Link>
           </div>

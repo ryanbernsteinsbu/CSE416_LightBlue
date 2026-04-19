@@ -6,11 +6,10 @@ import CreateLeagueModal from "./CreateLeagueModal";
 import LeagueDraftBoard from "./LeagueDraftBoard";
 import { getUserLeagues, deleteLeague, getLeagueTeams } from "../lib/api";
 
-export default function Home() {
+export default function Home({ activeLeague, setActiveLeague }) {
   const [leagues, setLeagues] = useState([]);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [activeLeague, setActiveLeague] = useState(null);
 
   const DEFAULT_LOGO = "https://i.imgur.com/DxHxkuJ.png";
 
