@@ -5,17 +5,15 @@ import userRoutes from './routes/userRoutes';
 import playerRoutes from './routes/playerRoutes'
 import leagueRoutes from './routes/leagueRoutes';
 import teamRoutes from './routes/teamRoutes';
-import requireAuth from './middleware/requireAuth';
-import publicRoutes from './routes/publicRoutes'
 import draftPickRoutes from './routes/draftPickRoutes';
 import Team from './models/team';
 import Player from './models/player';
 import DraftPick from './models/draftPick';
 import League from './models/league';
-import rankingRoutes from './routes/rankingRoutes';
 
-const ApiUser = require('./models/apiUser')
+//const ApiUser = require('./models/apiUser')
 
+// associations
 Team.belongsTo(League, { foreignKey: 'league_id', as: 'league' });
 Team.hasMany(DraftPick, { foreignKey: 'team_id', as: 'players' });
 DraftPick.belongsTo(Team, { foreignKey: 'team_id', as: 'team' });
@@ -27,6 +25,7 @@ require('dotenv').config();
 const allowedOrigins = [
   "https://catch23.vercel.app",
   "https://catch23-api.vercel.app",
+  "https://catch23-public.vercel.app",
   "http://localhost:3000",  
 ];
 
@@ -43,7 +42,7 @@ const corsOptions = {
 
 const app = express();
 app.use(express.json());
-app.options('*', cors(corsOptions)); 
+app.options('/{*path}', cors(corsOptions)); 
 app.use(cors(corsOptions));         
 
 // Routes
@@ -51,9 +50,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/players', playerRoutes);
 app.use('/api/leagues', leagueRoutes);
 app.use('/api/teams', teamRoutes);
-app.use('/api/public', requireAuth, publicRoutes);
 app.use('/api/draft-picks', draftPickRoutes);
-app.use('/api/ranking', rankingRoutes);
 
 const PORT = process.env.PORT || 8000;
 sequelize.sync().then(() => {
