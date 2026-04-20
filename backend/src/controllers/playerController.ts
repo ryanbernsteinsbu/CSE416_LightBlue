@@ -2,27 +2,6 @@ import { Request, Response } from 'express';
 import * as playerService from '../services/playerService';
 import { Position, Status } from '../models/player';
 
-
-/* 
-create player, find all, find by id, find by mlb id, find by position, 
-find by status, update a player, delete a player
-*/
-/* 
-    public id!: number; ignore
-    public mlbPlayerId!: string; // use for syncing with MLB database
-    public firstName!: string;
-    public lastName!: string;
-    public isHitter!: boolean;
-    public playablePositions!: Position[];
-    public lastYearStats!: Record<string, number>;
-    public threeYearAvg!: Record<string, number>;
-    public projectedStats!: Record<string, number>;
-    public status!: Status;
-    public seasonsLeft!: number; 
-    public realTeam!: string;
-    public realLeague!: string;
-*/
-
 // POST /api/players/create
 export const create = async (req: Request, res: Response): Promise<void> => {
     try {
