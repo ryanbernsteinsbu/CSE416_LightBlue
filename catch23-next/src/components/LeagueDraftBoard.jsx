@@ -54,8 +54,8 @@ function makeEmptyTeam(index, POSITIONS) {
     };
 }
 
-
 // get player display name
+
 const getPlayerDisplayName = (p) =>
     `${p?.firstName ?? ""} ${p?.lastName ?? ""}`.trim();
 

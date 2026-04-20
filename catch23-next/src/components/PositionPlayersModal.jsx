@@ -7,7 +7,7 @@ import axios from 'axios';
 // RANKING FUNCTION
 export async function rankPlayers(players) {
     // Grab rank
-    const response = await axios.get('/api/ranking/rank');
+    const {response} = await getRankedPlayers();
     const rankData = Object.values(response.data);
     const rankMap = new Map(rankData.map(r => [String(r.id), r.rank]));
     
