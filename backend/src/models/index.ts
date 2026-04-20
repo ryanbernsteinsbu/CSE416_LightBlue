@@ -1,6 +1,5 @@
 import sequelize from '../config/database';
 
-import ApiUser from './apiUser';
 import User from './user';
 import DraftPick from './draftPick';
 import League from './league';
