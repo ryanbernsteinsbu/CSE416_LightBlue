@@ -12,7 +12,7 @@ const sign = (body) => {
     const payload = JSON.stringify(body);
 
     const expectedSignature = crypto
-        .createHmac("sha256", secret)
+        .createHmac("sha256", API_KEY)
         .update(payload)
         .digest("hex");
 
