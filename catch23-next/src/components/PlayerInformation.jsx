@@ -158,6 +158,7 @@ export default function PlayerInformation() {
         setSortKey("name");
         setSortDir("asc");
         setPage(1);
+        console.log(process.env.BASE_URL);
     }
 
     return (

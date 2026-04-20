@@ -86,10 +86,7 @@ export const deleteTeam = (id) =>
 // Players
 
 export const getAllPlayers = () => 
-  axios.get('/api/players/all').then(response => {
-  console.log(response.config.url);        // '/users'
-  console.log(response.config.baseURL);    // 'https://api.example.com'
-});;
+  axios.get('/api/players/all');
 
 export const getPlayer = (id) => 
   axios.get(`/api/players/${id}`);
