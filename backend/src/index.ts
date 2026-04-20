@@ -11,7 +11,7 @@ import Player from './models/player';
 import DraftPick from './models/draftPick';
 import League from './models/league';
 
-const ApiUser = require('./models/apiUser')
+//const ApiUser = require('./models/apiUser')
 
 // associations
 Team.belongsTo(League, { foreignKey: 'league_id', as: 'league' });
@@ -42,7 +42,7 @@ const corsOptions = {
 
 const app = express();
 app.use(express.json());
-app.options('*', cors(corsOptions)); 
+app.options('/{*path}', cors(corsOptions)); 
 app.use(cors(corsOptions));         
 
 // Routes
