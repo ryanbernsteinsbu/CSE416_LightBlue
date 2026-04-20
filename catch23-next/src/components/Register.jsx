@@ -2,8 +2,6 @@
 import React, { useState } from "react";
 import { registerUser } from '../lib/api';
 import axios from "axios"
-axios.defaults.withCredentials = true;
-axios.defaults.baseURL = 'https://catch23-api.vercel.app/';
 
 export default function Register({ onCreateUserClick, onShowLogin }) {
     const [email, setEmail] = useState("");
