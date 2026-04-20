@@ -123,6 +123,5 @@ test("clicking Register calls onShowRegister", () => {
     render(<Login onShowRegister={onShowRegister} />);
 
     fireEvent.click(screen.getByText("Register"));
-
     expect(onShowRegister).toHaveBeenCalledTimes(1);
 });
