@@ -1,9 +1,33 @@
 import axios from 'axios'
 
-const BASE_URL = 'http://localhost:8000';
+import dotenv from 'dotenv';
+dotenv.config();
+
+const BASE_URL = process.env.BASE_URL;
 axios.defaults.baseURL = BASE_URL;
 axios.defaults.withCredentials = true;
 
+const PUBLIC_URL = process.env.PUBLIC_URL;
+const API_KEY = process.env.API_KEY;
+const EMAIL = process.env.EMAIL;
+
+const sign = (body) => {
+    const payload = JSON.stringify(body);
+
+    const expectedSignature = crypto
+        .createHmac("sha256", secret)
+        .update(payload)
+        .digest("hex");
+
+    return expectedSignature;
+}
+
+const publicApi = axios.create({
+    baseURL: PUBLIC_URL,
+    headers: {
+        "x-email": EMAIL,
+    }
+});
 // Authentication
 
 export const registerUser = (email, displayName, password) => 
@@ -100,6 +124,11 @@ export const getTeamDraftPicks = (teamId) =>
 
 
 // Getting Ranked Players
-export const getRankedPlayers = () =>
-  axios.get(`/api/ranking/rank`);
+export const getRankedPlayers = () => {
+    const data = {};
+    publicApi.post(`/api/ranking/rank`, {
+        data,
+        headers: {...headers, "x-signature": sign(data)}
+    })
+};
  
