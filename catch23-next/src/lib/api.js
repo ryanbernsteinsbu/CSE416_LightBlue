@@ -1,12 +1,12 @@
 import axios from 'axios'
 
-const BASE_URL = process.env.BASE_URL;
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 axios.defaults.baseURL = BASE_URL;
 axios.defaults.withCredentials = true;
 
-const PUBLIC_URL = process.env.PUBLIC_URL;
-const API_KEY = process.env.API_KEY;
-const EMAIL = process.env.EMAIL;
+const PUBLIC_URL = process.env.NEXT_PUBLIC_PUBLIC_URL;
+const API_KEY = process.env.NEXT_PUBLIC_API_KEY;
+const EMAIL = process.env.NEXT_PUBLIC_EMAIL;
 
 const sign = (body) => {
     const payload = JSON.stringify(body);
