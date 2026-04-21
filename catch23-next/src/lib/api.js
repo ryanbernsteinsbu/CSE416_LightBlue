@@ -1,6 +1,7 @@
 import axios from 'axios'
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://catch23-api.vercel.app';
+// const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://catch23-api.vercel.app';
+const BASE_URL = (process.env.NEXT_PUBLIC_BASE_URL || 'https://catch23-api.vercel.app').replace('http://', 'https://');
 axios.defaults.baseURL = BASE_URL;
 axios.defaults.withCredentials = true;
 
