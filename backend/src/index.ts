@@ -29,8 +29,11 @@ const allowedOrigins = [
   "http://localhost:3000",  
 ];
 
-const corsOptions = {
-    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+
+const app = express();
+app.use(express.json());
+app.use(cors({
+    origin:( origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
         if (!origin || allowedOrigins.includes(origin)) {
             callback(null, true);
         } else {
@@ -38,12 +41,7 @@ const corsOptions = {
         }
     },
     credentials: true
-};
-
-const app = express();
-app.use(express.json());
-app.options('/{*path}', cors(corsOptions)); 
-app.use(cors(corsOptions));         
+}));
 
 // Routes
 app.use('/api/users', userRoutes);
