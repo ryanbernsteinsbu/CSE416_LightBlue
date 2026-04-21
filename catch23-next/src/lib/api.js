@@ -21,9 +21,6 @@ const sign = (body) => {
 
 const publicApi = axios.create({
     baseURL: PUBLIC_URL,
-    headers: {
-        "x-email": EMAIL,
-    }
 });
 // Authentication
 
@@ -125,7 +122,7 @@ export const getRankedPlayers = async () => {
     const data = {};
     publicApi.post(`/api/ranking/rank`, {
         data,
-        headers: {...headers, "x-signature": sign(data)}
+        headers: {"x-email": EMAIL, "x-signature": sign(data)}
     })
 };
  
