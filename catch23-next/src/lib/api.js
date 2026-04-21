@@ -120,8 +120,8 @@ export const getTeamDraftPicks = (teamId) =>
 // Getting Ranked Players
 export const getRankedPlayers = async () => {
     const data = {};
-    publicApi.post(`/api/ranking/rank`, {
-        data,
+    publicApi.post(`/api/ranking/rank`, 
+        data, {
         headers: {"x-email": EMAIL, "x-signature": sign(data)}
     })
 };
