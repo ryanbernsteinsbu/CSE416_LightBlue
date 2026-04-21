@@ -1,5 +1,5 @@
 import axios from 'axios'
-
+import crypto from 'crypto';
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 axios.defaults.baseURL = BASE_URL;
 axios.defaults.withCredentials = true;
