@@ -22,7 +22,6 @@ const sign = (body) => {
 const publicApi = axios.create({
     baseURL: PUBLIC_URL,
 });
-// Authentication
 
 export const registerUser = (email, displayName, password) => 
     axios.post('/api/users/register', { 
