@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
 import CreateLeagueModal from "./CreateLeagueModal";
-import LeagueDraftBoard from "./LeagueDraftBoard";
+import LeagueDraftController from  "./LeagueDraftController";
 import { getUserLeagues, deleteLeague, getLeagueTeams } from "../lib/api";
 
 export default function Home({ activeLeague, setActiveLeague }) {
@@ -46,17 +46,17 @@ export default function Home({ activeLeague, setActiveLeague }) {
     setIsCreateOpen(true);
   };
 
-  if (activeLeague) {
+ if (activeLeague) {
     return (
-      <LeagueDraftBoard
-        league={activeLeague}
-        onBack={() => {
-          setActiveLeague(null);
-          fetchLeagues();
-        }}
-      />
+        <LeagueDraftController
+            league={activeLeague}
+            onBack={() => {
+                setActiveLeague(null);
+                fetchLeagues();
+            }}
+        />
     );
-  }
+}
 
   return (
     <div className="home">

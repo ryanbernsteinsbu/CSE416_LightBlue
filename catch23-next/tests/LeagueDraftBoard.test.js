@@ -1,5 +1,5 @@
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
-import LeagueDraftBoard from "@/components/LeagueDraftBoard";
+import LeagueDraftBoard from "@/components/PreDraftBoard";
 
 import {
   createTeam,

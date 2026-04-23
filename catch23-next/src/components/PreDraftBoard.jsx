@@ -63,7 +63,7 @@ const getPlayerDisplayName = (p) =>
 const getPlayerName = (p) =>
     getPlayerDisplayName(p).toLowerCase();
 
-export default function LeagueDraftBoard({ league, onBack }) {
+export default function LeagueDraftBoard({ league, onBack, onModeChange }) {
     const POSITIONS = buildPositions(league.rosterSettings)
 
     const [teams, setTeams] = useState([]);
@@ -76,7 +76,6 @@ export default function LeagueDraftBoard({ league, onBack }) {
     const [teamDeleteTarget, setTeamDeleteTarget] = useState(null);
     const [saveBanner, setSaveBanner] = useState(false);
     const [selectedPosition, setSelectedPosition] = useState(null);
-    //const [teamBudgets, setTeamBudgets] = useState({});
 
 
     const cellInputRef = useRef(null);
@@ -327,6 +326,7 @@ export default function LeagueDraftBoard({ league, onBack }) {
 
     return (
         <div className="home" style={{ paddingTop: 80 }}>
+            <div className="db-mode-banner">YOU ARE IN PRE-DRAFT MODE!</div>
             <div className={`save-banner ${saveBanner ? "save-banner--visible" : ""}`}>
                 ✅ Draft saved!
             </div>
@@ -364,6 +364,12 @@ export default function LeagueDraftBoard({ league, onBack }) {
                             <span className="db-progress-label">
                                 Click any cell to edit • Click team name to rename
                             </span>
+                            <button className="db-tool-btn db-tool-secondary" onClick={() => onModeChange("simulation")}>
+                                Draft Simulation
+                            </button>
+                            <button className="db-tool-btn db-tool-secondary" onClick={() => onModeChange("live")}>
+                                Live Draft
+                            </button>
                             <button className="db-tool-btn db-tool-primary" onClick={handleSaveDraft}>
                                 💾 Save Draft
                             </button>

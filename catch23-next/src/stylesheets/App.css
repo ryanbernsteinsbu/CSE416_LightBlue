@@ -1021,6 +1021,10 @@ button {
   gap: 14px;
 }
 
+.db-mode-banner{
+  color: white;
+}
+
 .db-header-left {
   display: flex;
   align-items: center;
