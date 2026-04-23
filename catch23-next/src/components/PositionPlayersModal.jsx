@@ -6,16 +6,19 @@ import axios from 'axios';
 
 // RANKING FUNCTION
 export async function rankPlayers(players) {
-    // Grab rank
-    const {response} = await getRankedPlayers();
+    const response = await getRankedPlayers();
+
+    if (!response?.data) {
+        console.error("Ranking API failed");
+        return players;
+    }
+
     const rankData = Object.values(response.data);
     const rankMap = new Map(rankData.map(r => [String(r.id), r.rank]));
-    
-    const sorted = [...players].map(p=>({...p, rank: rankMap.get(String(p.id)) ?? -1 }))
-                .sort((a,b) => b.rank - a.rank);
-    
-    console.log("sorted players:", sorted.map(p => `${p.firstName} ${p.lastName}: ${p.rank}`));
-    console.log("sorted:", sorted.map(p => `${p.firstName}: ${p.rank}`));
+
+    const sorted = [...players]
+        .map(p => ({ ...p, rank: rankMap.get(String(p.id)) ?? -1 }))
+        .sort((a, b) => b.rank - a.rank);
 
     return sorted;
 }
