@@ -63,7 +63,7 @@ const getPlayerDisplayName = (p) =>
 const getPlayerName = (p) =>
     getPlayerDisplayName(p).toLowerCase();
 
-export default function LeagueDraftBoard({ league, onBack, onModeChange }) {
+export default function PreDraftBoard({ league, onBack, onModeChange }) {
     const POSITIONS = buildPositions(league.rosterSettings)
 
     const [teams, setTeams] = useState([]);
