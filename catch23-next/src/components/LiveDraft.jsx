@@ -71,7 +71,7 @@ export default function LiveDraftBoard({ league, onBack, onModeChange }) {
 
     const draftedIds = useMemo(() =>
         new Set(teams.flatMap(t => t.rows.map(r => r.player_id).filter(Boolean)))
-    , [teams]);
+        , [teams]);
 
     const remainingBudgets = useMemo(() => {
         const result = {};
@@ -147,8 +147,14 @@ export default function LiveDraftBoard({ league, onBack, onModeChange }) {
     }, []);
 
     useEffect(() => {
-        if (draftPopup) setTimeout(() => popupPlayerRef.current?.focus(), 50);
-    }, [draftPopup]);
+        if (!draftPopup) return;
+
+        const timer = setTimeout(() => {
+            popupPlayerRef.current?.focus();
+        }, 50);
+
+        return () => clearTimeout(timer);
+    }, [!!draftPopup]);
 
     const showPickBanner = (teamName, playerName, position) => {
         if (pickBannerTimer.current) clearTimeout(pickBannerTimer.current);
@@ -354,7 +360,6 @@ export default function LiveDraftBoard({ league, onBack, onModeChange }) {
                                 <div className="db-empty-icon">📋</div>
                                 <div className="db-empty-title">No teams yet</div>
                                 <div className="db-empty-sub">Click "+ Add Team" to get started</div>
-                                <button className="clm-primary" style={{ marginTop: 18 }} onClick={addTeam}>+ Add Team</button>
                             </div>
                         ) : (
                             <div className="db-scroll">
@@ -516,6 +521,12 @@ export default function LiveDraftBoard({ league, onBack, onModeChange }) {
                                     );
                                 }}
                             />
+                            {draftPopup.price &&
+                                parseFloat(draftPopup.price) > (remainingBudgets[draftPopup.teamId] ?? 0) && (
+                                    <div style={{ color: "#ff4d4f", fontSize: "0.85rem", marginTop: 6 }}>
+                                        Exceeds remaining budget (${remainingBudgets[draftPopup.teamId]?.toFixed(0)})
+                                    </div>
+                                )}
                             {suggestions.length > 0 && (
                                 <ul className="db-suggestions">
                                     {suggestions.map(p => (
@@ -554,7 +565,11 @@ export default function LiveDraftBoard({ league, onBack, onModeChange }) {
                             </button>
                             <button
                                 className="db-tool-btn db-tool-primary"
-                                disabled={!draftPopup.playerId || !draftPopup.price}
+                                disabled={
+                                    !draftPopup.playerId ||
+                                    !draftPopup.price ||
+                                    parseFloat(draftPopup.price) > (remainingBudgets[draftPopup.teamId] ?? 0)
+                                }
                                 onClick={confirmDraftPopup}
                             >
                                 ✓ Draft

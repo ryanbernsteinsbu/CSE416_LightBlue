@@ -364,9 +364,6 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
                             <button className="db-tool-btn db-tool-secondary" onClick={() => onModeChange("live")}>
                                 Live Draft
                             </button>
-                            <button className="db-tool-btn db-tool-primary" onClick={handleSaveDraft}>
-                                💾 Save Draft
-                            </button>
                         </>
                     )}
                 </div>
