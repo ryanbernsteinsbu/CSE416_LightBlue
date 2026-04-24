@@ -1,8 +1,6 @@
 'use client';
 import React, { useEffect, useState } from "react";
 import { getRankedPlayers } from "../lib/api";
-import axios from 'axios';
-
 
 // RANKING FUNCTION
 export async function rankPlayers(players) {

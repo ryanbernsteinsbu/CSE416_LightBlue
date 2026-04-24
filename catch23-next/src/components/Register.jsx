@@ -1,7 +1,6 @@
 'use client';
 import React, { useState } from "react";
 import { registerUser } from '../lib/api';
-import axios from "axios"
 
 export default function Register({ onCreateUserClick, onShowLogin }) {
     const [email, setEmail] = useState("");

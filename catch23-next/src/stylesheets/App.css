@@ -1009,7 +1009,7 @@ button {
   color: #111;
 }
 
-/* Draft Board Page */
+/* Pre-Draft Board Page */
 
 .db-header {
   width: min(1300px, 92vw);
@@ -1019,6 +1019,10 @@ button {
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 14px;
+}
+
+.db-mode-banner{
+  color: white;
 }
 
 .db-header-left {
