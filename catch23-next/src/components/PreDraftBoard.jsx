@@ -75,6 +75,7 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
     const [suggestions, setSuggestions] = useState([]);
     const [teamDeleteTarget, setTeamDeleteTarget] = useState(null);
     const [saveBanner, setSaveBanner] = useState(false);
+    const [errorBanner, setErrorBanner] = useState(false);
     const [selectedPosition, setSelectedPosition] = useState(null);
 
 
@@ -162,6 +163,16 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
     }, []);
 
     const handleSaveDraft = async () => {
+        const missingPrice = teams.some(team =>
+            team.rows.some(row => row.player_id && !row.price)
+        );
+
+        if (missingPrice) {
+            setErrorBanner(true);
+            setTimeout(() => setErrorBanner(false), 3000);
+            return;
+        }
+
         const picks = [];
 
         teams.forEach(team => {
@@ -169,7 +180,7 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
                 if (!row.player_id) return;
 
                 picks.push({
-                    cost: parseFloat(row.price) || 0,
+                    cost: parseFloat(row.price),
                     rosterPosition: positionToEnum(POSITIONS[i], i, POSITIONS),
                     team_id: team.id,
                     player_id: row.player_id,
@@ -181,7 +192,6 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
         console.log("sending picks:", picks);
 
         try {
-            // save draft picks to the database
             await saveDraftPicks({
                 picks,
                 teamIds: teams.map(t => t.id)
@@ -192,10 +202,10 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
 
         } catch (err) {
             console.error("Failed to save draft:", err);
-            alert("Error saving draft.");
+            setErrorBanner(true);
+            setTimeout(() => setErrorBanner(false), 3000);
         }
     };
-
     // adding a new team
     const addTeam = async () => {
 
@@ -331,6 +341,9 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
             <div className="db-mode-banner">YOU ARE IN PRE-DRAFT MODE!</div>
             <div className={`save-banner ${saveBanner ? "save-banner--visible" : ""}`}>
                 ✅ Draft saved!
+            </div>
+            <div className={`save-banner save-banner-error ${errorBanner ? "save-banner--visible" : ""}`}>
+                ❌ Draft did not save. Missing price for one or more players.
             </div>
             <div className="db-header">
                 <div className="db-header-left">

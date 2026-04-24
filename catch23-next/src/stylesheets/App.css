@@ -2225,3 +2225,12 @@ button {
     color: #e03030;
     font-weight: 800;
 }
+
+.db-td-keeper .db-cell-value {
+    color: #4f8cff;
+    font-weight: 700;
+}
+
+.db-td-keeper {
+    cursor: not-allowed !important;
+}

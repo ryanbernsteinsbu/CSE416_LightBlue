@@ -112,16 +112,18 @@ export default function LiveDraftBoard({ league, onBack, onModeChange }) {
                                     draft_time: pick.draft_time ?? ""
                                 };
 
-                                loadedDraftLog.push({
-                                    id: pick.id ?? crypto.randomUUID(),
-                                    teamName: t.name,
-                                    teamId: Number(t.id),
-                                    playerName,
-                                    position: POSITIONS[rowIndex],
-                                    price: pick.cost ?? "",
-                                    rowIndex,
-                                    timestamp: pick.draft_time || "—"
-                                });
+                                if (pick.draft_time) {
+                                    loadedDraftLog.push({
+                                        id: pick.id ?? crypto.randomUUID(),
+                                        teamName: t.name,
+                                        teamId: Number(t.id),
+                                        playerName,
+                                        position: POSITIONS[rowIndex],
+                                        price: pick.cost ?? "",
+                                        rowIndex,
+                                        timestamp: pick.draft_time
+                                    });
+                                }
                             }
                         });
                         return { id: Number(t.id), name: t.name, rows: emptyRows };
@@ -409,15 +411,28 @@ export default function LiveDraftBoard({ league, onBack, onModeChange }) {
 
                                                 {teams.map(team => {
                                                     const row = team.rows[rowIndex];
+                                                    const isKeeper = row.player_id && !row.draft_time;
                                                     return (
                                                         <React.Fragment key={`${team.id}-${rowIndex}`}>
                                                             <td
-                                                                className={["db-td db-td-pick", row.player ? "db-td-filled" : ""].join(" ")}
-                                                                style={{ cursor: "pointer" }}
-                                                                onClick={() => setDraftPopup({
-                                                                    teamId: team.id, rowIndex, pos,
-                                                                    playerName: "", playerId: null, price: ""
-                                                                })}
+                                                                className={[
+                                                                    "db-td db-td-pick",
+                                                                    row.player ? "db-td-filled" : "",
+                                                                    isKeeper ? "db-td-keeper" : ""
+                                                                ].join(" ")}
+                                                                style={{ cursor: isKeeper ? "not-allowed" : "pointer" }}
+                                                                onClick={() => {
+                                                                    if (isKeeper) return;
+
+                                                                    setDraftPopup({
+                                                                        teamId: team.id,
+                                                                        rowIndex,
+                                                                        pos,
+                                                                        playerName: "",
+                                                                        playerId: null,
+                                                                        price: ""
+                                                                    });
+                                                                }}
                                                             >
                                                                 <span className="db-cell-value">
                                                                     {row.player || <span className="db-cell-empty">—</span>}
@@ -425,34 +440,66 @@ export default function LiveDraftBoard({ league, onBack, onModeChange }) {
                                                             </td>
 
                                                             <td
-                                                                className={["db-td db-td-pick db-td-narrow",
+                                                                className={[
+                                                                    "db-td db-td-pick db-td-narrow",
                                                                     isEditing(team.id, rowIndex, "season") ? "db-td-editing" : "",
-                                                                    row.season ? "db-td-filled" : ""].join(" ")}
-                                                                onClick={() => !isEditing(team.id, rowIndex, "season") &&
-                                                                    startEditCell(team.id, rowIndex, "season", row.season)}
+                                                                    row.season ? "db-td-filled" : "",
+                                                                    isKeeper ? "db-td-keeper" : ""
+                                                                ].join(" ")}
+                                                                style={{ cursor: isKeeper ? "not-allowed" : "pointer" }}
+                                                                onClick={() => {
+                                                                    if (isKeeper) return;
+
+                                                                    if (!isEditing(team.id, rowIndex, "season")) {
+                                                                        startEditCell(team.id, rowIndex, "season", row.season);
+                                                                    }
+                                                                }}
                                                             >
                                                                 {isEditing(team.id, rowIndex, "season") ? (
-                                                                    <input ref={cellInputRef} className="db-cell-input" value={editValue}
+                                                                    <input
+                                                                        ref={cellInputRef}
+                                                                        className="db-cell-input"
+                                                                        value={editValue}
                                                                         onChange={e => setEditValue(e.target.value)}
-                                                                        onBlur={commitCellEdit} onKeyDown={handleCellKeyDown} />
+                                                                        onBlur={commitCellEdit}
+                                                                        onKeyDown={handleCellKeyDown}
+                                                                    />
                                                                 ) : (
-                                                                    <span className="db-cell-value">{row.season || <span className="db-cell-empty">—</span>}</span>
+                                                                    <span className="db-cell-value">
+                                                                        {row.season || <span className="db-cell-empty">—</span>}
+                                                                    </span>
                                                                 )}
                                                             </td>
 
                                                             <td
-                                                                className={["db-td db-td-pick db-td-narrow",
+                                                                className={[
+                                                                    "db-td db-td-pick db-td-narrow",
                                                                     isEditing(team.id, rowIndex, "price") ? "db-td-editing" : "",
-                                                                    row.price ? "db-td-filled" : ""].join(" ")}
-                                                                onClick={() => !isEditing(team.id, rowIndex, "price") &&
-                                                                    startEditCell(team.id, rowIndex, "price", row.price)}
+                                                                    row.price ? "db-td-filled" : "",
+                                                                    isKeeper ? "db-td-keeper" : ""
+                                                                ].join(" ")}
+                                                                style={{ cursor: isKeeper ? "not-allowed" : "pointer" }}
+                                                                onClick={() => {
+                                                                    if (isKeeper) return;
+
+                                                                    if (!isEditing(team.id, rowIndex, "price")) {
+                                                                        startEditCell(team.id, rowIndex, "price", row.price);
+                                                                    }
+                                                                }}
                                                             >
                                                                 {isEditing(team.id, rowIndex, "price") ? (
-                                                                    <input ref={cellInputRef} className="db-cell-input" value={editValue}
+                                                                    <input
+                                                                        ref={cellInputRef}
+                                                                        className="db-cell-input"
+                                                                        value={editValue}
                                                                         onChange={e => setEditValue(e.target.value)}
-                                                                        onBlur={commitCellEdit} onKeyDown={handleCellKeyDown} />
+                                                                        onBlur={commitCellEdit}
+                                                                        onKeyDown={handleCellKeyDown}
+                                                                    />
                                                                 ) : (
-                                                                    <span className="db-cell-value">{row.price || <span className="db-cell-empty">—</span>}</span>
+                                                                    <span className="db-cell-value">
+                                                                        {row.price || <span className="db-cell-empty">—</span>}
+                                                                    </span>
                                                                 )}
                                                             </td>
                                                         </React.Fragment>
