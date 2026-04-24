@@ -1526,10 +1526,16 @@ button {
   background: rgba(47, 63, 137, 0.12);
 }
 
-.db-suggestion-pos {
+.db-suggestion-pos{
   color: #666;
   font-size: 0.75rem;
 }
+
+.db-suggestion-season {
+    color: #aaa;
+    font-size: 0.85em;
+}
+
 
 .db-toolbar-right {
   display: flex;

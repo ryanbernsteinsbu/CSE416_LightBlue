@@ -21,6 +21,7 @@ class DraftPick extends Model {
     public team?: Team;
     public player_id!: number;
     public player?: Player;
+    public season?: string; 
 
     // Associations
     public static associations: {
@@ -59,7 +60,11 @@ DraftPick.init({
         type: DataTypes.BIGINT,
         allowNull: false,
         references: { model: 'player', key: 'id'}
-    }
+    },
+    season: {                
+        type: DataTypes.STRING,
+        allowNull: true
+    },
 }, {
     sequelize,
     tableName:'draft_pick',

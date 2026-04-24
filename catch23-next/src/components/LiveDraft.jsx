@@ -63,7 +63,7 @@ const getPlayerDisplayName = (p) =>
 const getPlayerName = (p) =>
     getPlayerDisplayName(p).toLowerCase();
 
-export default function LiveDraft({ league, onBack, onModeChange }) {
+export default function PreDraftBoard({ league, onBack, onModeChange }) {
     const POSITIONS = buildPositions(league.rosterSettings)
 
     const [teams, setTeams] = useState([]);
@@ -127,7 +127,7 @@ export default function LiveDraft({ league, onBack, onModeChange }) {
                                         ? `${pick.player.firstName ?? ""} ${pick.player.lastName ?? ""}`.trim()
                                         : "",
                                     player_id: pick.player_id,
-                                    season: "",
+                                    season: pick.season ?? "",
                                     price: pick.cost ?? ""
                                 };
                             }
@@ -173,6 +173,7 @@ export default function LiveDraft({ league, onBack, onModeChange }) {
                     rosterPosition: positionToEnum(POSITIONS[i], i, POSITIONS),
                     team_id: team.id,
                     player_id: row.player_id,
+                    season: row.season || league.season
                 });
             });
         });
@@ -291,7 +292,8 @@ export default function LiveDraft({ league, onBack, onModeChange }) {
                         return {
                             ...row,
                             player: isValid ? getPlayerDisplayName(matched) : "", // null if not an existing player 
-                            player_id: isValid ? matched.id : null
+                            player_id: isValid ? matched.id : null,
+                            season: isValid ? league.season : ""
                         };
                     }
 
@@ -523,7 +525,8 @@ export default function LiveDraft({ league, onBack, onModeChange }) {
                                                                                                     ? {
                                                                                                         ...r,
                                                                                                         player: displayName,
-                                                                                                        player_id: p.id
+                                                                                                        player_id: p.id,
+                                                                                                        season: league.season
                                                                                                     }
                                                                                                     : r
                                                                                             );
@@ -544,6 +547,7 @@ export default function LiveDraft({ league, onBack, onModeChange }) {
                                                                                         ? p.playablePositions.join(", ")
                                                                                         : ""}
                                                                                 </span>
+                                                                                <span className="db-suggestion-season"> {league.season}</span>
                                                                             </li>
                                                                         ))}
                                                                     </ul>
