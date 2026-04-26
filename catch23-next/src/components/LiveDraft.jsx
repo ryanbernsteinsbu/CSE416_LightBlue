@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useState, useRef, useMemo } from "react";
-import { createTeam, getLeagueTeams, deleteTeam, getAllPlayers, saveDraftPicks, getTeamDraftPicks } from "../lib/api";
+import { createTeam, getLeagueTeams, deleteTeam, getAllPlayers, saveDraftPicks, getTeamDraftPicks, updateLeague } from "../lib/api";
 import ConfirmDeleteModal from "./ConfirmDeleteModal.jsx";
 import { PositionPlayersModal, playerMatchesRowPosition } from "./PositionPlayersModal";
 
@@ -60,6 +60,8 @@ export default function LiveDraftBoard({ league, onBack, onModeChange }) {
     const [selectedPosition, setSelectedPosition] = useState(null);
     const [draftLog, setDraftLog] = useState([]);
     const [draftPopup, setDraftPopup] = useState(null);
+    const [endDraftConfirm, setEndDraftConfirm] = useState(false);
+    const [endingDraft, setEndingDraft] = useState(false);
 
     const [pickBanner, setPickBanner] = useState(null);
     const [pickBannerVisible, setPickBannerVisible] = useState(false);
@@ -142,6 +144,16 @@ export default function LiveDraftBoard({ league, onBack, onModeChange }) {
         fetchTeams();
     }, [league.id]);
 
+    // draft is complete when every team has every slot filled
+    const allFilled = useMemo(() =>
+        teams.length > 0 && teams.every(t => t.rows.every(r => r.player_id))
+        , [teams]);
+
+    // count how many slots are still empty across all teams
+    const emptyCount = useMemo(() =>
+        teams.reduce((total, t) => total + t.rows.filter(r => !r.player_id).length, 0)
+        , [teams]);
+
     useEffect(() => {
         getAllPlayers()
             .then(({ data }) => setAllPlayers(data))
@@ -187,6 +199,22 @@ export default function LiveDraftBoard({ league, onBack, onModeChange }) {
             await saveDraftPicks({ picks, teamIds: updatedTeams.map(t => t.id) });
         } catch (err) {
             console.error("Auto-save failed:", err);
+        }
+    };
+
+    // finalize draft and navigate to summary
+    const handleEndDraft = async () => {
+        if (!allFilled) return;
+        setEndingDraft(true);
+        try {
+            await updateLeague(league.id, { status: "DRAFTED" });
+            onModeChange("summary");
+        } catch (err) {
+            console.error("Failed to end draft:", err);
+            alert("Error ending draft. Please try again.");
+        } finally {
+            setEndingDraft(false);
+            setEndDraftConfirm(false);
         }
     };
 
@@ -308,7 +336,7 @@ export default function LiveDraftBoard({ league, onBack, onModeChange }) {
     };
 
     return (
-        <div className="home" style={{ paddingTop: 80 }}>
+        <div className="home home-padded"> 
             <div className="db-mode-banner">YOU ARE IN LIVE DRAFT MODE!</div>
 
             <div className={`pick-banner ${pickBannerVisible ? "pick-banner--visible" : ""}`}>
@@ -336,6 +364,14 @@ export default function LiveDraftBoard({ league, onBack, onModeChange }) {
                 <div className="db-header-right">
                     <div className="db-stat"><span className="db-stat-num">{teams.length}</span><span className="db-stat-label">Teams</span></div>
                     <div className="db-stat"><span className="db-stat-num">{POSITIONS.length}</span><span className="db-stat-label">Positions</span></div>
+                    {teams.length > 0 && (
+                        <div className="db-stat">
+                            <span className={`db-stat-num ${allFilled ? "db-stat-num--complete" : "db-stat-num--incomplete"}`}>
+                                {allFilled ? "✓" : emptyCount}
+                            </span>
+                            <span className="db-stat-label">{allFilled ? "Complete" : "Empty Slots"}</span>
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -349,6 +385,21 @@ export default function LiveDraftBoard({ league, onBack, onModeChange }) {
                             <span className="db-progress-label">Click any player cell to draft • Auto-saves on each pick</span>
                             <button className="db-tool-btn db-tool-secondary" onClick={() => onModeChange("predraft")}>Pre-Draft</button>
                             <button className="db-tool-btn db-tool-secondary" onClick={() => onModeChange("simulation")}>Draft Simulation</button>
+                            <div
+                                className="tooltip-wrap"
+                                data-tip={allFilled
+                                    ? "Finalize and view draft summary"
+                                    : `${emptyCount} roster slot${emptyCount !== 1 ? "s" : ""} still need to be filled`
+                                }
+                            >
+                                <button
+                                    className={`db-tool-btn ${allFilled ? "end-draft-btn--active" : "end-draft-btn--disabled"}`}
+                                    disabled={!allFilled}
+                                    onClick={() => allFilled && setEndDraftConfirm(true)}
+                                >
+                                    🏁 End Draft
+                                </button>
+                            </div>
                         </>
                     )}
                 </div>
@@ -404,7 +455,7 @@ export default function LiveDraftBoard({ league, onBack, onModeChange }) {
                                     <tbody>
                                         {POSITIONS.map((pos, rowIndex) => (
                                             <tr key={rowIndex} className={rowIndex % 2 === 0 ? "db-row" : "db-row db-row-alt"}>
-                                                <td className="db-td db-td-pos db-sticky-col" style={{ cursor: "pointer" }}
+                                                <td className="db-td db-td-pos db-sticky-col db-td-draftable" 
                                                     onClick={() => setSelectedPosition(pos)}>
                                                     <div className="tooltip-wrap" data-tip="Click to view available players">{pos}</div>
                                                 </td>
@@ -415,15 +466,13 @@ export default function LiveDraftBoard({ league, onBack, onModeChange }) {
                                                     return (
                                                         <React.Fragment key={`${team.id}-${rowIndex}`}>
                                                             <td
-                                                                className={[
+                                                                className={[ 
                                                                     "db-td db-td-pick",
                                                                     row.player ? "db-td-filled" : "",
-                                                                    isKeeper ? "db-td-keeper" : ""
+                                                                    isKeeper ? "db-td-keeper" : "db-td-draftable"
                                                                 ].join(" ")}
-                                                                style={{ cursor: isKeeper ? "not-allowed" : "pointer" }}
                                                                 onClick={() => {
                                                                     if (isKeeper) return;
-
                                                                     setDraftPopup({
                                                                         teamId: team.id,
                                                                         rowIndex,
@@ -440,30 +489,22 @@ export default function LiveDraftBoard({ league, onBack, onModeChange }) {
                                                             </td>
 
                                                             <td
-                                                                className={[
+                                                                className={[ 
                                                                     "db-td db-td-pick db-td-narrow",
                                                                     isEditing(team.id, rowIndex, "season") ? "db-td-editing" : "",
                                                                     row.season ? "db-td-filled" : "",
-                                                                    isKeeper ? "db-td-keeper" : ""
+                                                                    isKeeper ? "db-td-keeper" : "db-td-draftable"
                                                                 ].join(" ")}
-                                                                style={{ cursor: isKeeper ? "not-allowed" : "pointer" }}
                                                                 onClick={() => {
                                                                     if (isKeeper) return;
-
-                                                                    if (!isEditing(team.id, rowIndex, "season")) {
+                                                                    if (!isEditing(team.id, rowIndex, "season"))
                                                                         startEditCell(team.id, rowIndex, "season", row.season);
-                                                                    }
                                                                 }}
                                                             >
                                                                 {isEditing(team.id, rowIndex, "season") ? (
-                                                                    <input
-                                                                        ref={cellInputRef}
-                                                                        className="db-cell-input"
-                                                                        value={editValue}
+                                                                    <input ref={cellInputRef} className="db-cell-input" value={editValue}
                                                                         onChange={e => setEditValue(e.target.value)}
-                                                                        onBlur={commitCellEdit}
-                                                                        onKeyDown={handleCellKeyDown}
-                                                                    />
+                                                                        onBlur={commitCellEdit} onKeyDown={handleCellKeyDown} />
                                                                 ) : (
                                                                     <span className="db-cell-value">
                                                                         {row.season || <span className="db-cell-empty">—</span>}
@@ -476,26 +517,18 @@ export default function LiveDraftBoard({ league, onBack, onModeChange }) {
                                                                     "db-td db-td-pick db-td-narrow",
                                                                     isEditing(team.id, rowIndex, "price") ? "db-td-editing" : "",
                                                                     row.price ? "db-td-filled" : "",
-                                                                    isKeeper ? "db-td-keeper" : ""
+                                                                    isKeeper ? "db-td-keeper" : "db-td-draftable"
                                                                 ].join(" ")}
-                                                                style={{ cursor: isKeeper ? "not-allowed" : "pointer" }}
                                                                 onClick={() => {
                                                                     if (isKeeper) return;
-
-                                                                    if (!isEditing(team.id, rowIndex, "price")) {
+                                                                    if (!isEditing(team.id, rowIndex, "price"))
                                                                         startEditCell(team.id, rowIndex, "price", row.price);
-                                                                    }
                                                                 }}
                                                             >
                                                                 {isEditing(team.id, rowIndex, "price") ? (
-                                                                    <input
-                                                                        ref={cellInputRef}
-                                                                        className="db-cell-input"
-                                                                        value={editValue}
+                                                                    <input ref={cellInputRef} className="db-cell-input" value={editValue}
                                                                         onChange={e => setEditValue(e.target.value)}
-                                                                        onBlur={commitCellEdit}
-                                                                        onKeyDown={handleCellKeyDown}
-                                                                    />
+                                                                        onBlur={commitCellEdit} onKeyDown={handleCellKeyDown} />
                                                                 ) : (
                                                                     <span className="db-cell-value">
                                                                         {row.price || <span className="db-cell-empty">—</span>}
@@ -538,17 +571,18 @@ export default function LiveDraftBoard({ league, onBack, onModeChange }) {
                 </div>
             </div>
 
+            {/* Draft popup */}
             {draftPopup && (
                 <div className="draft-popup-backdrop" onClick={() => { setDraftPopup(null); setSuggestions([]); }}>
                     <div className="draft-popup" onClick={e => e.stopPropagation()}>
                         <div className="draft-popup-title">
-                            Draft Player — <span style={{ color: "#7a9fff" }}>{draftPopup.pos}</span>
-                            <span style={{ float: "right", color: "#666", fontWeight: 400, fontSize: "0.85rem" }}>
+                            Draft Player — <span className="ds-top-pick-pos">{draftPopup.pos}</span>
+                            <span className="ld-popup-team-label">
                                 {teams.find(t => t.id === draftPopup.teamId)?.name}
                             </span>
                         </div>
 
-                        <div style={{ position: "relative" }}>
+                        <div className="db-suggestions-wrap">
                             <input
                                 ref={popupPlayerRef}
                                 className="draft-popup-input"
@@ -570,7 +604,7 @@ export default function LiveDraftBoard({ league, onBack, onModeChange }) {
                             />
                             {draftPopup.price &&
                                 parseFloat(draftPopup.price) > (remainingBudgets[draftPopup.teamId] ?? 0) && (
-                                    <div style={{ color: "#ff4d4f", fontSize: "0.85rem", marginTop: 6 }}>
+                                    <div className="ld-budget-warning"> 
                                         Exceeds remaining budget (${remainingBudgets[draftPopup.teamId]?.toFixed(0)})
                                     </div>
                                 )}
@@ -620,6 +654,38 @@ export default function LiveDraftBoard({ league, onBack, onModeChange }) {
                                 onClick={confirmDraftPopup}
                             >
                                 ✓ Draft
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {endDraftConfirm && (
+                <div className="draft-popup-backdrop" onClick={() => setEndDraftConfirm(false)}>
+                    <div className="draft-popup draft-popup--sm" onClick={e => e.stopPropagation()}>
+                        <div className="draft-popup-title">
+                            🏁 End Draft?
+                        </div>
+                        <p className="end-draft-confirm-text">
+                            All {teams.length} teams and {teams.length * POSITIONS.length} roster slots are filled.
+                            This will finalize the draft and take you to the summary page.
+                            <br /><br />
+                            You can still return to Pre-Draft mode to make changes after.
+                        </p>
+                        <div className="draft-popup-actions">
+                            <button
+                                className="db-tool-btn db-tool-secondary"
+                                onClick={() => setEndDraftConfirm(false)}
+                                disabled={endingDraft}
+                            >
+                                Keep Drafting
+                            </button>
+                            <button
+                                className="db-tool-btn end-draft-finalize-btn"
+                                onClick={handleEndDraft}
+                                disabled={endingDraft}
+                            >
+                                {endingDraft ? "Saving..." : "✓ Finalize Draft"}
                             </button>
                         </div>
                     </div>
