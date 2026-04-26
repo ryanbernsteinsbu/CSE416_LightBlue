@@ -1526,10 +1526,16 @@ button {
   background: rgba(47, 63, 137, 0.12);
 }
 
-.db-suggestion-pos {
+.db-suggestion-pos{
   color: #666;
   font-size: 0.75rem;
 }
+
+.db-suggestion-season {
+    color: #aaa;
+    font-size: 0.85em;
+}
+
 
 .db-toolbar-right {
   display: flex;
@@ -2009,4 +2015,222 @@ button {
 
 .pprof-team {
   color: #aab0d0;
+}
+
+/* Live Draft Layout */
+.ld-layout {
+    display: flex;
+    gap: 0;
+    align-items: flex-start;
+    width: min(1300px, 92vw);
+    margin: 0 auto 40px;
+}
+
+.ld-main {
+    flex: 1;
+    min-width: 0;
+}
+
+.ld-main .db-table-wrap {
+    width: 100%;
+    margin: 0;
+}
+
+/* Draft Log Sidebar */
+.ld-sidebar {
+    width: 260px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 80px;
+    max-height: calc(100vh - 100px);
+    display: flex;
+    flex-direction: column;
+    background: #1a2340;
+    border: 1px solid #2e3a7a;
+    border-radius: 0 8px 8px 0;
+    overflow: hidden;
+}
+
+.ld-sidebar-header {
+    padding: 14px 16px;
+    font-family: "Robson", Impact, sans-serif;
+    font-size: 16px;
+    letter-spacing: 0.08em;
+    color: #fff;
+    background: #2e3a7a;
+    border-bottom: 1px solid #3a4a9a;
+    flex-shrink: 0;
+}
+
+.ld-sidebar-body {
+    overflow-y: auto;
+    flex: 1;
+    padding: 4px 0;
+}
+
+.ld-sidebar-empty {
+    color: #666;
+    font-size: 13px;
+    padding: 20px 16px;
+    text-align: center;
+    font-family: "Trade Gothic", Arial, sans-serif;
+    line-height: 1.5;
+}
+
+.ld-log-entry {
+    padding: 10px 14px;
+    border-bottom: 1px solid #2a3560;
+    font-family: "Trade Gothic", Arial, sans-serif;
+}
+
+.ld-log-entry:last-child { border-bottom: none; }
+
+.ld-log-team {
+    font-weight: 800;
+    font-size: 13px;
+    color: #7a9fff;
+    margin-bottom: 2px;
+}
+
+.ld-log-pick {
+    font-size: 13px;
+    color: #ccc;
+}
+
+.ld-log-player {
+    color: #fff;
+    font-weight: 700;
+}
+
+.ld-log-meta {
+    font-size: 11px;
+    color: #555;
+    margin-top: 3px;
+    letter-spacing: 0.03em;
+}
+
+/* Draft Popup */
+.draft-popup-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.draft-popup {
+    background: #1a2340;
+    border: 1px solid #2e3a7a;
+    border-radius: 12px;
+    padding: 24px;
+    width: 360px;
+    max-width: 92vw;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    box-shadow: 0 16px 60px rgba(0, 0, 0, 0.5);
+    position: relative;
+}
+
+.draft-popup-title {
+    font-family: "Robson", Impact, sans-serif;
+    font-size: 20px;
+    letter-spacing: 0.06em;
+    color: #fff;
+}
+
+.draft-popup-input {
+    background: #0f1628;
+    border: 1px solid #2e3a7a;
+    border-radius: 8px;
+    color: #fff;
+    padding: 10px 12px;
+    font-family: "Trade Gothic", Arial, sans-serif;
+    font-size: 14px;
+    width: 100%;
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color 0.15s;
+}
+
+.draft-popup-input:focus { border-color: #7a9fff; }
+.draft-popup-input::placeholder { color: #444; }
+
+.draft-popup-input[type="number"]::-webkit-inner-spin-button,
+.draft-popup-input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.draft-popup-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 4px;
+}
+
+/* Secondary button */
+.db-tool-secondary {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.db-tool-secondary:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.18);
+    border-color: white;
+}
+
+/* Pick Banner */
+.pick-banner {
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100%);
+
+    background: #2f3f89;
+    color: white;
+    font-family: "Trade Gothic", Arial, sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+
+    padding: 14px 32px;
+    border-radius: 0 0 14px 14px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-top: none;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+
+    z-index: 2000;
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    white-space: nowrap;
+    text-align: center;
+}
+
+.pick-banner--visible {
+    transform: translateX(-50%) translateY(64px);
+}
+
+.pick-banner-team {
+    color: #7a9fff;
+    font-weight: 800;
+}
+
+.pick-banner-player {
+    color: #fff;
+    font-weight: 800;
+}
+
+.pick-banner-pos {
+    color: #e03030;
+    font-weight: 800;
+}
+
+.db-td-keeper .db-cell-value {
+    color: #4f8cff;
+    font-weight: 700;
+}
+
+.db-td-keeper {
+    cursor: not-allowed !important;
 }
