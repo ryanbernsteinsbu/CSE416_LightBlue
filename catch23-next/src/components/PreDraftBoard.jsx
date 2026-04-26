@@ -36,8 +36,8 @@ const positionToEnum = (pos, index, POSITIONS) => {
         "2B": "SECOND",
         "3B": "THIRD",
         SS: "SHORTSTOP",
-        MI: "SHORTSTOP",
-        CI: "FIRST",
+        MI: "MIDDLE_INFIELD",
+        CI: "CORNER_INFIELD",
         OF: `OUTFIELD_${n}`,
         U: "UTILITY",
         P: `PITCHER_${n}`,
@@ -77,6 +77,7 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
     const [saveBanner, setSaveBanner] = useState(false);
     const [errorBanner, setErrorBanner] = useState(false);
     const [selectedPosition, setSelectedPosition] = useState(null);
+    const [budgetErrorTeam, setBudgetErrorTeam] = useState(null);
 
 
     const cellInputRef = useRef(null);
@@ -171,6 +172,26 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
             setErrorBanner(true);
             setTimeout(() => setErrorBanner(false), 3000);
             return;
+        }
+
+        if (league.draftSettings.budget != null) {
+            const overBudgetTeam = teams.find(team => {
+                const spent = team.rows.reduce((sum, row) => {
+                    const price = parseFloat(row.price);
+                    return sum + (isNaN(price) ? 0 : price);
+                }, 0);
+                return spent > league.draftSettings.budget;
+            });
+
+            if (overBudgetTeam) {
+                const spent = overBudgetTeam.rows.reduce((sum, row) => {
+                    const price = parseFloat(row.price);
+                    return sum + (isNaN(price) ? 0 : price);
+                }, 0);
+                setBudgetErrorTeam({ name: overBudgetTeam.name, spent, budget: league.draftSettings.budget });
+                setTimeout(() => setBudgetErrorTeam(null), 4000);
+                return;
+            }
         }
 
         const picks = [];
@@ -344,6 +365,9 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
             </div>
             <div className={`save-banner save-banner-error ${errorBanner ? "save-banner--visible" : ""}`}>
                 ❌ Draft did not save. Missing price for one or more players.
+            </div>
+            <div className={`save-banner save-banner-error ${budgetErrorTeam ? "save-banner--visible" : ""}`}>
+                ❌ {budgetErrorTeam?.name} is over budget — spent ${budgetErrorTeam?.spent.toFixed(0)} of ${budgetErrorTeam?.budget}
             </div>
             <div className="db-header">
                 <div className="db-header-left">

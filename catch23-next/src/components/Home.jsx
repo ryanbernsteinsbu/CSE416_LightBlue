@@ -86,12 +86,12 @@ export default function Home({ activeLeague, setActiveLeague }) {
       ) : (
         <div className="league-grid">
           {leagues.map((league) => {
-            const isDrafted = league.status === "DRAFTED"; // ✅ ADD
+            const isDrafted = league.status === "DRAFTED"; 
             return (
               <div
                 className="league-card"
                 key={league.id}
-                onClick={() => openLeague(league)} // ✅ CHANGE: was setActiveLeague(league)
+                onClick={() => openLeague(league)} 
               >
                 <button
                   className="league-close"

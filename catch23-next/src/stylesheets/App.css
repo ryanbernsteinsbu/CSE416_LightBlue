@@ -2243,10 +2243,6 @@ button {
 
 /* ─── DraftSummary — Banner ───────────────────────────────────── */
 
-.ds-banner-complete {
-    background: linear-gradient(90deg, #1a472a 0%, #2d6a4f 100%);
-}
-
 .ds-readonly-label {
     color: #aaa;
     font-style: italic;

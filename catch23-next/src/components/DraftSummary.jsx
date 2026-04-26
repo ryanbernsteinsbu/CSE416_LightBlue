@@ -27,9 +27,16 @@ const positionToEnum = (pos, index, POSITIONS) => {
     }
     const n = counts[pos];
     const map = {
-        C: `CATCHER_${n}`, "1B": "FIRST", "2B": "SECOND", "3B": "THIRD",
-        SS: "SHORTSTOP", MI: "SHORTSTOP", CI: "FIRST",
-        OF: `OUTFIELD_${n}`, U: "UTILITY", P: `PITCHER_${n}`,
+        C: `CATCHER_${n}`,
+        "1B": "FIRST",
+        "2B": "SECOND",
+        "3B": "THIRD",
+        SS: "SHORTSTOP",
+        MI: "MIDDLE_INFIELD", // ✅ CHANGE: was "SHORTSTOP"
+        CI: "CORNER_INFIELD", // ✅ CHANGE: was "FIRST"
+        OF: `OUTFIELD_${n}`,
+        U: "UTILITY",
+        P: `PITCHER_${n}`,
     };
     return map[pos] || pos;
 };
