@@ -3,9 +3,11 @@ import React, { useState } from "react";
 import PreDraftBoard from "./PreDraftBoard";
 import DraftSimulation from "./DraftSimulation";
 import LiveDraft from "./LiveDraft";
+import DraftSummary from "./DraftSummary";
 
-export default function LeagueDraftController({ league, onBack }) {
-    const [mode, setMode] = useState("predraft");
+export default function LeagueDraftController({ league, onBack, initialMode }) {
+    const defaultMode = initialMode || (league.status === "DRAFTED" ? "summary" : "predraft"); 
+    const [mode, setMode] = useState(defaultMode); 
 
     return (
         <>
@@ -27,6 +29,13 @@ export default function LeagueDraftController({ league, onBack }) {
                 <LiveDraft
                     league={league}
                     onBack={() => setMode("predraft")}
+                    onModeChange={setMode}
+                />
+            )}
+            {mode === "summary" && (
+                <DraftSummary
+                    league={league}
+                    onBack={onBack}
                     onModeChange={setMode}
                 />
             )}

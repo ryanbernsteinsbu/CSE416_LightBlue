@@ -54,6 +54,9 @@ export const createLeague = (leagueData) =>
 export const deleteLeague = (id) =>
     axios.delete(`/api/leagues/${id}`);
 
+export const updateLeague = (id, data) =>
+    axios.put(`/api/leagues/${id}`, data);
+
 export const getUserLeagues = (userId) =>
     axios.get(`/api/leagues/user/${userId}`);
 

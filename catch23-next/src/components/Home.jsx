@@ -3,13 +3,14 @@
 import { useEffect, useState } from "react";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
 import CreateLeagueModal from "./CreateLeagueModal";
-import LeagueDraftController from  "./LeagueDraftController";
+import LeagueDraftController from "./LeagueDraftController";
 import { getUserLeagues, deleteLeague, getLeagueTeams } from "../lib/api";
 
 export default function Home({ activeLeague, setActiveLeague }) {
   const [leagues, setLeagues] = useState([]);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [initialMode, setInitialMode] = useState(null);
 
   const DEFAULT_LOGO = "https://i.imgur.com/DxHxkuJ.png";
 
@@ -42,28 +43,36 @@ export default function Home({ activeLeague, setActiveLeague }) {
     fetchLeagues();
   }, []);
 
+  // open league directly into a specific mode 
+  const openLeague = (league, mode = null) => {
+    setInitialMode(mode);
+    setActiveLeague(league);
+  };
+
   const onCreateLeague = () => {
     setIsCreateOpen(true);
   };
 
- if (activeLeague) {
+  if (activeLeague) {
     return (
-        <LeagueDraftController
-            league={activeLeague}
-            onBack={() => {
-                setActiveLeague(null);
-                fetchLeagues();
-            }}
-        />
+      <LeagueDraftController
+        league={activeLeague}
+        initialMode={initialMode}
+        onBack={() => {
+          setActiveLeague(null);
+          setInitialMode(null);
+          fetchLeagues();
+        }}
+      />
     );
-}
+  }
 
   return (
     <div className="home">
       <div className="home-header">
         <h1 className="home-leagues-title">Leagues</h1>
         <div className="tooltip-wrap tooltip-right" data-tip="Create a new league">
-          <button className="create-league-btn" onClick={onCreateLeague}>
+          <button className="create-league-btn" onClick={() => setIsCreateOpen(true)}>
             +
           </button>
         </div>
@@ -76,47 +85,62 @@ export default function Home({ activeLeague, setActiveLeague }) {
         </div>
       ) : (
         <div className="league-grid">
-          {leagues.map((league) => (
-            <div
-              className="league-card"
-              key={league.id}
-              onClick={() => setActiveLeague(league)}
-            >
-              <button
-                className="league-close"
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setDeleteTarget({
-                    id: league.id,
-                    name: league.title || league.name,
-                  });
-                }}
-                aria-label="Remove league"
+          {leagues.map((league) => {
+            const isDrafted = league.status === "DRAFTED"; 
+            return (
+              <div
+                className="league-card"
+                key={league.id}
+                onClick={() => openLeague(league)} 
               >
-                ×
-              </button>
+                <button
+                  className="league-close"
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDeleteTarget({
+                      id: league.id,
+                      name: league.title || league.name,
+                    });
+                  }}
+                  aria-label="Remove league"
+                >
+                  ×
+                </button>
 
-              <img
-                className="league-logo-placeholder"
-                src={
-                  league.leagueIconUrl ||
-                  league.league_icon_url ||
-                  league.logoUrl ||
-                  DEFAULT_LOGO
-                }
-                alt="league logo"
-              />
+                <img
+                  className="league-logo-placeholder"
+                  src={
+                    league.leagueIconUrl ||
+                    league.league_icon_url ||
+                    league.logoUrl ||
+                    DEFAULT_LOGO
+                  }
+                  alt="league logo"
+                />
 
-              <div className="league-title">{league.title || league.name}</div>
+                <div className="league-title">{league.title || league.name}</div>
 
-              <div className="league-subtitle">
-                {league.format} • {league.teamCount ?? 0} TEAMS • {league.season} SEASON
+                <div className="league-subtitle">
+                  {league.format} • {league.teamCount ?? 0} TEAMS • {league.season} SEASON
+                </div>
+
+                <div className="league-season">Season {league.seasonNum}</div>
+
+                {isDrafted && (
+                  <button
+                    className="league-summary-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openLeague(league, "summary");
+                    }}
+                  >
+                    📊 View Draft Summary
+                  </button>
+                )}
               </div>
-
-              <div className="league-season">Season {league.seasonNum}</div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
