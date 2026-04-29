@@ -1,7 +1,7 @@
 import axios from 'axios'
 import crypto from 'crypto';
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
-axios.defaults.baseURL = process.env.NEXT_PUBLIC_API_URL; // http://localhost:8001
+axios.defaults.baseURL = BASE_URL; 
 axios.defaults.withCredentials = true;
 
 const PUBLIC_URL = process.env.NEXT_PUBLIC_PUBLIC_URL;

@@ -32,8 +32,8 @@ const positionToEnum = (pos, index, POSITIONS) => {
         "2B": "SECOND",
         "3B": "THIRD",
         SS: "SHORTSTOP",
-        MI: "MIDDLE_INFIELD", // ✅ CHANGE: was "SHORTSTOP"
-        CI: "CORNER_INFIELD", // ✅ CHANGE: was "FIRST"
+        MI: "MIDDLE_INFIELD", 
+        CI: "CORNER_INFIELD", 
         OF: `OUTFIELD_${n}`,
         U: "UTILITY",
         P: `PITCHER_${n}`,
