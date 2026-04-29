@@ -10,7 +10,7 @@ import DraftSettings from './draftSettings'
 
 // Enum
 export enum LeagueStatus {
-    PRE_DRAFT = 'PRE_DRAFT', IN_PROGRESS = 'IN_PROGRESS', COMPLETED = 'COMPLETED'
+    PRE_DRAFT = 'PRE_DRAFT', IN_PROGRESS = 'IN_PROGRESS', COMPLETED = 'COMPLETED', DRAFTED = 'DRAFTED' 
 }
 
 class League extends Model {

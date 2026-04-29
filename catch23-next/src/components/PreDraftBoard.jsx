@@ -36,8 +36,8 @@ const positionToEnum = (pos, index, POSITIONS) => {
         "2B": "SECOND",
         "3B": "THIRD",
         SS: "SHORTSTOP",
-        MI: "SHORTSTOP",
-        CI: "FIRST",
+        MI: "MIDDLE_INFIELD",
+        CI: "CORNER_INFIELD",
         OF: `OUTFIELD_${n}`,
         U: "UTILITY",
         P: `PITCHER_${n}`,
@@ -63,7 +63,7 @@ const getPlayerDisplayName = (p) =>
 const getPlayerName = (p) =>
     getPlayerDisplayName(p).toLowerCase();
 
-export default function LeagueDraftBoard({ league, onBack }) {
+export default function PreDraftBoard({ league, onBack, onModeChange }) {
     const POSITIONS = buildPositions(league.rosterSettings)
 
     const [teams, setTeams] = useState([]);
@@ -75,8 +75,9 @@ export default function LeagueDraftBoard({ league, onBack }) {
     const [suggestions, setSuggestions] = useState([]);
     const [teamDeleteTarget, setTeamDeleteTarget] = useState(null);
     const [saveBanner, setSaveBanner] = useState(false);
+    const [errorBanner, setErrorBanner] = useState(false);
     const [selectedPosition, setSelectedPosition] = useState(null);
-    //const [teamBudgets, setTeamBudgets] = useState({});
+    const [budgetErrorTeam, setBudgetErrorTeam] = useState(null);
 
 
     const cellInputRef = useRef(null);
@@ -128,7 +129,7 @@ export default function LeagueDraftBoard({ league, onBack }) {
                                         ? `${pick.player.firstName ?? ""} ${pick.player.lastName ?? ""}`.trim()
                                         : "",
                                     player_id: pick.player_id,
-                                    season: "",
+                                    season: pick.season ?? "",
                                     price: pick.cost ?? ""
                                 };
                             }
@@ -163,6 +164,36 @@ export default function LeagueDraftBoard({ league, onBack }) {
     }, []);
 
     const handleSaveDraft = async () => {
+        const missingPrice = teams.some(team =>
+            team.rows.some(row => row.player_id && !row.price)
+        );
+
+        if (missingPrice) {
+            setErrorBanner(true);
+            setTimeout(() => setErrorBanner(false), 3000);
+            return;
+        }
+
+        if (league.draftSettings.budget != null) {
+            const overBudgetTeam = teams.find(team => {
+                const spent = team.rows.reduce((sum, row) => {
+                    const price = parseFloat(row.price);
+                    return sum + (isNaN(price) ? 0 : price);
+                }, 0);
+                return spent > league.draftSettings.budget;
+            });
+
+            if (overBudgetTeam) {
+                const spent = overBudgetTeam.rows.reduce((sum, row) => {
+                    const price = parseFloat(row.price);
+                    return sum + (isNaN(price) ? 0 : price);
+                }, 0);
+                setBudgetErrorTeam({ name: overBudgetTeam.name, spent, budget: league.draftSettings.budget });
+                setTimeout(() => setBudgetErrorTeam(null), 4000);
+                return;
+            }
+        }
+
         const picks = [];
 
         teams.forEach(team => {
@@ -170,10 +201,11 @@ export default function LeagueDraftBoard({ league, onBack }) {
                 if (!row.player_id) return;
 
                 picks.push({
-                    cost: parseFloat(row.price) || 0,
+                    cost: parseFloat(row.price),
                     rosterPosition: positionToEnum(POSITIONS[i], i, POSITIONS),
                     team_id: team.id,
                     player_id: row.player_id,
+                    season: row.season || league.season
                 });
             });
         });
@@ -181,7 +213,6 @@ export default function LeagueDraftBoard({ league, onBack }) {
         console.log("sending picks:", picks);
 
         try {
-            // save draft picks to the database
             await saveDraftPicks({
                 picks,
                 teamIds: teams.map(t => t.id)
@@ -192,10 +223,10 @@ export default function LeagueDraftBoard({ league, onBack }) {
 
         } catch (err) {
             console.error("Failed to save draft:", err);
-            alert("Error saving draft.");
+            setErrorBanner(true);
+            setTimeout(() => setErrorBanner(false), 3000);
         }
     };
-
     // adding a new team
     const addTeam = async () => {
 
@@ -292,7 +323,8 @@ export default function LeagueDraftBoard({ league, onBack }) {
                         return {
                             ...row,
                             player: isValid ? getPlayerDisplayName(matched) : "", // null if not an existing player 
-                            player_id: isValid ? matched.id : null
+                            player_id: isValid ? matched.id : null,
+                            season: isValid ? league.season : ""
                         };
                     }
 
@@ -327,8 +359,15 @@ export default function LeagueDraftBoard({ league, onBack }) {
 
     return (
         <div className="home" style={{ paddingTop: 80 }}>
+            <div className="db-mode-banner">YOU ARE IN PRE-DRAFT MODE!</div>
             <div className={`save-banner ${saveBanner ? "save-banner--visible" : ""}`}>
                 ✅ Draft saved!
+            </div>
+            <div className={`save-banner save-banner-error ${errorBanner ? "save-banner--visible" : ""}`}>
+                ❌ Draft did not save. Missing price for one or more players.
+            </div>
+            <div className={`save-banner save-banner-error ${budgetErrorTeam ? "save-banner--visible" : ""}`}>
+                ❌ {budgetErrorTeam?.name} is over budget — spent ${budgetErrorTeam?.spent.toFixed(0)} of ${budgetErrorTeam?.budget}
             </div>
             <div className="db-header">
                 <div className="db-header-left">
@@ -364,6 +403,12 @@ export default function LeagueDraftBoard({ league, onBack }) {
                             <span className="db-progress-label">
                                 Click any cell to edit • Click team name to rename
                             </span>
+                            <button className="db-tool-btn db-tool-secondary" onClick={() => onModeChange("simulation")}>
+                                Draft Simulation
+                            </button>
+                            <button className="db-tool-btn db-tool-secondary" onClick={() => onModeChange("live")}>
+                                Live Draft
+                            </button>
                             <button className="db-tool-btn db-tool-primary" onClick={handleSaveDraft}>
                                 💾 Save Draft
                             </button>
@@ -517,7 +562,8 @@ export default function LeagueDraftBoard({ league, onBack }) {
                                                                                                     ? {
                                                                                                         ...r,
                                                                                                         player: displayName,
-                                                                                                        player_id: p.id
+                                                                                                        player_id: p.id,
+                                                                                                        season: league.season
                                                                                                     }
                                                                                                     : r
                                                                                             );
@@ -538,6 +584,7 @@ export default function LeagueDraftBoard({ league, onBack }) {
                                                                                         ? p.playablePositions.join(", ")
                                                                                         : ""}
                                                                                 </span>
+                                                                                <span className="db-suggestion-season"> {league.season}</span>
                                                                             </li>
                                                                         ))}
                                                                     </ul>

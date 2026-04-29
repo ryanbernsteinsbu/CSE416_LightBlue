@@ -1,23 +1,37 @@
 'use client';
 import React, { useEffect, useState } from "react";
 import { getRankedPlayers } from "../lib/api";
-import axios from 'axios';
-
 
 // RANKING FUNCTION
 export async function rankPlayers(players) {
-    // Grab rank
-    const {response} = await getRankedPlayers();
-    const rankData = Object.values(response.data);
-    const rankMap = new Map(rankData.map(r => [String(r.id), r.rank]));
-    
-    const sorted = [...players].map(p=>({...p, rank: rankMap.get(String(p.id)) ?? -1 }))
-                .sort((a,b) => b.rank - a.rank);
-    
-    console.log("sorted players:", sorted.map(p => `${p.firstName} ${p.lastName}: ${p.rank}`));
-    console.log("sorted:", sorted.map(p => `${p.firstName}: ${p.rank}`));
+    try {
+        const response = await getRankedPlayers();
 
-    return sorted;
+        if (!response?.data) {
+            console.error("Ranking API failed:", response);
+            return players;
+        }
+
+        const rankData = Array.isArray(response.data)
+            ? response.data
+            : Object.values(response.data);
+
+        const rankMap = new Map(rankData.map(r => [String(r.mlbPlayerId), r.rank]));
+        console.log("Ohtani rank:", rankMap.get(String(players.find(p => p.lastName === "Ohtani")?.mlbPlayerId)));
+        console.log("Jorge Alfaro rank:", rankMap.get(String(players.find(p => p.lastName === "Alfaro")?.mlbPlayerId)));
+
+        const sorted = [...players]
+            .map(p => ({
+                ...p,
+                rank: rankMap.get(String(p.mlbPlayerId)) ?? Number.POSITIVE_INFINITY
+            }))
+            .sort((a, b) => b.rank - a.rank);
+
+        return sorted;
+    } catch (err) {
+        console.error("Error fetching ranked players:", err?.response?.data || err.message);
+        return players;
+    }
 }
 
 export const playerMatchesRowPosition = (player, rowPos) => {

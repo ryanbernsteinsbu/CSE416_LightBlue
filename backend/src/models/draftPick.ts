@@ -1,19 +1,20 @@
-import { DataTypes, Model, Association} from 'sequelize';
+import { DataTypes, Model, Association } from 'sequelize';
 import sequelize from '../config/database';
 import Team from './team';
 import Player from './player';
 
-
 export enum RosterPosition {
     CATCHER_1 = 'CATCHER_1', CATCHER_2 = 'CATCHER_2',
     FIRST = 'FIRST', THIRD = 'THIRD', SECOND = 'SECOND', SHORTSTOP = 'SHORTSTOP',
+    CORNER_INFIELD = 'CORNER_INFIELD',
+    MIDDLE_INFIELD = 'MIDDLE_INFIELD',
     OUTFIELD_1 = 'OUTFIELD_1', OUTFIELD_2 = 'OUTFIELD_2', OUTFIELD_3 = 'OUTFIELD_3', OUTFIELD_4 = 'OUTFIELD_4', OUTFIELD_5 = 'OUTFIELD_5',
     UTILITY = 'UTILITY',
-    PITCHER_1 = 'PITCHER_1', PITCHER_2 = 'PITCHER_2', PITCHER_3 = 'PITCHER_3', PITCHER_4 = 'PITCHER_4', PITCHER_5 = 'PITCHER_5', 
+    PITCHER_1 = 'PITCHER_1', PITCHER_2 = 'PITCHER_2', PITCHER_3 = 'PITCHER_3', PITCHER_4 = 'PITCHER_4', PITCHER_5 = 'PITCHER_5',
     PITCHER_6 = 'PITCHER_6', PITCHER_7 = 'PITCHER_7', PITCHER_8 = 'PITCHER_8', PITCHER_9 = 'PITCHER_9'
 }
+
 class DraftPick extends Model {
-    // Fields
     public id!: number;
     public cost!: number;
     public rosterPosition!: RosterPosition;
@@ -21,18 +22,15 @@ class DraftPick extends Model {
     public team?: Team;
     public player_id!: number;
     public player?: Player;
+    public season?: string;
+    public draft_time?: string; // ← new
+    public createdAt!: Date;
+    public updatedAt!: Date;
 
-    // Associations
     public static associations: {
         team: Association<DraftPick, Team>;
         player: Association<DraftPick, Player>;
     }
-    
-    // public static associate (models: any) {
-    //     DraftPick.belongsTo(models.Team, { foreignKey: 'team_id', as: 'team' });
-    //     DraftPick.belongsTo(models.Player, { foreignKey: 'player_id', as: 'player' });
-    // }
-
 }
 
 DraftPick.init({
@@ -53,20 +51,27 @@ DraftPick.init({
     team_id: {
         type: DataTypes.BIGINT,
         allowNull: false,
-        references: { model: 'teams', key: 'id'}
+        references: { model: 'teams', key: 'id' }
     },
     player_id: {
         type: DataTypes.BIGINT,
         allowNull: false,
-        references: { model: 'player', key: 'id'}
-    }
+        references: { model: 'player', key: 'id' }
+    },
+    season: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    draft_time: {           // ← new
+        type: DataTypes.STRING(50),
+        allowNull: true
+    },
 }, {
     sequelize,
-    tableName:'draft_pick',
-    timestamps: false,
+    tableName: 'draft_pick',
+    timestamps: true,
+    createdAt: 'created_at',
+    updatedAt: 'updated_at',
 });
-
-//DraftPick.belongsTo(Team, { foreignKey: 'team_id', as: 'team' });
-//DraftPick.belongsTo(Player, { foreignKey: 'player_id', as: 'player' });
 
 export default DraftPick;
