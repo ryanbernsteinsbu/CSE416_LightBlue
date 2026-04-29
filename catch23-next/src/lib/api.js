@@ -120,10 +120,11 @@ export const getTeamDraftPicks = (teamId) =>
 
 
 // Getting Ranked Players
-export const getRankedPlayers = async () => {
-    const url = `${BASE_URL}/api/ranking/rank`;
-    console.log("Calling:", url);
 
-    return axios.post(url, {});
+export const getRankedPlayers = async () => {
+    const data = {};
+    return publicApi.post(`/api/ranking/rank`, data, {
+        headers: { "x-email": EMAIL, "x-signature": sign(data) }
+    });
 };
  
