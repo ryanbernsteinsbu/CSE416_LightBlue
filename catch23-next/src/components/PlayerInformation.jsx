@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { getAllPlayers } from "../lib/api";
 import { PlayerProfileModal } from "./PlayerProfileModal";
+import { PlayerCompareModal } from "./PlayerCompareModal";
 
 // Base columns (shared columns that appear both hitting and pitching views)
 const BASE_COLUMNS = [
@@ -74,6 +75,8 @@ export default function PlayerInformation() {
 
     // player selected
     const [selectedPlayer, setSelectedPlayer] = useState(null);
+    const [compareOpen, setCompareOpen] = useState(false);
+    const [compareSelected, setCompareSelected] = useState([]);
 
     const [players, setPlayers] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -161,6 +164,21 @@ export default function PlayerInformation() {
         console.log(process.env.BASE_URL);
     }
 
+    const addPlayer = (player) => {
+        if (!compareOpen) return;
+        if (compareSelected.find(p => p.id === player.id)) {
+            setCompareSelected(prev => prev.filter(p => p.id !== player.id));
+            return;
+        }
+        if (compareSelected.length >= 4) return;
+        setCompareSelected(prev => [...prev, player]);
+    }
+
+    const closeCompare = () => {
+        setCompareOpen(false);
+        setCompareSelected([]);
+    }
+
     return (
         <div className="pi-page">
             <div className="pi-wrap">
@@ -179,6 +197,13 @@ export default function PlayerInformation() {
                                     {t.charAt(0).toUpperCase() + t.slice(1)}
                                 </button>
                             ))}
+                            <button
+                                className={`pi-tab ${compareOpen ? "is-active" : ""}`}
+                                type="button"
+                                onClick={() => compareOpen ? closeCompare() : setCompareOpen(true)}
+                                >
+                                Compare
+                            </button>
                         </div>
                     </div>
 
@@ -273,9 +298,12 @@ export default function PlayerInformation() {
                                                                     style={{ display: "inline-block" }}
                                                                 >
                                                                     <span
-                                                                        onClick={() => setSelectedPlayer(p)}
+                                                                        onClick={() => {
+                                                                            if (!compareOpen) setSelectedPlayer(p);
+                                                                            addPlayer(p);
+                                                                        }}
                                                                         style={{ cursor: "pointer", color: "#e03030", fontWeight: "bold" }}
-                                                                    >
+                                                                        >
                                                                         {fullName}
                                                                     </span>
                                                                 </div>
@@ -342,6 +370,12 @@ export default function PlayerInformation() {
                     team: selectedPlayer?.team,
                     stats: selectedPlayer?.stats,
                 }}
+            />
+            <PlayerCompareModal
+                isOpen={compareOpen}
+                selected={compareSelected}
+                onRemove={(id) => setCompareSelected(prev => prev.filter(p => p.id !== id))}
+                onClose={closeCompare}
             />
         </div>
     );
