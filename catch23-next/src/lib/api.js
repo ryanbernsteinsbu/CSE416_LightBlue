@@ -87,6 +87,9 @@ export const deleteTeam = (id) =>
 export const getAllPlayers = () => 
   axios.get('/api/players/all');
 
+export const queryPlayers = (nameQuery, posQuery, teamQuery, sortKey, sortDir, isHitters, pageNumber) => 
+  axios.post('/api/players/query',{nameQuery, posQuery, teamQuery, sortKey, sortDir, isHitters, pageNumber});
+
 export const getPlayer = (id) => 
   axios.get(`/api/players/${id}`);
 

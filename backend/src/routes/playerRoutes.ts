@@ -13,7 +13,7 @@ router.get('/all', playerController.getAllPlayers);
 router.get('/mlbId/:mlbPlayerId', playerController.getPlayerByMlbId);
 router.get('/position/:position', playerController.getPlayerByPosition);
 router.get('/status/:status', playerController.getPlayerByStatus);
-
+router.post('/query', playerController.queryPlayers)
 router.get('/:id', playerController.getPlayer);
 router.put('/:id', playerController.updatePlayer);
 router.delete('/:id', playerController.deletePlayer);
