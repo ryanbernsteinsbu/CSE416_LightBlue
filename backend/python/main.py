@@ -2,7 +2,7 @@ from pybaseball import batting_stats_range, pitching_stats_range
  
 import pandas as pd
 import requests
-
+yesterday = "2026-04-11"
 # def get_position(mlb_id): # this is too slow we need to batch
 #     url = f"https://statsapi.mlb.com/api/v1/people/{mlb_id}"
 #     res = requests.get(url).json()
@@ -59,7 +59,7 @@ TEAM_MAP = { #results dont show team so I used AI to make this map
     # Index(['Name', 'Age', '#days', 'Lev', 'Tm', 'G', 'PA', 'AB', 'R', 'H', '2B',
     #        '3B', 'HR', 'RBI', 'BB', 'IBB', 'SO', 'HBP', 'SH', 'SF', 'GDP', 'SB',
     #        'CS', 'BA', 'OBP', 'SLG', 'OPS', 'mlbID'],
-data = batting_stats_range(start_dt="2023-04-01", end_dt="2026-04-11") # grab stats, TODO make this range dynamic (it will break if times are offseason)
+data = batting_stats_range(start_dt="2023-04-01", end_dt=yesterday) # grab stats, TODO make this range dynamic (it will break if times are offseason)
 data.rename({ "SO": "K", "BA": "AVG" }, axis="columns", inplace=True) # match existing labels
 data["1B"] = data["H"] - data["2B"] - data["3B"] - data["HR"] # add existing label
 #names contain escape codes
@@ -78,7 +78,7 @@ for batch in chunk(final_data["mlbID"].tolist(), 50):
 
 final_data["position"] = final_data["mlbID"].map(positions) # grab positions
 # final_data["position"] = final_data["mlbID"].apply(get_position)
-
+print(final_data["position"].unique())
 final_data["team_abbr"] = final_data.apply(# get team
     lambda row: TEAM_MAP.get((row["Lev"], row["Tm"]), None),
     axis=1
@@ -93,7 +93,7 @@ final_data.to_csv(r'./data.csv', index=False) #save
 #        'SO/W', 'mlbID'],
 
 #pitching stats reference ^^
-pitching_data = pitching_stats_range(start_dt="2023-04-01", end_dt="2026-04-11")
+pitching_data = pitching_stats_range(start_dt="2023-04-01", end_dt=yesterday)
 
 # pitching_data["Name"] = pitching_data["Name"].apply( # was my attempt to parse names TODO 
 #     lambda x : x.encode("latin1").decode("utf-8")

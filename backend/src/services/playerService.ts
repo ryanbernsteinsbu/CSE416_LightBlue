@@ -1,6 +1,8 @@
 import * as playerRepository from '../repositories/playerRepository';
 import Player, { Position, Status } from '../models/player';
-
+import { Op } from "sequelize";
+import sequelize from '../config/database';
+const PAGE_SIZE = 50;
 /* 
 create player, find all, find by id, find by mlb id, find by position, 
 find by status, update a player, delete a player
@@ -62,6 +64,71 @@ export const getPlayersByStatus = async (status: Status): Promise<Player[] | nul
     const players = await playerRepository.findPlayerByStatus(status);
     if (!players) throw new Error('Players not found');
     return players;
+}
+
+// POST /api/players/query
+export const queryPlayers = async (nameQuery: string, posQuery: string, teamQuery: string, sortKey: string, sortDir: boolean, isHitters: boolean, page: number): Promise<Player[] | null> => {
+    try {
+        const where: any = {};
+        
+        where.isHitter = isHitters;
+        
+        if (nameQuery?.trim()) {
+            where[Op.or] = [
+                { firstName: { [Op.iLike]: `%${nameQuery}%` } },
+                { lastName: { [Op.iLike]: `%${nameQuery}%` } },
+            ];
+        }
+
+        if (teamQuery?.trim()) {
+            where.realTeam = { [Op.iLike]: `%${teamQuery}%` };
+        }
+
+        if (posQuery?.trim()) {
+            where.playablePositions = {
+                [Op.contains]: [posQuery.toUpperCase()],
+            };
+        }
+
+        const offset = (page - 1) * PAGE_SIZE;
+
+        let order: any[] = [];
+
+        const direction = sortDir ? "ASC" : "DESC";
+
+        if (sortKey === "name") {
+            order = [
+                ["lastName", direction],
+                ["firstName", direction],
+            ];
+        } else if (sortKey === "team") {
+            order = [["realTeam", direction]];
+        } else if (sortKey === "age") {
+            order = [["age", direction]];
+        } else if (sortKey === "pos") {
+            order = [["playablePositions", direction]];
+        } else {
+            order = [
+                [
+                    sequelize.literal(`"lastYearStats"->>'${sortKey}'`),
+                    direction,
+                ],
+            ];
+        }
+        console.log(where);
+        console.log(order);
+        const players = await Player.findAll({
+            where,
+            limit: PAGE_SIZE,
+            offset,
+            order,
+        });
+
+        return players;
+    } catch(err: any) {
+        console.error(err);
+        return null;
+    }
 }
 
 // PUT /api/players/:id
