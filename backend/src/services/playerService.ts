@@ -2,7 +2,6 @@ import * as playerRepository from '../repositories/playerRepository';
 import Player, { Position, Status } from '../models/player';
 import { Op } from "sequelize";
 import sequelize from '../config/database';
-const PAGE_SIZE = 50;
 /* 
 create player, find all, find by id, find by mlb id, find by position, 
 find by status, update a player, delete a player
@@ -67,7 +66,7 @@ export const getPlayersByStatus = async (status: Status): Promise<Player[] | nul
 }
 
 // POST /api/players/query
-export const queryPlayers = async (nameQuery: string, posQuery: string, teamQuery: string, sortKey: string, sortDir: boolean, isHitters: boolean, page: number): Promise<Player[] | null> => {
+export const queryPlayers = async (nameQuery: string, posQuery: string, teamQuery: string, sortKey: string, sortDir: boolean, isHitters: boolean, page: number, pageSize:number): Promise<{players: Player[], total: number} | null> => {
     try {
         const where: any = {};
         
@@ -90,7 +89,7 @@ export const queryPlayers = async (nameQuery: string, posQuery: string, teamQuer
             };
         }
 
-        const offset = (page - 1) * PAGE_SIZE;
+        const offset = (page - 1) * pageSize;
 
         let order: any[] = [];
 
@@ -117,14 +116,18 @@ export const queryPlayers = async (nameQuery: string, posQuery: string, teamQuer
         }
         console.log(where);
         console.log(order);
-        const players = await Player.findAll({
-            where,
-            limit: PAGE_SIZE,
-            offset,
-            order,
-        });
-
-        return players;
+        const [players, total] = await Promise.all([
+            Player.findAll({
+                where,
+                limit: pageSize,
+                offset,
+                order,
+            }),
+            Player.count({
+                where,
+            }),
+        ]);
+        return {players, total};
     } catch(err: any) {
         console.error(err);
         return null;
