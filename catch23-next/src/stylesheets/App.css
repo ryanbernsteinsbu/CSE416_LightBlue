@@ -2812,3 +2812,421 @@ button {
 .txn-wire-from { color: #f87171; font-weight: 500; }
 .txn-wire-arrow { color: #475569; }
 .txn-wire-to { color: #4ade80; font-weight: 500; }
+
+/* ── Missing classes referenced in existing code ────────────────────────── */
+
+/* Error variant of the save banner */
+.save-banner-error {
+    background: #7a1a1a;
+    border-color: rgba(255, 100, 100, 0.3);
+}
+
+/* Budget remaining label under team header */
+.db-team-budget {
+    font-family: "Trade Gothic", Arial, sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.65);
+    text-align: center;
+    margin-top: 4px;
+    letter-spacing: 0.05em;
+}
+
+/* Mode banner shared base style */
+.db-mode-banner {
+    width: min(1300px, 92vw);
+    margin: 0 auto 10px;
+    font-family: "Robson", Impact, sans-serif;
+    font-size: 13px;
+    letter-spacing: 2px;
+    color: rgba(255, 255, 255, 0.5);
+    text-transform: uppercase;
+}
+
+
+/* ── Draft Simulation — layout ───────────────────────────────────────────── */
+
+.sim-mode-banner {
+    color: rgba(255, 200, 60, 0.75);
+}
+
+.sim-layout {
+    display: flex;
+    gap: 18px;
+    align-items: flex-start;
+    width: min(1300px, 92vw);
+    margin: 0 auto 40px;
+}
+
+.sim-main {
+    flex: 1;
+    min-width: 0;
+}
+
+.sim-main .db-scroll {
+    border-radius: 14px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+}
+
+/* Widen the single team column */
+.sim-th-teamname {
+    min-width: 480px;
+}
+
+
+/* ── Draft Simulation — sidebar ──────────────────────────────────────────── */
+
+.sim-sidebar {
+    width: 260px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 80px;
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    background: #1a2340;
+    border: 1px solid #2e3a7a;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.sim-sidebar-header {
+    padding: 14px 16px;
+    font-family: "Robson", Impact, sans-serif;
+    font-size: 16px;
+    letter-spacing: 0.08em;
+    color: #fff;
+    background: #2e3a7a;
+    border-bottom: 1px solid #3a4a9a;
+    flex-shrink: 0;
+}
+
+.sim-sidebar-body {
+    overflow-y: auto;
+    flex: 1;
+    padding: 0;
+}
+
+.sim-section {
+    padding: 12px 14px;
+    border-bottom: 1px solid #1e2a4a;
+}
+
+.sim-section:last-child {
+    border-bottom: none;
+}
+
+.sim-section-title {
+    font-family: "Trade Gothic", Arial, sans-serif;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #5060b0;
+    margin-bottom: 8px;
+}
+
+
+/* ── Budget bar ──────────────────────────────────────────────────────────── */
+
+.sim-budget-numbers {
+    font-family: "Trade Gothic", Arial, sans-serif;
+    font-size: 13px;
+    margin-bottom: 6px;
+}
+
+.sim-budget-spent {
+    color: #e8eaf6;
+    font-weight: 700;
+}
+
+.sim-budget-sep {
+    color: #444;
+}
+
+.sim-budget-total {
+    color: #555;
+}
+
+.sim-budget-bar {
+    height: 5px;
+    background: #1e2a4a;
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 4px;
+}
+
+.sim-budget-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s ease, background 0.3s ease;
+}
+
+.sim-budget-remaining {
+    font-family: "Trade Gothic", Arial, sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+
+/* ── Sim pick rows ───────────────────────────────────────────────────────── */
+
+.sim-pick-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 0;
+    border-bottom: 1px solid #1e2a4a;
+    font-family: "Trade Gothic", Arial, sans-serif;
+}
+
+.sim-pick-row:last-child {
+    border-bottom: none;
+}
+
+.sim-pick-row--keeper {
+    opacity: 0.7;
+}
+
+.sim-pick-pos {
+    background: #1e3a5f;
+    color: #7a9fff;
+    border-radius: 4px;
+    padding: 2px 5px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+    min-width: 28px;
+    text-align: center;
+}
+
+.sim-pick-name {
+    color: #e8eaf6;
+    font-size: 12px;
+    font-weight: 600;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sim-pick-price {
+    color: #52c41a;
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+
+/* ── Sim keeper badge (in table cell) ────────────────────────────────────── */
+
+.sim-keeper-badge {
+    margin-left: 6px;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: #4f8cff;
+    background: rgba(79, 140, 255, 0.12);
+    padding: 1px 5px;
+    border-radius: 3px;
+    vertical-align: middle;
+}
+
+
+/* ── Sim open slots ──────────────────────────────────────────────────────── */
+
+.sim-slots-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 2px;
+}
+
+.sim-slot-chip {
+    background: #1e2a4a;
+    color: #5060b0;
+    border-radius: 4px;
+    padding: 2px 7px;
+    font-family: "Trade Gothic", Arial, sans-serif;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+}
+
+
+/* ── Sim empty / tip ─────────────────────────────────────────────────────── */
+
+.sim-empty-msg {
+    color: #3a4a7a;
+    font-family: "Trade Gothic", Arial, sans-serif;
+    font-size: 12px;
+    line-height: 1.5;
+    padding: 4px 0;
+}
+
+.sim-tip {
+    padding: 12px 14px;
+    font-family: "Trade Gothic", Arial, sans-serif;
+    font-size: 11px;
+    color: #3a4a7a;
+    line-height: 1.6;
+    border-top: 1px solid #1e2a4a;
+}
+
+.sim-tip strong {
+    color: #5060b0;
+}
+
+
+/* ── LiveDraft — "YOU" badge on sim team header ──────────────────────────── */
+
+.ld-your-team-badge {
+    margin-left: 6px;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    color: #52c41a;
+    background: rgba(82, 196, 26, 0.15);
+    border: 1px solid rgba(82, 196, 26, 0.3);
+    padding: 1px 5px;
+    border-radius: 3px;
+    vertical-align: middle;
+}
+
+/* Sim team header column tint */
+.db-th-simteam {
+    background: #1e3a22 !important;
+    border-bottom-color: rgba(82, 196, 26, 0.2);
+}
+
+
+/* ── LiveDraft — Targets (sim recommendations) panel ────────────────────── */
+
+.ld-targets-section {
+    background: #111d30;
+    border-bottom: 2px solid #2e3a7a;
+    flex-shrink: 0;
+}
+
+.ld-targets-header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 11px 16px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: "Trade Gothic", Arial, sans-serif;
+    font-size: 13px;
+    font-weight: 800;
+    color: #7a9fff;
+    letter-spacing: 0.04em;
+    transition: background 0.15s;
+}
+
+.ld-targets-header:hover {
+    background: rgba(122, 159, 255, 0.06);
+}
+
+.ld-targets-count {
+    margin-left: 8px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #52c41a;
+    background: rgba(82, 196, 26, 0.12);
+    padding: 1px 6px;
+    border-radius: 10px;
+}
+
+.ld-targets-toggle {
+    font-size: 10px;
+    color: #3a4a7a;
+}
+
+.ld-targets-body {
+    padding: 4px 0 8px;
+    max-height: 260px;
+    overflow-y: auto;
+}
+
+.ld-targets-empty {
+    padding: 10px 16px;
+    font-family: "Trade Gothic", Arial, sans-serif;
+    font-size: 12px;
+    color: #3a4a7a;
+}
+
+/* Individual target row */
+.ld-target-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 16px;
+    border-bottom: 1px solid #1a2340;
+    font-family: "Trade Gothic", Arial, sans-serif;
+    transition: background 0.12s;
+}
+
+.ld-target-row:last-child {
+    border-bottom: none;
+}
+
+.ld-target-row--available {
+    cursor: pointer;
+}
+
+.ld-target-row--available:hover {
+    background: rgba(122, 159, 255, 0.08);
+}
+
+.ld-target-row--done {
+    opacity: 0.4;
+    cursor: default;
+}
+
+.ld-target-pos {
+    background: #1e3a5f;
+    color: #7a9fff;
+    border-radius: 4px;
+    padding: 1px 5px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+    min-width: 26px;
+    text-align: center;
+}
+
+.ld-target-name {
+    color: #c8ccf0;
+    font-size: 12px;
+    font-weight: 600;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ld-target-price {
+    color: #52c41a;
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.ld-target-check {
+    color: #52c41a;
+    font-size: 13px;
+    font-weight: 900;
+    flex-shrink: 0;
+}
+
+.ld-target-click-hint {
+    font-size: 10px;
+    color: #3a4a7a;
+    font-style: italic;
+    flex-shrink: 0;
+}
