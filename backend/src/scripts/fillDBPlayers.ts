@@ -22,15 +22,39 @@ interface CreatePlayerInput {
 }
 async function addPlayer(data: CreatePlayerInput): Promise<Player| null> {
     try {
-        const now = new Date();
+        let player = await Player.findOne({
+            where: { mlbPlayerId: String(data.mlbPlayerId) }
+        });
 
-        const player = await Player.create({
+        if (player) {
+            player.age = data.age;
+            player.realTeam = data.realTeam;
+            player.realLeague = data.realLeague;
+
+            player.lastYearStats = {
+                ...(player.lastYearStats || {}),
+                ...(data.lastYearStats || {})
+            }
+            player.threeYearAvg = {
+                ...(player.threeYearAvg || {}),
+                ...(data.threeYearAvg || {})
+            }
+            player.projectedStats = {
+                ...(player.projectedStats || {}),
+                ...(data.projectedStats || {})
+            }
+            // Save updates
+            await player.save();
+            return player;
+        }
+
+        const newPlayer = await Player.create({
             mlbPlayerId: data.mlbPlayerId,
             age: data.age,
             firstName: data.firstName,
             lastName: data.lastName,
             isHitter: data.isHitter,
-            playablePositions: data.playablePositions,
+            playablePositions: data.playablePositions, // DO NOT TOUCH LATER
             lastYearStats: data.lastYearStats ?? {},
             threeYearAvg: data.threeYearAvg ?? {},
             projectedStats: data.projectedStats ?? {},
@@ -39,16 +63,19 @@ async function addPlayer(data: CreatePlayerInput): Promise<Player| null> {
             realTeam: data.realTeam,
             realLeague: data.realLeague,
         });
-        if(!player){
+
+        if(!newPlayer){
             console.log("issue")
             return null;
         }
-        return player;
+        return newPlayer;
     } catch (error) {
         // console.error("Error creating player:", error);
         throw error;
     }
 }
+// ['SS' '1B' 'RF' 'CF' 'C' '3B' '2B' 'P' 'OF' 'LF' 'DH' 'TWP']
+
 function mapPosition(pos: string): Position {
   const map: Record<string, Position> = {
     C: Position.CATCHER,
@@ -59,6 +86,11 @@ function mapPosition(pos: string): Position {
     OF: Position.OUTFIELD,
     P: Position.PITCHER,
     U: Position.UTILITY,
+    RF: Position.RIGHTFIELD,
+    CF: Position.CENTERFIELD,
+    LF: Position.LEFTFIELD,
+    DH: Position.HITTER,
+    TWP: Position.TWOWAY
   };
   return map[pos] ?? Position.UTILITY;
 }

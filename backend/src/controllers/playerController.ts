@@ -2,7 +2,16 @@ import { Request, Response } from 'express';
 import * as playerService from '../services/playerService';
 import { Position, Status } from '../models/player';
 
-
+type QueryParams = {
+    nameQuery?: string;
+    posQuery?: string;
+    teamQuery?: string;
+    sortKey?: string;
+    sortDir?: boolean;
+    isHitters?: boolean;
+    pageNumber?: number;
+    pageSize?: number;
+};
 /* 
 create player, find all, find by id, find by mlb id, find by position, 
 find by status, update a player, delete a player
@@ -99,6 +108,25 @@ export const getPlayerByStatus = async (req: Request, res: Response): Promise<vo
         const players = await playerService.getPlayersByStatus(req.params.status as Status);
         res.status(200).json(players);
     } catch (err: any) {
+        res.status(404).json({ error: err.message });
+    }
+}
+
+export const queryPlayers = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const {
+            nameQuery = "",
+            posQuery = "",
+            teamQuery = "",
+            sortKey = "name",
+            sortDir = true,
+            isHitters = true,
+            pageNumber = 1,
+            pageSize = 50,
+        } = req.body as QueryParams;
+    const players = await playerService.queryPlayers(nameQuery, posQuery, teamQuery, sortKey, sortDir, isHitters, pageNumber, pageSize)
+        res.status(200).json(players);
+    } catch(err: any) {
         res.status(404).json({ error: err.message });
     }
 }
