@@ -14,10 +14,11 @@ export const createPlayer = async (
     status: Status,
     seasonsLeft: number,
     realTeam: string,
-    realLeague: String
+    realLeague: String,
+    depth: String
 ): Promise<Player> => {
     return await Player.create({ mlbPlayerId, age, firstName, lastName, isHitter, playablePositions,
-        lastYearStats, threeYearAvg, projectedStats, status, seasonsLeft, realTeam, realLeague });
+        lastYearStats, threeYearAvg, projectedStats, status, seasonsLeft, realTeam, realLeague, depth });
 }
 
 // Find all players

@@ -33,6 +33,7 @@ class Player extends Model {
     public seasonsLeft!: number; 
     public realTeam!: string;
     public realLeague!: string;
+    public depth!: string;
 }
 
 
@@ -90,11 +91,15 @@ Player.init({
     },
     realTeam: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: true
     },
     realLeague: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: true
+    },
+    depth: {
+        type: DataTypes.STRING,
+        allowNull: true
     },
 }, {
     sequelize,
