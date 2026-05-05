@@ -1,5 +1,6 @@
 from pybaseball import batting_stats_range, pitching_stats_range
- 
+from baseball_id import Lookup
+
 import pandas as pd
 import requests
 yesterday = "2026-04-11"
@@ -23,7 +24,7 @@ TEAM_MAP = { #results dont show team so I used AI to make this map
     ("Maj-AL", "Baltimore"): "BAL",
     ("Maj-AL", "Boston"): "BOS",
     ("Maj-AL", "Los Angeles"): "LAA",
-    ("Maj-AL", "Chicago"): "CWS",
+    ("Maj-AL", "Chicago"): "CHW",
     ("Maj-AL", "Cleveland"): "CLE",
     ("Maj-AL", "Detroit"): "DET",
     ("Maj-AL", "Kansas City"): "KC",
@@ -33,30 +34,29 @@ TEAM_MAP = { #results dont show team so I used AI to make this map
     ("Maj-AL", "Athletics"): "ATH",
     ("Maj-AL", "Seattle"): "SEA",
     ("Maj-AL", "Texas"): "TEX",
-    ("Maj-NL", "New York"): "NYM",
-    ("Maj-NL", "San Francisco"): "SF",
     ("Maj-AL", "Toronto"): "TOR",
+    ("Maj-NL", "Atlanta"): "ATL",
+    ("Maj-NL", "Chicago"): "CHC",
+    ("Maj-NL", "Cincinnati"): "CIN",
+    ("Maj-AL", "Houston"): "HOU",
     ("Maj-NL", "Los Angeles"): "LAD",
     ("Maj-NL", "Washington"): "WSH",
-    ("Maj-NL", "St. Louis"): "STL",
-    ("Maj-NL", "San Diego"): "SD",
-    ("Maj-AL", "Tampa Bay"): "TB",
-    ("Maj-NL", "Chicago"): "CHC",
-    ("Maj-NL", "Atlanta"): "ATL",
-    ("Maj-NL", "Miami"): "MIA",
+    ("Maj-NL", "New York"): "NYM",
     ("Maj-NL", "Philadelphia"): "PHI",
     ("Maj-NL", "Pittsburgh"): "PIT",
-    ("Maj-NL", "Cincinnati"): "CIN",
-    ("Maj-NL", "Arizona"): "ARI",
+    ("Maj-NL", "St. Louis"): "STL",
+    ("Maj-NL", "San Diego"): "SD",
+    ("Maj-NL", "San Francisco"): "SF",
     ("Maj-NL", "Colorado"): "COL",
-    ("Maj-AL", "Houston"): "HOU",
+    ("Maj-NL", "Miami"): "MIA",
+    ("Maj-NL", "Arizona"): "ARI",
+    ("Maj-AL", "Tampa Bay"): "TB",
 }
 
 depthchart = {}
+teamchart = {}
 BASE_URL = "https://sports.core.api.espn.com/v2/sports/baseball/leagues/mlb/seasons/2026/teams/{}/depthcharts?lang=en&region=us"
 ROLES = ["rp", "p", "c", "1b", "2b", "3b", "ss", "lf", "cf", "rf", "dh", "cl"]
-for role in ROLES:
-    depthchart[role] = []
 
 def fill_depth_chart():
     for team in range(1, 31):  #TEAM_MAP.values():
@@ -70,18 +70,47 @@ def fill_depth_chart():
             data = response.json()
             items = data["items"][0]["positions"]
             for role in ROLES:
+                try:
+                    items[role]
+                except:
+                    print(team)
+
                 for player in items[role]["athletes"]:
                     ref = player["athlete"]["$ref"]
 
                     athlete_id = ref.split("/")[-1].split("?")[0]
                     rank = player["rank"]
                     depthchart[athlete_id] = f"{rank} {role}"
+                    teamchart[athlete_id] = list(TEAM_MAP.values())[team - 1]
         except requests.RequestException as e:
             print(f"Failed {team}: {e}")
         # print(team)
 
 fill_depth_chart()
-print(depthchart)
+print(teamchart)
+
+def map_espn_to_mlb(input_dict):
+    # get lookup dataframe
+    lookup_df = Lookup.from_espn_ids(list(input_dict.keys()))
+    
+    # build mapping (ensure strings for consistency)
+    espn_to_mlb = dict(
+        zip(
+            lookup_df["espn_id"].astype(str),
+            lookup_df["mlb_id"]
+        )
+    )
+    
+    # build new dict with MLB IDs
+    return {
+        espn_to_mlb[espn_id]: value
+        for espn_id, value in input_dict.items()
+        if espn_id in espn_to_mlb
+    }
+
+mlb_depth = map_espn_to_mlb(depthchart)
+mlb_teams = map_espn_to_mlb(teamchart)
+
 # lastYearStats: { AB,R,H,"1B":_1B,"2B":_2B,"3B":_3B,HR,RBI,BB,K,SB,CS,AVG,OBP,SLG,FPTS },
     # Index(['Name', 'Age', '#days', 'Lev', 'Tm', 'G', 'PA', 'AB', 'R', 'H', '2B',
     #        '3B', 'HR', 'RBI', 'BB', 'IBB', 'SO', 'HBP', 'SH', 'SF', 'GDP', 'SB',
@@ -110,6 +139,8 @@ def get_batting_stats(start_dt, end_dt, filename=r"./data.csv"):
         lambda row: TEAM_MAP.get((row["Lev"], row["Tm"]), None),
         axis=1
     )
+    final_data["depth"] = final_data["mlbID"].map(mlb_depth)
+    final_data["team_abbr"] = final_data["mlbID"].map(mlb_teams)
 
     final_data.to_csv(filename, index=False) #save
 
@@ -136,9 +167,11 @@ def get_pitching_stats(start_dt, end_dt, filename=r"./pdata.csv"):
         lambda row: TEAM_MAP.get((row["Lev"], row["Tm"]), None),
         axis=1
     )
+    final_pitching_data["depth"] = final_pitching_data["mlbID"].map(mlb_depth)
+    final_pitching_data["team_abbr"] = final_pitching_data["mlbID"].map(mlb_teams)
     final_pitching_data.to_csv(filename, index=False)
 
-# get_batting_stats('2023-04-01', yesterday)
-# get_pitching_stats('2023-04-01', yesterday)
+get_batting_stats('2023-04-01', yesterday)
+get_pitching_stats('2023-04-01', yesterday)
 
 
