@@ -21,13 +21,14 @@ export const createPlayer = async (
     status: Status,
     seasonsLeft: number,
     realTeam: string,
-    realLeague: string
+    realLeague: string,
+    depth: string
 ): Promise<Player> => {
     const existing = await playerRepository.findPlayerByMlbId(mlbPlayerId);
     if (existing) throw new Error('Player already exists');
 
     return await playerRepository.createPlayer(mlbPlayerId, age, firstName, lastName, isHitter, playablePositions,
-        lastYearStats, threeYearAvg, projectedStats, status, seasonsLeft, realTeam, realLeague );
+        lastYearStats, threeYearAvg, projectedStats, status, seasonsLeft, realTeam, realLeague, depth );
 }
 
 // GET /api/players/all

@@ -19,6 +19,7 @@ interface CreatePlayerInput {
     seasonsLeft: number;
     realTeam: string;
     realLeague: string;
+    depth: string;
 }
 async function addPlayer(data: CreatePlayerInput): Promise<Player| null> {
     try {
@@ -30,6 +31,7 @@ async function addPlayer(data: CreatePlayerInput): Promise<Player| null> {
             player.age = data.age;
             player.realTeam = data.realTeam;
             player.realLeague = data.realLeague;
+            player.depth = data.depth;
 
             player.lastYearStats = {
                 ...(player.lastYearStats || {}),
@@ -62,6 +64,7 @@ async function addPlayer(data: CreatePlayerInput): Promise<Player| null> {
             seasonsLeft: data.seasonsLeft,
             realTeam: data.realTeam,
             realLeague: data.realLeague,
+            depth: data.depth,
         });
 
         if(!newPlayer){
@@ -187,6 +190,7 @@ async function ingestHitters(csvPath: string) {
 
             realTeam: row.team_abbr,
             realLeague: row.Lev === "Maj-AL" ? "AL" : "NL",
+            depth: row.depth
           };
 
           players.push(playerData);
@@ -290,6 +294,7 @@ async function ingestPitchers(csvPath: string) {
             seasonsLeft: 1, // placeholder
             realTeam: row.team_abbr,
             realLeague: row.Lev === "Maj-AL" ? "AL" : "NL",
+            depth: row.depth,
           };
 
           pitchers.push(pitcherData);

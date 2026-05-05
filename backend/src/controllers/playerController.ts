@@ -36,9 +36,9 @@ find by status, update a player, delete a player
 export const create = async (req: Request, res: Response): Promise<void> => {
     try {
         const { mlbPlayerId, age, firstName, lastName, isHitter, playablePositions, 
-            lastYearStats, threeYearAvg, projectedStats, status, seasonsLeft, realTeam, realLeague } = req.body;
+            lastYearStats, threeYearAvg, projectedStats, status, seasonsLeft, realTeam, realLeague, depth } = req.body;
         const player = await playerService.createPlayer(mlbPlayerId, age, firstName, lastName, isHitter, playablePositions, 
-            lastYearStats, threeYearAvg, projectedStats, status, seasonsLeft, realTeam, realLeague);
+            lastYearStats, threeYearAvg, projectedStats, status, seasonsLeft, realTeam, realLeague, depth);
         res.status(201).json({
             mlbPlayerId: player.mlbPlayerId,
             age: player.age,
@@ -47,6 +47,7 @@ export const create = async (req: Request, res: Response): Promise<void> => {
             isHitter: player.isHitter,
             realTeam: player.realTeam,
             realLeague: player.realLeague,
+            depth: player.depth,
             seasonsLeft: player.seasonsLeft,
             status: player.status,
             playablePositions: player.playablePositions,
