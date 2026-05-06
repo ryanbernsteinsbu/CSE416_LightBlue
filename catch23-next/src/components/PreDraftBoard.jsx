@@ -403,6 +403,9 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
                             <span className="db-progress-label">
                                 Click any cell to edit • Click team name to rename
                             </span>
+                            <button className="db-tool-btn db-tool-secondary" onClick={() => onModeChange("taxi")}>
+                                Taxi Draft
+                            </button>
                             <button className="db-tool-btn db-tool-secondary" onClick={() => onModeChange("simulation")}>
                                 Draft Simulation
                             </button>
