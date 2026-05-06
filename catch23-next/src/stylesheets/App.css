@@ -2846,10 +2846,6 @@ button {
 
 /* ── Draft Simulation — layout ───────────────────────────────────────────── */
 
-.sim-mode-banner {
-    color: rgba(255, 200, 60, 0.75);
-}
-
 .sim-layout {
     display: flex;
     gap: 18px;

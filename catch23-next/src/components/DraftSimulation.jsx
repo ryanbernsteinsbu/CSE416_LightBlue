@@ -287,7 +287,7 @@ export default function DraftSimulation({ league, onBack, onModeChange }) {
     return (
         <div className="home home-padded">
             {/* Mode banner */}
-            <div className="db-mode-banner sim-mode-banner">⚙️ DRAFT SIMULATION MODE</div>
+            <div className="db-mode-banner">DRAFT SIMULATION MODE</div>
 
             {/* Banners */}
             <div className={`save-banner ${saveBanner ? "save-banner--visible" : ""}`}>
