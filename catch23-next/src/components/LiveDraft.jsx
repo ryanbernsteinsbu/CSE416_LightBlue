@@ -450,6 +450,7 @@ export default function LiveDraftBoard({ league, onBack, onModeChange }) {
                             <span className="db-progress-label">Click any player cell to draft · Auto-saves on each pick</span>
                             <button className="db-tool-btn db-tool-secondary" onClick={() => onModeChange("predraft")}>Pre-Draft</button>
                             <button className="db-tool-btn db-tool-secondary" onClick={() => onModeChange("simulation")}>Simulation</button>
+                            <button className="db-tool-btn db-tool-secondary" onClick={() => onModeChange("taxi")}>Taxi Draft</button>
                             <div
                                 className="tooltip-wrap"
                                 data-tip={allFilled
