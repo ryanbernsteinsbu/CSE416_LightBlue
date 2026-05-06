@@ -193,6 +193,7 @@ export default function DraftSummary({ league, onBack, onModeChange }) {
                     <button className="db-tool-btn db-tool-secondary" onClick={() => onModeChange("live")}>
                         🔄 Return to Live Draft
                     </button>
+                    <button className="db-tool-btn db-tool-secondary" onClick={() => onModeChange("taxi")}>Taxi Draft</button>
                 </div>
             </div>
 
