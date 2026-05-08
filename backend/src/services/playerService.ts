@@ -1,6 +1,6 @@
 import * as playerRepository from '../repositories/playerRepository';
 import Player, { Position, Status } from '../models/player';
-import { Op } from "sequelize";
+import { Op, Sequelize } from "sequelize";
 import sequelize from '../config/database';
 /* 
 create player, find all, find by id, find by mlb id, find by position, 
@@ -85,9 +85,16 @@ export const queryPlayers = async (nameQuery: string, posQuery: string, teamQuer
         }
 
         if (posQuery?.trim()) {
-            where.playablePositions = {
-                [Op.contains]: [posQuery.toUpperCase()],
-            };
+            where.playablePositions = Sequelize.where(
+                Sequelize.fn(
+                    "array_to_string",
+                    Sequelize.col("playablePositions"),
+                    ","
+                ),
+                {
+                    [Op.iLike]: `%${posQuery}%`,
+                }
+            );
         }
 
         const offset = (page - 1) * pageSize;

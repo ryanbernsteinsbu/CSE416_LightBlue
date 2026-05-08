@@ -81,7 +81,9 @@ export default function PlayerInformation() {
     useEffect(() => {
         const fetchPlayers = async () => {
             try {
-                const { data } = await queryPlayers(nameQuery, posQuery, teamQuery, sortKey, sortDir, (mode === "hitting"), page, pageSize);
+                console.log(nameQuery, posQuery, teamQuery, sortKey, (sortDir === "asc"), (mode === "hitting"), page, pageSize);
+                setLoading(true);
+                const { data } = await queryPlayers(nameQuery, posQuery, teamQuery, sortKey, (sortDir === "asc"), (mode === "hitting"), page, pageSize);
                 const {players, total} = data;
                 const mapped = players.map(p => ({
                     id: p.id,
