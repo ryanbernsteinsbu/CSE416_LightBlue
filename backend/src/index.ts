@@ -6,12 +6,12 @@ import playerRoutes from './routes/playerRoutes'
 import leagueRoutes from './routes/leagueRoutes';
 import teamRoutes from './routes/teamRoutes';
 import draftPickRoutes from './routes/draftPickRoutes';
-import authRoutes from './routes/authRoutes'
+//import authRoutes from './routes/authRoutes'
 import Team from './models/team';
 import Player from './models/player';
 import DraftPick from './models/draftPick';
 import League from './models/league';
-import PasswordResetToken from './models/passwordResetToken';
+//import PasswordResetToken from './models/passwordResetToken';
 
 
 //const ApiUser = require('./models/apiUser')
@@ -52,7 +52,7 @@ app.use('/api/players', playerRoutes);
 app.use('/api/leagues', leagueRoutes);
 app.use('/api/teams', teamRoutes);
 app.use('/api/draft-picks', draftPickRoutes);
-app.use('/api/auth', authRoutes);
+//app.use('/api/auth', authRoutes);
 
 const PORT = process.env.PORT || 8000;
 sequelize.sync().then(() => {
