@@ -130,4 +130,15 @@ export const getRankedPlayers = async () => {
         headers: { "x-email": EMAIL, "x-signature": sign(data) }
     });
 };
+
+// Password Reset
+
+export const requestPasswordReset = (email) =>
+  axios.post("/api/auth/forgot-password", { email });
+
+// Submits the reset token + new password to finalize the reset
+export const resetPassword = (token, password) =>
+  axios.post("/api/auth/reset-password", { token, password });
+
+
  

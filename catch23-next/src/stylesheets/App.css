@@ -3437,3 +3437,71 @@ button {
 .cmp-panel--open {
   transform: translateX(0);
 }
+
+/* ─── Password Reset ─────────────────────────── */
+
+/* "Forgot password?" link under the password input */
+.forgot-link-row {
+  width: 100%;
+  max-width: 420px;
+  text-align: right;
+  margin-top: 6px;
+}
+
+.forgot-link {
+  color: #888;
+  font-size: 0.8rem;
+  font-family: "Trade Gothic", Arial, sans-serif;
+  cursor: pointer;
+  text-decoration: underline;
+  background: none;
+  border: none;
+  padding: 0;
+  font-weight: 600;
+}
+
+.forgot-link:hover {
+  color: #2f3f89;
+}
+
+/* Success / token-invalid state shown after email sent or password reset */
+.auth-feedback {
+  text-align: center;
+  padding: 8px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.auth-feedback-icon {
+  font-size: 2.2rem;
+  line-height: 1;
+  font-family: sans-serif;
+}
+
+.auth-feedback-title {
+  color: #111;
+  font-family: "Trade Gothic", Arial, sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  margin: 0;
+}
+
+.auth-feedback-sub {
+  color: #666;
+  font-family: "Trade Gothic", Arial, sans-serif;
+  font-size: 0.82rem;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Small helper text above the form (e.g. "Enter the email linked to your account") */
+.auth-hint {
+  color: #555;
+  font-family: "Trade Gothic", Arial, sans-serif;
+  font-size: 0.88rem;
+  text-align: center;
+  margin-bottom: 16px;
+  line-height: 1.4;
+}
