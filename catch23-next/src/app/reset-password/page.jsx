@@ -1,9 +1,10 @@
 'use client';
-import { useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import ResetPassword from '@/components/ResetPassword';
-import { useRouter } from 'next/navigation';
+import Modal from '@/components/Modal';
 
-export default function ResetPasswordPage() {
+function ResetPasswordContent() {
     const params = useSearchParams();
     const token = params.get("token");
     const router = useRouter();
@@ -20,4 +21,11 @@ export default function ResetPasswordPage() {
         </div>
     );
 }
- 
+
+export default function ResetPasswordPage() {
+    return (
+        <Suspense fallback={null}>
+            <ResetPasswordContent />
+        </Suspense>
+    );
+}

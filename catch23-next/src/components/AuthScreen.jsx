@@ -15,7 +15,7 @@ export default function AuthScreen({ authView, setAuthView, onLoginSuccess }) {
           <Login
             onLoginSuccess={onLoginSuccess}
             onShowRegister={() => setAuthView("register")}
-            onShowForgotPassword={() => setAuthView("forgot")}  // ← also missing!
+            onShowForgotPassword={() => setAuthView("forgot")} 
           />
         )}
         {authView === "register" && (
