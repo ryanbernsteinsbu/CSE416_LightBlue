@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { loginUser } from '../lib/api';
 
-export default function Login({ onLoginSuccess, handleError, onShowRegister }) {
+export default function Login({ onLoginSuccess, handleError, onShowRegister, onShowForgotPassword }) {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [errorBanner, setErrorBanner] = useState("");
@@ -25,7 +25,7 @@ export default function Login({ onLoginSuccess, handleError, onShowRegister }) {
             console.log("LOGIN:", data);
             onLoginSuccess?.(data);
         } catch (err) {
-             const backendMsg = err.response?.data?.message;
+            const backendMsg = err.response?.data?.message;
 
             if (backendMsg === "Invalid user credentials") {
                 showError("Invalid user credentials");
@@ -58,6 +58,7 @@ export default function Login({ onLoginSuccess, handleError, onShowRegister }) {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                 />
+
                 <br /><br />
                 <input
                     placeholder="Password"
@@ -65,6 +66,12 @@ export default function Login({ onLoginSuccess, handleError, onShowRegister }) {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                 />
+
+                <div className="forgot-link-row">
+                    <button type="button" className="forgot-link" onClick={onShowForgotPassword}>
+                        Forgot password?
+                    </button>
+                </div>
                 <br /><br />
 
                 <button id="submit_login" type="submit">Sign in</button>

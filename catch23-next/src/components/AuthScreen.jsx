@@ -1,6 +1,7 @@
 import React from "react";
 import Login from "./Login";
 import Register from "./Register";
+import ForgotPassword from "./ForgotPassword";
 import Modal from "./Modal";
 
 export default function AuthScreen({ authView, setAuthView, onLoginSuccess }) {
@@ -10,15 +11,22 @@ export default function AuthScreen({ authView, setAuthView, onLoginSuccess }) {
       <h1 className="landing-title">CATCH 23</h1>
 
       <Modal isOpen={true}>
-        {authView === "login" ? (
+        {authView === "login" && (
           <Login
             onLoginSuccess={onLoginSuccess}
             onShowRegister={() => setAuthView("register")}
+            onShowForgotPassword={() => setAuthView("forgot")}  // ← also missing!
           />
-        ) : (
+        )}
+        {authView === "register" && (
           <Register
-            createUser={async () => {}}
+            createUser={async () => { }}
             onCreateUserClick={() => setAuthView("login")}
+            onShowLogin={() => setAuthView("login")}
+          />
+        )}
+        {authView === "forgot" && (
+          <ForgotPassword
             onShowLogin={() => setAuthView("login")}
           />
         )}
