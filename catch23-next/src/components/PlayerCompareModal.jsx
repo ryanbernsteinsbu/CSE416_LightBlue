@@ -1,4 +1,5 @@
 'use client';
+import "../stylesheets/App.css";
 
 import { useEffect, useState } from "react";
 
@@ -74,7 +75,7 @@ export function PlayerCompareModal({ isOpen, selected, onRemove, onClose }) {
     else setVisible(false);
   }, [isOpen]);
 
-  if (!isOpen) return null;
+  //if (!isOpen) return null;
 
   return (
     <div className={`cmp-panel ${visible ? "cmp-panel--open" : ""}`}>
@@ -94,7 +95,7 @@ export function PlayerCompareModal({ isOpen, selected, onRemove, onClose }) {
       {/* Empty state */}
       {selected.length === 0 ? (
         <div className="cmp-empty">
-          <span className="cmp-empty-icon">⚡</span>
+          <span className="cmp-empty-icon"></span>
           <p className="cmp-empty-text">Start comparing players!</p>
           <small className="cmp-empty-sub">Click any player name in the table</small>
         </div>

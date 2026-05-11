@@ -65,6 +65,9 @@ export default function Navbar() {
             <Link className="navmenu-item" href="/player" onClick={() => setOpen(false)}>
               Player Information
             </Link>
+            <Link className="navmenu-item" href="/transactions" onClick={() => setOpen(false)}>
+              Transaction Wire
+            </Link>
           </div>
         )}
       </div>

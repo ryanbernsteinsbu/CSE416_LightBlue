@@ -130,4 +130,22 @@ export const getRankedPlayers = async () => {
         headers: { "x-email": EMAIL, "x-signature": sign(data) }
     });
 };
+
+// Password Reset
+
+export const requestPasswordReset = (email) =>
+  axios.post("/api/auth/forgot-password", { email });
+
+// Submits the reset token + new password to finalize the reset
+export const resetPassword = (token, password) =>
+  axios.post("/api/auth/reset-password", { token, password });
+
+// Get a single user by ID (used to load playerNotes)
+export const getUser = (id) =>
+  axios.get(`/api/users/${id}`);
+ 
+// Update a user's playerNotes array
+export const updatePlayerNotes = (id, playerNotes) =>
+  axios.put(`/api/users/${id}`, { playerNotes });
+ 
  
