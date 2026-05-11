@@ -9,7 +9,7 @@ import User from '../models/user';
 
 const router = Router();
 
-// ── Nodemailer transporter (created once, reused) ────────────────────────────
+// Nodemailer transporter 
 const transporter = nodemailer.createTransport({
     host: process.env.EMAIL_HOST,
     port: Number(process.env.EMAIL_PORT) || 587,
@@ -20,8 +20,9 @@ const transporter = nodemailer.createTransport({
     },
 });
 
-// ── POST /api/auth/forgot-password ───────────────────────────────────────────
+// POST /api/auth/forgot-password
 router.post('/forgot-password', async (req: Request, res: Response) => {
+    console.log('FORGOT PASSWORD HIT', req.body);
     try {
         const { email } = req.body;
 
@@ -29,13 +30,13 @@ router.post('/forgot-password', async (req: Request, res: Response) => {
             return res.status(400).json({ error: 'Email is required' });
         }
 
-        // Look up the user — do NOT reveal in the response whether it exists
+        // Look up the user
         const user = await User.findOne({ where: { email } });
 
         if (user) {
             // Delete any existing unused tokens for this user
             await PasswordResetToken.destroy({
-                where: { user_id: user.id, used: false },
+                where: { user_id: Number(user.id), used: false },
             });
 
             // Generate a cryptographically secure token
@@ -76,7 +77,6 @@ router.post('/forgot-password', async (req: Request, res: Response) => {
             });
         }
 
-        // Always 200 — don't let callers enumerate valid emails
         return res.status(200).json({
             message: 'If that email is linked to an account, a reset link has been sent.',
         });
@@ -86,7 +86,7 @@ router.post('/forgot-password', async (req: Request, res: Response) => {
     }
 });
 
-// ── POST /api/auth/reset-password ────────────────────────────────────────────
+// POST /api/auth/reset-password 
 router.post('/reset-password', async (req: Request, res: Response) => {
     try {
         const { token, password } = req.body;
@@ -122,7 +122,7 @@ router.post('/reset-password', async (req: Request, res: Response) => {
 
         // Update user password
         await User.update(
-            { password: hashedPassword },
+            { hashedPassword: hashedPassword },
             { where: { id: resetToken.user_id } }
         );
 
