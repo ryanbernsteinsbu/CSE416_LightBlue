@@ -26,7 +26,7 @@ export default function ForgotPassword({ onShowLogin }) {
             await requestPasswordReset(email);
         } catch (err) {
             console.error("FORGOT PASSWORD ERROR:", err);
-            // Always show success — never leak whether an email exists
+            // Always show success (never leak whether an email exists)
         } finally {
             setLoading(false);
             setSuccess(true);
