@@ -34,22 +34,17 @@ const allowedOrigins = [
 
 
 const app = express();
-// app.use(cors({
-//     origin:( origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
-//         if (!origin || allowedOrigins.includes(origin)) {
-//             callback(null, true);
-//         } else {
-//             callback(new Error("CORS origin not allowed"));
-//         }
-//     },
-//     credentials: true
-// }));
-app.use(
-  cors({
-    origin: "*",
-  })
-);
 app.use(express.json());
+app.use(cors({
+    origin:( origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error("CORS origin not allowed"));
+        }
+    },
+    credentials: true
+}));
 
 // Routes
 app.use('/api/users', userRoutes);
