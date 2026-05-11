@@ -140,5 +140,12 @@ export const requestPasswordReset = (email) =>
 export const resetPassword = (token, password) =>
   axios.post("/api/auth/reset-password", { token, password });
 
-
+// Get a single user by ID (used to load playerNotes)
+export const getUser = (id) =>
+  axios.get(`/api/users/${id}`);
+ 
+// Update a user's playerNotes array
+export const updatePlayerNotes = (id, playerNotes) =>
+  axios.put(`/api/users/${id}`, { playerNotes });
+ 
  

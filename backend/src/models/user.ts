@@ -3,12 +3,19 @@ import { DataTypes, Model, Association} from 'sequelize';
 import sequelize from '../config/database';
 import League from './league';
 
+// Type for each player note entry
+export interface PlayerNote {
+    playerId: number;
+    note: string;
+}
+
 class User extends Model {
     // Fields
     public id!: number;
     public email!: string;
     public hashedPassword!: string;
     public displayName!: string;
+    public playerNotes!: PlayerNote[];
 
     public readonly leagues?: League[];
     public static assocations: {
@@ -40,6 +47,12 @@ User.init({
         type: DataTypes.STRING,
         allowNull: false,
         field: 'display_name'
+    },
+    playerNotes: {
+        type: DataTypes.JSON,
+        allowNull: false,
+        defaultValue: [],
+        field: 'player_notes'
     }
 }, {
     sequelize,
