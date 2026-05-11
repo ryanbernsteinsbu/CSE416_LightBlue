@@ -36,26 +36,20 @@ const PITCHING_COLUMNS = [
 
 export default function PlayerInformation() {
 
-    // MLB-like tabs
-    const [mode, setMode] = useState("hitting") // hitting | pitching
+    const [mode, setMode] = useState("hitting");
 
-    // search filter inputs
     const [nameQuery, setNameQuery] = useState("");
     const [teamQuery, setTeamQuery] = useState("");
     const [posQuery, setPosQuery] = useState("");
 
-    // which column is currently sorted, and in which direction
-    const [sortKey, setSortKey] = useState("name")
-    const [sortDir, setSortDir] = useState("asc")
+    const [sortKey, setSortKey] = useState("name");
+    const [sortDir, setSortDir] = useState("asc");
 
-    // current page number, and how many rows to show per page
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(50);
 
-    // pick the right column set based on the active tab 
     const columns = mode === "hitting" ? HITTING_COLUMNS : PITCHING_COLUMNS;
 
-    // player selected
     const [selectedPlayer, setSelectedPlayer] = useState(null);
     const [compareOpen, setCompareOpen] = useState(false);
     const [compareSelected, setCompareSelected] = useState([]);
@@ -64,34 +58,19 @@ export default function PlayerInformation() {
     const [loading, setLoading] = useState(true);
     const [totalPlayers, setTotalPlayers] = useState(null);
 
-    // useEffect(() => {
-    //     const fetchTotalPlayers = async () => {
-    //         try {
-    //             const { data } = await getAllPlayers();
-    //             setTotalPlayers(data.length);
-    //         } catch (err) {
-    //             console.error("Failed to fetch players:", err);
-    //         }// finally {
-    //         //     setLoading(false);
-    //         // }
-    //     };
-    //     fetchTotalPlayers();
-    // }, []);
-
     useEffect(() => {
         const fetchPlayers = async () => {
             try {
-                console.log(nameQuery, posQuery, teamQuery, sortKey, (sortDir === "asc"), (mode === "hitting"), page, pageSize);
                 setLoading(true);
                 const { data } = await queryPlayers(nameQuery, posQuery, teamQuery, sortKey, (sortDir === "asc"), (mode === "hitting"), page, pageSize);
-                const {players, total} = data;
+                const { players, total } = data;
                 const mapped = players.map(p => ({
-                    id: p.id,
+                    id: p.id,                                    // ← always carry id through
                     firstName: p.firstName || p.first_name,
                     lastName: p.lastName || p.last_name,
                     team: p.realTeam || p.real_team,
                     pos: p.playablePositions?.[0] || "—",
-                    age: p.age ?? "—",   // not in DB yet
+                    age: p.age ?? "—",
                     stats: {
                         HR: 0, RBI: 0, SB: 0, AVG: 0, R: 0, OBP: 0,
                         W: 0, SV: 0, K: 0, ERA: 0, WHIP: 0,
@@ -109,31 +88,21 @@ export default function PlayerInformation() {
         fetchPlayers();
     }, [nameQuery, posQuery, teamQuery, sortKey, sortDir, mode, page, pageSize]);
 
-    // total number of pages based on how many players passed filtering
     const pageCount = totalPlayers == null ? 1 : Math.max(1, Math.ceil(totalPlayers / pageSize));
-    // clamp page to a valid range (prevents being stuck on page 5 if filters reduce results to 1 page)
     const safePage = Math.min(Math.max(1, page), pageCount);
-    // slice just the rows for the current page to render in the table
 
-
-    // Event Handlers
-
-    // called when the user clicks a column eader to sort it
     const handleHeader = (col) => {
         setSortKey(col.key);
         setSortDir(sortKey === col.key && sortDir === "asc" ? "desc" : "asc");
         setPage(1);
     };
 
-    // called when the user switches between Hitting and Pitching tabs.
-    // resets sort and page so the new tab starts in a clean state.
     const switchTab = (next) => {
         setMode(next);
         setSortKey("name");
         setSortDir("asc");
         setPage(1);
-        console.log(process.env.BASE_URL);
-    }
+    };
 
     const addPlayer = (player) => {
         if (!compareOpen) return;
@@ -143,12 +112,12 @@ export default function PlayerInformation() {
         }
         if (compareSelected.length >= 4) return;
         setCompareSelected(prev => [...prev, player]);
-    }
+    };
 
     const closeCompare = () => {
         setCompareOpen(false);
         setCompareSelected([]);
-    }
+    };
 
     return (
         <div className="pi-page">
@@ -156,7 +125,6 @@ export default function PlayerInformation() {
                 <div className="pi-header">
                     <div className="pi-titleRow">
                         <h1 className="pi-title">Player Information</h1>
-
                         <div className="pi-tabs">
                             {["hitting", "pitching"].map((t) => (
                                 <button
@@ -172,7 +140,7 @@ export default function PlayerInformation() {
                                 className={`pi-tab ${compareOpen ? "is-active" : ""}`}
                                 type="button"
                                 onClick={() => compareOpen ? closeCompare() : setCompareOpen(true)}
-                                >
+                            >
                                 Compare
                             </button>
                         </div>
@@ -250,15 +218,12 @@ export default function PlayerInformation() {
                                 <tbody>
                                     {players.length === 0 ? (
                                         <tr>
-                                            <td className="pi-empty" colSpan={columns.length}>
-                                                No results.
-                                            </td>
+                                            <td className="pi-empty" colSpan={columns.length}>No results.</td>
                                         </tr>
                                     ) : (
                                         players.map((p) => (
                                             <tr key={p.id} className="pi-row">
                                                 {columns.map((col) => {
-                                                    let val = "—";
                                                     if (col.key === "name") {
                                                         const fullName = `${p.firstName} ${p.lastName}`;
                                                         return (
@@ -274,18 +239,15 @@ export default function PlayerInformation() {
                                                                             addPlayer(p);
                                                                         }}
                                                                         style={{ cursor: "pointer", color: "#e03030", fontWeight: "bold" }}
-                                                                        >
+                                                                    >
                                                                         {fullName}
                                                                     </span>
                                                                 </div>
                                                             </td>
                                                         );
                                                     }
-                                                    else if (col.stat) val = p.stats?.[col.stat] ?? "—";
-                                                    else val = p[col.key] ?? "—";
-                                                    return (
-                                                        <td key={col.key} className="pi-td">{val}</td>
-                                                    );
+                                                    const val = col.stat ? (p.stats?.[col.stat] ?? "—") : (p[col.key] ?? "—");
+                                                    return <td key={col.key} className="pi-td">{val}</td>;
                                                 })}
                                             </tr>
                                         ))
@@ -328,20 +290,20 @@ export default function PlayerInformation() {
                     </div>
                 </div>
             </div>
+
+            {/* ── Player Profile Modal ── */}
             <PlayerProfileModal
                 isOpen={!!selectedPlayer}
                 onClose={() => setSelectedPlayer(null)}
-                player={{
-                    username: `${selectedPlayer?.firstName} ${selectedPlayer?.lastName}`,
-                    role: selectedPlayer?.pos,
-                    games: "—",
-                    wins: selectedPlayer?.stats?.W ?? "—",
-                    losses: "—",
-                    winRate: selectedPlayer?.stats?.AVG ?? "—",
-                    team: selectedPlayer?.team,
-                    stats: selectedPlayer?.stats,
-                }}
+                player={selectedPlayer ? {
+                    id:       selectedPlayer.id,      
+                    username: `${selectedPlayer.firstName} ${selectedPlayer.lastName}`,
+                    role:     selectedPlayer.pos,
+                    team:     selectedPlayer.team,
+                    stats:    selectedPlayer.stats,
+                } : null}
             />
+
             <PlayerCompareModal
                 isOpen={compareOpen}
                 selected={compareSelected}

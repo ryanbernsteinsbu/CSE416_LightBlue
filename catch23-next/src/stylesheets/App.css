@@ -3505,3 +3505,118 @@ button {
   margin-bottom: 16px;
   line-height: 1.4;
 }
+
+/* ── Player Profile Modal — Scout Notes ─────────────────────── */
+
+.pprof-notes-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+.pprof-notes-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pprof-notes-textarea {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid #5060b0;
+  border-radius: 10px;
+  color: #e8eaf6;
+  font-family: 'Trade Gothic', Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  padding: 12px 14px;
+  resize: vertical;
+  box-sizing: border-box;
+  outline: none;
+  transition: border-color 0.2s;
+  min-height: 110px;
+}
+
+.pprof-notes-textarea::placeholder {
+  color: rgba(170, 176, 208, 0.4);
+}
+
+.pprof-notes-textarea:focus {
+  border-color: #7a9fff;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+/* Save status indicator */
+.pprof-save-indicator {
+  font-family: 'Trade Gothic', Arial, sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  transition: opacity 0.3s;
+}
+
+.pprof-save-idle    { opacity: 0; }
+.pprof-save-saving  { color: #aab0d0; opacity: 1; }
+.pprof-save-saved   { color: #52c41a; opacity: 1; }
+.pprof-save-error   { color: #e03030; opacity: 1; }
+
+/* ── Player cell detail button ──────────────────────────────────────────── */
+
+/* Wrapper for filled player cells that have the detail button */
+.db-cell-has-player {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  padding: 6px 6px 6px 8px;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* The player name inside the cell */
+.db-cell-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  font-family: "Trade Gothic", Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: #111;
+}
+
+/* The "Details" tab button — hidden by default, shown on row hover */
+.db-cell-detail-btn {
+  flex-shrink: 0;
+  padding: 2px 7px;
+  border-radius: 5px;
+  border: 1px solid #5060b0;
+  background: #3d4a8a;
+  color: #c8ccf0;
+  font-family: "Trade Gothic", Arial, sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  white-space: nowrap;
+  line-height: 1.6;
+  transition: background 0.15s, color 0.15s;
+
+  /* Hidden until the row is hovered */
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Show on td hover */
+.db-td-pick:hover .db-cell-detail-btn,
+.db-td-filled:hover .db-cell-detail-btn {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.db-cell-detail-btn:hover {
+  background: #5060b0;
+  color: #fff;
+}

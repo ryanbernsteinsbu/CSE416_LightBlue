@@ -2,8 +2,9 @@
 import React, { useEffect, useState, useRef, useMemo } from "react";
 import { getLeagueTeams, getAllPlayers, getTeamDraftPicks } from "../lib/api";
 import { PositionPlayersModal, playerMatchesRowPosition } from "./PositionPlayersModal";
+import { PlayerProfileModal } from "./PlayerProfileModal";
 
-// ─── helpers (same as other boards) ─────────────────────────────────────────
+// helpers
 
 const buildPositions = (rosterSettings) => {
     if (!rosterSettings) return [];
@@ -50,16 +51,35 @@ const getPlayerName = (p) => getPlayerDisplayName(p).toLowerCase();
 const simPicksKey  = (id) => `sim_picks_${id}`;
 const simTeamIdKey = (id) => `sim_team_${id}`;
 
-// ─── component ───────────────────────────────────────────────────────────────
+// Maps raw player from allPlayers into the shape PlayerProfileModal expects
+const toProfilePlayer = (p) => ({
+    id: p.id,
+    username: getPlayerDisplayName(p),
+    team: p.team ?? p.mlbTeam ?? p.teamAbbreviation ?? "",
+    role: Array.isArray(p.playablePositions) ? p.playablePositions.join(", ") : (p.position ?? ""),
+    stats: p.stats ?? {
+        HR:   p.HR   ?? p.homeRuns,
+        RBI:  p.RBI,
+        SB:   p.SB   ?? p.stolenBases,
+        R:    p.R    ?? p.runs,
+        AVG:  p.AVG  ?? p.battingAverage,
+        OBP:  p.OBP,
+        W:    p.W    ?? p.wins,
+        SV:   p.SV   ?? p.saves,
+        K:    p.K    ?? p.strikeouts,
+        ERA:  p.ERA,
+        WHIP: p.WHIP,
+    }
+});
 
 export default function DraftSimulation({ league, onBack, onModeChange }) {
     const POSITIONS = buildPositions(league.rosterSettings);
 
     // team identity
-    const [simTeamId,      setSimTeamId]      = useState(null);
-    const [teamName,       setTeamName]       = useState("My Team");
-    const [editingName,    setEditingName]    = useState(false);
-    const [editNameValue,  setEditNameValue]  = useState("");
+    const [simTeamId,     setSimTeamId]     = useState(null);
+    const [teamName,      setTeamName]      = useState("My Team");
+    const [editingName,   setEditingName]   = useState(false);
+    const [editNameValue, setEditNameValue] = useState("");
 
     // rows: one per position slot
     const emptyRows = () => POSITIONS.map(() => ({
@@ -68,22 +88,21 @@ export default function DraftSimulation({ league, onBack, onModeChange }) {
     const [rows, setRows] = useState(emptyRows);
 
     // players / autocomplete
-    const [allPlayers,   setAllPlayers]   = useState([]);
-    const [editingCell,  setEditingCell]  = useState(null); // { rowIndex, field }
-    const [editValue,    setEditValue]    = useState("");
-    const [suggestions,  setSuggestions]  = useState([]);
+    const [allPlayers,  setAllPlayers]  = useState([]);
+    const [editingCell, setEditingCell] = useState(null); // { rowIndex, field }
+    const [editValue,   setEditValue]   = useState("");
+    const [suggestions, setSuggestions] = useState([]);
 
     // ui state
     const [selectedPosition, setSelectedPosition] = useState(null);
-    const [saveBanner,   setSaveBanner]   = useState(false);
-    const [errorMsg,     setErrorMsg]     = useState(null);
-    const [budgetError,  setBudgetError]  = useState(null);
-    const [loading,      setLoading]      = useState(true);
+    const [saveBanner,  setSaveBanner]  = useState(false);
+    const [errorMsg,    setErrorMsg]    = useState(null);
+    const [budgetError, setBudgetError] = useState(null);
+    const [loading,     setLoading]     = useState(true);
+    const [profilePlayer, setProfilePlayer] = useState(null); // PlayerProfileModal
 
     const cellInputRef = useRef(null);
     const teamInputRef = useRef(null);
-
-    // ── derived ──────────────────────────────────────────────────────────────
 
     const draftedIds = useMemo(() =>
         new Set(rows.map(r => r.player_id).filter(Boolean))
@@ -97,20 +116,34 @@ export default function DraftSimulation({ league, onBack, onModeChange }) {
         (league.draftSettings?.budget ?? 0) - totalSpent
     , [totalSpent, league.draftSettings?.budget]);
 
-    const keeperRows  = useMemo(() => rows.map((r, i) => ({ ...r, pos: POSITIONS[i] })).filter(r => r.isKeeper),            [rows]);
-    const targetRows  = useMemo(() => rows.map((r, i) => ({ ...r, pos: POSITIONS[i] })).filter(r => r.player_id && !r.isKeeper), [rows]);
-    const emptySlots  = useMemo(() => POSITIONS.filter((_, i) => !rows[i]?.player_id),                                       [rows]);
+    const keeperRows = useMemo(() =>
+        rows.map((r, i) => ({ ...r, pos: POSITIONS[i] })).filter(r => r.isKeeper)
+    , [rows]);
 
-    // ── init ─────────────────────────────────────────────────────────────────
+    const targetRows = useMemo(() =>
+        rows.map((r, i) => ({ ...r, pos: POSITIONS[i] })).filter(r => r.player_id && !r.isKeeper)
+    , [rows]);
+
+    const emptySlots = useMemo(() =>
+        POSITIONS.filter((_, i) => !rows[i]?.player_id)
+    , [rows]);
+
+    // open profile
+
+    const openProfile = (e, playerId) => {
+        e.stopPropagation();
+        const found = allPlayers.find(p => p.id === playerId);
+        if (found) setProfilePlayer(toProfilePlayer(found));
+    };
+
 
     useEffect(() => {
         const init = async () => {
             try {
                 const { data: teams } = await getLeagueTeams(league.id);
 
-                // pick the stored sim team, or fall back to first team
-                const storedId    = typeof window !== "undefined" ? localStorage.getItem(simTeamIdKey(league.id)) : null;
-                const targetTeam  = (storedId ? teams.find(t => String(t.id) === storedId) : null) ?? teams[0];
+                const storedId   = typeof window !== "undefined" ? localStorage.getItem(simTeamIdKey(league.id)) : null;
+                const targetTeam = (storedId ? teams.find(t => String(t.id) === storedId) : null) ?? teams[0];
 
                 if (!targetTeam) { setLoading(false); return; }
 
@@ -118,7 +151,6 @@ export default function DraftSimulation({ league, onBack, onModeChange }) {
                 setSimTeamId(teamId);
                 if (typeof window !== "undefined") localStorage.setItem(simTeamIdKey(league.id), String(teamId));
 
-                // load DB picks → keepers (player_id + no draft_time)
                 const { data: picks } = await getTeamDraftPicks(targetTeam.id);
                 const newRows = emptyRows();
 
@@ -141,7 +173,6 @@ export default function DraftSimulation({ league, onBack, onModeChange }) {
                     }
                 });
 
-                // overlay localStorage sim picks on non-keeper slots
                 let storedPayload = null;
                 if (typeof window !== "undefined") {
                     try { storedPayload = JSON.parse(localStorage.getItem(simPicksKey(league.id)) ?? "null"); } catch {}
@@ -181,7 +212,7 @@ export default function DraftSimulation({ league, onBack, onModeChange }) {
             .catch(err => console.error("Failed to load players:", err));
     }, []);
 
-    // ── save ─────────────────────────────────────────────────────────────────
+    // save
 
     const handleSave = () => {
         const missingPrice = rows.some(r => r.player_id && !r.isKeeper && !r.price);
@@ -211,7 +242,7 @@ export default function DraftSimulation({ league, onBack, onModeChange }) {
         setTimeout(() => setSaveBanner(false), 3000);
     };
 
-    // ── team-name editing ─────────────────────────────────────────────────────
+    // team name editing
 
     const startEditName = () => {
         setEditingName(true);
@@ -229,7 +260,7 @@ export default function DraftSimulation({ league, onBack, onModeChange }) {
         if (e.key === "Escape") setEditingName(false);
     };
 
-    // ── cell editing ──────────────────────────────────────────────────────────
+    // cell editing
 
     const startEditCell = (rowIndex, field, currentValue) => {
         setEditingCell({ rowIndex, field });
@@ -270,7 +301,7 @@ export default function DraftSimulation({ league, onBack, onModeChange }) {
     const isEditing = (rowIndex, field) =>
         editingCell?.rowIndex === rowIndex && editingCell?.field === field;
 
-    // ── render ────────────────────────────────────────────────────────────────
+    // render
 
     if (loading) {
         return (
@@ -392,6 +423,7 @@ export default function DraftSimulation({ league, onBack, onModeChange }) {
 
                                     return (
                                         <tr key={rowIndex} className={rowIndex % 2 === 0 ? "db-row" : "db-row db-row-alt"}>
+
                                             {/* Position label */}
                                             <td
                                                 className="db-td db-td-pos db-sticky-col db-td-draftable"
@@ -408,7 +440,10 @@ export default function DraftSimulation({ league, onBack, onModeChange }) {
                                                     isEditing(rowIndex, "player") ? "db-td-editing" : "",
                                                     row.player ? "db-td-filled" : ""
                                                 ].join(" ")}
-                                                onClick={() => { if (isKeeper) return; if (!isEditing(rowIndex, "player")) startEditCell(rowIndex, "player", row.player); }}
+                                                onClick={() => {
+                                                    if (isKeeper) return;
+                                                    if (!isEditing(rowIndex, "player")) startEditCell(rowIndex, "player", row.player);
+                                                }}
                                             >
                                                 {isEditing(rowIndex, "player") ? (
                                                     <div style={{ position: "relative" }}>
@@ -458,12 +493,26 @@ export default function DraftSimulation({ league, onBack, onModeChange }) {
                                                         )}
                                                     </div>
                                                 ) : (
-                                                    <span className="db-cell-value">
-                                                        {row.player
-                                                            ? <>{row.player}{isKeeper && <span className="sim-keeper-badge">KEEPER</span>}</>
-                                                            : <span className="db-cell-empty">—</span>
-                                                        }
-                                                    </span>
+                                                    // ── Filled player cell with detail button ──
+                                                    row.player ? (
+                                                        <span className="db-cell-value db-cell-has-player">
+                                                            <span className="db-cell-name">
+                                                                {row.player}
+                                                                {isKeeper && <span className="sim-keeper-badge">KEEPER</span>}
+                                                            </span>
+                                                            <button
+                                                                className="db-cell-detail-btn"
+                                                                onClick={(e) => openProfile(e, row.player_id)}
+                                                                title="View player profile"
+                                                            >
+                                                                Details
+                                                            </button>
+                                                        </span>
+                                                    ) : (
+                                                        <span className="db-cell-value">
+                                                            <span className="db-cell-empty">—</span>
+                                                        </span>
+                                                    )
                                                 )}
                                             </td>
 
@@ -475,11 +524,15 @@ export default function DraftSimulation({ league, onBack, onModeChange }) {
                                                     isEditing(rowIndex, "season") ? "db-td-editing" : "",
                                                     row.season ? "db-td-filled" : ""
                                                 ].join(" ")}
-                                                onClick={() => { if (isKeeper) return; if (!isEditing(rowIndex, "season")) startEditCell(rowIndex, "season", row.season); }}
+                                                onClick={() => {
+                                                    if (isKeeper) return;
+                                                    if (!isEditing(rowIndex, "season")) startEditCell(rowIndex, "season", row.season);
+                                                }}
                                             >
                                                 {isEditing(rowIndex, "season") ? (
                                                     <input ref={cellInputRef} className="db-cell-input" value={editValue}
-                                                        onChange={e => setEditValue(e.target.value)} onBlur={commitCellEdit} onKeyDown={handleCellKeyDown} />
+                                                        onChange={e => setEditValue(e.target.value)}
+                                                        onBlur={commitCellEdit} onKeyDown={handleCellKeyDown} />
                                                 ) : (
                                                     <span className="db-cell-value">{row.season || <span className="db-cell-empty">—</span>}</span>
                                                 )}
@@ -493,11 +546,15 @@ export default function DraftSimulation({ league, onBack, onModeChange }) {
                                                     isEditing(rowIndex, "price") ? "db-td-editing" : "",
                                                     row.price ? "db-td-filled" : ""
                                                 ].join(" ")}
-                                                onClick={() => { if (isKeeper) return; if (!isEditing(rowIndex, "price")) startEditCell(rowIndex, "price", row.price); }}
+                                                onClick={() => {
+                                                    if (isKeeper) return;
+                                                    if (!isEditing(rowIndex, "price")) startEditCell(rowIndex, "price", row.price);
+                                                }}
                                             >
                                                 {isEditing(rowIndex, "price") ? (
                                                     <input ref={cellInputRef} className="db-cell-input" value={editValue}
-                                                        onChange={e => setEditValue(e.target.value)} onBlur={commitCellEdit} onKeyDown={handleCellKeyDown} />
+                                                        onChange={e => setEditValue(e.target.value)}
+                                                        onBlur={commitCellEdit} onKeyDown={handleCellKeyDown} />
                                                 ) : (
                                                     <span className="db-cell-value">{row.price || <span className="db-cell-empty">—</span>}</span>
                                                 )}
@@ -600,6 +657,13 @@ export default function DraftSimulation({ league, onBack, onModeChange }) {
                 position={selectedPosition}
                 players={allPlayers.filter(p => playerMatchesRowPosition(p, selectedPosition ?? ""))}
                 draftedIds={draftedIds}
+            />
+
+            {/* Player Profile slide-in */}
+            <PlayerProfileModal
+                isOpen={!!profilePlayer}
+                onClose={() => setProfilePlayer(null)}
+                player={profilePlayer}
             />
         </div>
     );
