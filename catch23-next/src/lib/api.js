@@ -131,3 +131,8 @@ export const getRankedPlayers = async () => {
     });
 };
  
+export const getDynamicRankedPlayers = async (league) => {
+    return publicApi.post(`/api/ranking/ranks/dynamic`, league, {
+        headers: { "x-email": EMAIL, "x-signature": sign(league) }
+    });
+};
