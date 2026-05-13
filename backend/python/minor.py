@@ -26,7 +26,7 @@ def transform_player(p):
         # Level + team
         "Lev": p.get("aLevel"),
         "Tm":  p.get("AffAbbName"),
-        "team_abbr": p.get("TeamName"),
+        "team_abbr": f"{p.get('AffAbbName')} ({p.get('aLevel')})",
 
         # hitting stats
         "PA": p.get("PA"),
@@ -50,11 +50,49 @@ def transform_player(p):
 
         # extras
         "position": p.get("positionDB"),
+        "depth": ""
     }
 
 
-def to_dataframe(api_data):
-    cleaned = [transform_player(p) for p in api_data]
+def transform_pitcher(p):
+    return {
+        "Name": clean_name(p.get("Name")),
+        "Age": parse_age(p.get("MaxAge", p.get("Age"))),
+
+        # IDs
+        "mlbID": p.get("xMLBAMID"),
+
+        # Level + team
+        "Lev": p.get("aLevel"),
+        "Tm":  p.get("AffAbbName"),
+        "team_abbr": f"{p.get('AffAbbName')} ({p.get('aLevel')})",
+
+        # pitching stats
+        "G": p.get("G"),
+        "GS": p.get("GS"),
+        "W": p.get("W"),
+        "SV": p.get("SV"),
+        "IP": p.get("IP"),
+        "H": p.get("H"),
+        "ER": p.get("ER"),
+        "BB": p.get("BB%"),
+        "SO": p.get("SO"),
+        "HR": p.get("HR"),
+        "ERA": p.get("ERA"),
+        "WHIP": p.get("WHIP"),
+        "BF": p.get("BF"),
+        "SO/W": p.get("SO/W"),
+        "SB": p.get("SB"),
+        "PO": p.get("PO"),
+
+        # extras
+        "position": p.get("positionDB"),
+        "depth": ""
+    }
+
+
+def to_dataframe(api_data, is_bat):
+    cleaned = [(transform_player(p) if is_bat else transform_pitcher(p)) for p in api_data]
 
     return pd.DataFrame(cleaned)
 
@@ -69,10 +107,11 @@ def get_minor_stats(is_bat, start_dt, end_dt):
 
         data = response.json()
 
-        df = to_dataframe(data)
+        df = to_dataframe(data, is_bat)
 
-        print(df)
+        df.to_csv((r"minordata.csv" if is_bat else r"minorpdata.csv"), index=False)
     except requests.RequestException as e:
         print(f"Failed : {e}")
 
 get_minor_stats(True, 2025, 2026)
+get_minor_stats(False, 2025, 2026)

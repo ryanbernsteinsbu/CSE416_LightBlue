@@ -319,9 +319,9 @@ async function ingestPitchers(csvPath: string) {
       .on("error", reject);
   });
 }
-ingestHitters("./python/data.csv")
+ingestHitters("./python/minordata.csv")
   .then(() => console.log("Done"))
   .catch((err) => console.error("Error:", err));
-ingestPitchers("./python/pdata.csv")
+ingestPitchers("./python/minorpdata.csv")
   .then(() => console.log("Done"))
   .catch((err) => console.error("Error:", err));
