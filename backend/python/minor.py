@@ -25,8 +25,8 @@ def transform_player(p):
 
         # Level + team
         "Lev": p.get("aLevel"),
-        "Tm": p.get("PlayerName", p.get("AffAbbName")),
-        "team_abbr": f"{p.get('AffAbbName','')}{p.get('aLevel','')}",
+        "Tm":  p.get("AffAbbName"),
+        "team_abbr": p.get("TeamName"),
 
         # hitting stats
         "PA": p.get("PA"),
@@ -54,9 +54,7 @@ def transform_player(p):
 
 
 def to_dataframe(api_data):
-    rows = api_data.get("data", api_data)  # handles both formats
-
-    cleaned = [transform_player(p) for p in rows]
+    cleaned = [transform_player(p) for p in api_data]
 
     return pd.DataFrame(cleaned)
 
@@ -70,10 +68,10 @@ def get_minor_stats(is_bat, start_dt, end_dt):
         response.raise_for_status()  # raises error if bad status
 
         data = response.json()
-        # print(data[0])
-        df = to_dataframe(data[0])
 
-        print(df.head())
+        df = to_dataframe(data)
+
+        print(df)
     except requests.RequestException as e:
         print(f"Failed : {e}")
 
