@@ -11,7 +11,7 @@ export default function TransactionToast({ toast, onDismiss }) {
     return () => clearTimeout(timerRef.current);
   }, [toast._id, onDismiss]);
 
-  const playerName = toast.player?.fullName ?? 'Unknown Player';
+  const playerName = toast.person?.fullName ?? 'Unknown Player';
   const fromTeam = toast.fromTeam?.name;
   const toTeam = toast.toTeam?.name;
   const teamLine = fromTeam && toTeam
