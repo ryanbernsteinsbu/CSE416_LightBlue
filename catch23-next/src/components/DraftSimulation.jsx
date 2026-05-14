@@ -57,18 +57,10 @@ const toProfilePlayer = (p) => ({
     username: getPlayerDisplayName(p),
     team: p.team ?? p.mlbTeam ?? p.teamAbbreviation ?? "",
     role: Array.isArray(p.playablePositions) ? p.playablePositions.join(", ") : (p.position ?? ""),
-    stats: p.stats ?? {
-        HR:   p.HR   ?? p.homeRuns,
-        RBI:  p.RBI,
-        SB:   p.SB   ?? p.stolenBases,
-        R:    p.R    ?? p.runs,
-        AVG:  p.AVG  ?? p.battingAverage,
-        OBP:  p.OBP,
-        W:    p.W    ?? p.wins,
-        SV:   p.SV   ?? p.saves,
-        K:    p.K    ?? p.strikeouts,
-        ERA:  p.ERA,
-        WHIP: p.WHIP,
+    stats: {
+        HR: 0, RBI: 0, SB: 0, AVG: 0, R: 0, OBP: 0,
+        W: 0, SV: 0, K: 0, ERA: 0, WHIP: 0,
+        ...p.lastYearStats  
     }
 });
 
@@ -380,7 +372,7 @@ export default function DraftSimulation({ league, onBack, onModeChange }) {
             {/* Main layout: table + sidebar */}
             <div className="sim-layout">
 
-                {/* ── Roster table ── */}
+                {/* Roster table */}
                 <div className="sim-main">
                     <div className="db-scroll">
                         <table className="db-table">

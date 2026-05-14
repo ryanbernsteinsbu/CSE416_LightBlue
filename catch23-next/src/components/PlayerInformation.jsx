@@ -36,7 +36,7 @@ const PITCHING_COLUMNS = [
 
 export default function PlayerInformation() {
 
-    const [mode, setMode] = useState("hitting");
+    const [mode, setMode] = useState(null);
 
     const [nameQuery, setNameQuery] = useState("");
     const [teamQuery, setTeamQuery] = useState("");
@@ -48,7 +48,7 @@ export default function PlayerInformation() {
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(50);
 
-    const columns = mode === "hitting" ? HITTING_COLUMNS : PITCHING_COLUMNS;
+    const columns = mode === "pitching" ? PITCHING_COLUMNS : HITTING_COLUMNS;
 
     const [selectedPlayer, setSelectedPlayer] = useState(null);
     const [compareOpen, setCompareOpen] = useState(false);
@@ -62,7 +62,7 @@ export default function PlayerInformation() {
         const fetchPlayers = async () => {
             try {
                 setLoading(true);
-                const { data } = await queryPlayers(nameQuery, posQuery, teamQuery, sortKey, (sortDir === "asc"), (mode === "hitting"), page, pageSize);
+                const { data } = await queryPlayers(nameQuery, posQuery, teamQuery, sortKey, (sortDir === "asc"), (mode !== "pitching"), page, pageSize);
                 const { players, total } = data;
                 const mapped = players.map(p => ({
                     id: p.id,                                    // ← always carry id through
@@ -98,7 +98,7 @@ export default function PlayerInformation() {
     };
 
     const switchTab = (next) => {
-        setMode(next);
+        setMode(prev => prev === next ? null : next);
         setSortKey("name");
         setSortDir("asc");
         setPage(1);
@@ -168,7 +168,7 @@ export default function PlayerInformation() {
                         <button
                             className="pi-btn pi-btn--ghost"
                             type="button"
-                            onClick={() => { setNameQuery(""); setTeamQuery(""); setPosQuery(""); setPage(1); }}
+                            onClick={() => { setNameQuery(""); setTeamQuery(""); setPosQuery(""); setMode(null); setPage(1); }}
                         >
                             Clear
                         </button>
@@ -307,6 +307,7 @@ export default function PlayerInformation() {
             <PlayerCompareModal
                 isOpen={compareOpen}
                 selected={compareSelected}
+                mode={mode}                  // ← add this
                 onRemove={(id) => setCompareSelected(prev => prev.filter(p => p.id !== id))}
                 onClose={closeCompare}
             />

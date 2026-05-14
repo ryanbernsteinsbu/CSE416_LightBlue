@@ -62,18 +62,10 @@ const toProfilePlayer = (p) => ({
     username: getPlayerDisplayName(p),
     team: p.team ?? p.mlbTeam ?? p.teamAbbreviation ?? "",
     role: Array.isArray(p.playablePositions) ? p.playablePositions.join(", ") : (p.position ?? ""),
-    stats: p.stats ?? {
-        HR:   p.HR   ?? p.homeRuns,
-        RBI:  p.RBI,
-        SB:   p.SB   ?? p.stolenBases,
-        R:    p.R    ?? p.runs,
-        AVG:  p.AVG  ?? p.battingAverage,
-        OBP:  p.OBP,
-        W:    p.W    ?? p.wins,
-        SV:   p.SV   ?? p.saves,
-        K:    p.K    ?? p.strikeouts,
-        ERA:  p.ERA,
-        WHIP: p.WHIP,
+    stats: {
+        HR: 0, RBI: 0, SB: 0, AVG: 0, R: 0, OBP: 0,
+        W: 0, SV: 0, K: 0, ERA: 0, WHIP: 0,
+        ...p.lastYearStats   
     }
 });
 
@@ -99,7 +91,7 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
 
     const draftedIds = useMemo(() =>
         new Set(teams.flatMap(t => t.rows.map(r => r.player_id).filter(Boolean)))
-    , [teams]);
+        , [teams]);
 
     const remainingBudgets = useMemo(() => {
         const result = {};
@@ -163,10 +155,10 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
     }, []);
 
     const handleSaveDraft = async () => {
-        const missingPrice = teams.some(team =>
-            team.rows.some(row => row.player_id && !row.price)
+        const missingField = teams.some(team =>
+            team.rows.some(row => row.player_id && (!row.price || !row.season))
         );
-        if (missingPrice) {
+        if (missingField) {
             setErrorBanner(true);
             setTimeout(() => setErrorBanner(false), 3000);
             return;
@@ -279,7 +271,7 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
                         ...row,
                         player: isValid ? getPlayerDisplayName(matched) : "",
                         player_id: isValid ? matched.id : null,
-                        season: isValid ? league.season : ""
+                        season: isValid ? (row.season || "") : ""
                     };
                 }
                 return { ...row, [field]: editValue };
@@ -306,7 +298,7 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
             <div className="db-mode-banner">YOU ARE IN PRE-DRAFT MODE!</div>
             <div className={`save-banner ${saveBanner ? "save-banner--visible" : ""}`}>✅ Draft saved!</div>
             <div className={`save-banner save-banner-error ${errorBanner ? "save-banner--visible" : ""}`}>
-                ❌ Draft did not save. Missing price for one or more players.
+                ❌ Draft did not save. One or more players is missing a required field (season or price).
             </div>
             <div className={`save-banner save-banner-error ${budgetErrorTeam ? "save-banner--visible" : ""}`}>
                 ❌ {budgetErrorTeam?.name} is over budget — spent ${budgetErrorTeam?.spent.toFixed(0)} of ${budgetErrorTeam?.budget}
@@ -467,7 +459,7 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
                                                                                         if (t.id !== team.id) return t;
                                                                                         const newRows = t.rows.map((r, i) =>
                                                                                             i === rowIndex
-                                                                                                ? { ...r, player: displayName, player_id: p.id, season: league.season }
+                                                                                                ? { ...r, player: displayName, player_id: p.id, season: r.season || "" }
                                                                                                 : r
                                                                                         );
                                                                                         return { ...t, rows: newRows };
@@ -488,7 +480,6 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
                                                                 )}
                                                             </div>
                                                         ) : (
-                                                            // ── Filled player cell with detail button ──
                                                             row.player ? (
                                                                 <span className="db-cell-value db-cell-has-player">
                                                                     <span className="db-cell-name">{row.player}</span>
@@ -521,9 +512,24 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
                                                         }
                                                     >
                                                         {isEditing(team.id, rowIndex, "season") ? (
-                                                            <input ref={cellInputRef} className="db-cell-input" value={editValue}
-                                                                onChange={e => setEditValue(e.target.value)}
-                                                                onBlur={commitCellEdit} onKeyDown={handleCellKeyDown} />
+                                                            <>
+                                                                <input
+                                                                    ref={cellInputRef}
+                                                                    className="db-cell-input"
+                                                                    list={`season-options-${team.id}-${rowIndex}`}
+                                                                    value={editValue}
+                                                                    onChange={e => setEditValue(e.target.value)}
+                                                                    onBlur={commitCellEdit}
+                                                                    onKeyDown={handleCellKeyDown}
+                                                                    placeholder="e.g. 2024"
+                                                                />
+                                                                <datalist id={`season-options-${team.id}-${rowIndex}`}>
+                                                                    {[0, 1, 2, 3, 4, 5].map(offset => {
+                                                                        const yr = String(Number(league.season) - offset);
+                                                                        return <option key={yr} value={yr} />;
+                                                                    })}
+                                                                </datalist>
+                                                            </>
                                                         ) : (
                                                             <span className="db-cell-value">{row.season || <span className="db-cell-empty">—</span>}</span>
                                                         )}
