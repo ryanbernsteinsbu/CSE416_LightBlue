@@ -1,60 +1,84 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 
-const getWsUrl = () => {
-  return process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8000/ws';
-};
 
 export const getApiUrl = () => {
-  return (process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8000/ws')
-    .replace('wss://', 'https://')
-    .replace('ws://', 'http://')
-    .replace('/ws', '');
+    const getESTDate = () => {
+        return new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'America/New_York',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+        }).format(new Date());
+    };
+    const date = getESTDate()
+    return `https://statsapi.mlb.com/api/v1/transactions?&startDate=${date}&endDate=${date}`
 };
 
 export function useTransactions() {
-  const [toasts, setToasts] = useState([]);
-  const [history, setHistory] = useState([]);
-  const wsRef = useRef(null);
-  const reconnectRef = useRef(null);
+    const [toasts, setToasts] = useState([]);
+    const [history, setHistory] = useState([]);
+    const isFirstLoad = useRef(true);
+    const seenIds = useRef(new Set());
+    const fetchTransactions = useCallback(async () => {
+        try {
+            const res = await fetch(getApiUrl());
+            
+            if (!res.ok) {
+                throw new Error(`HTTP ${res.status}`);
+            }
+            
+            const data = await res.json();
+            
+            const transactions = data.transactions || [];
+            
+            const newTransactions = [];
+            
+            for (const txn of transactions) {
+                // console.log(txn)
+                const id = txn.id;
+                
+                if (!seenIds.current.has(id)) {
+                    seenIds.current.add(id);
+                    const transaction = {
+                        ...txn,
+                        _id: crypto.randomUUID(),
+                    };
+                    newTransactions.push(transaction);
+                }
+            }
+            
+            if (newTransactions.length > 0) {
+                newTransactions.reverse();
+                
+                setHistory(prev => [
+                    ...newTransactions,
+                    ...prev,
+                ]);
 
-  const connect = useCallback(() => {
-    const userId = typeof window !== 'undefined' ? localStorage.getItem('user_id') : null;
-    if (!userId) return;
+                if (isFirstLoad.current) {
+                    isFirstLoad.current = false;
 
-    const ws = new WebSocket(getWsUrl());
-    wsRef.current = ws;
+                    return;
+                }
+                setToasts(prev => [...prev, ...newTransactions]);
 
-    ws.onopen = () => console.log('[WS] Connected to transaction feed');
+            }
 
-    ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        if (data.type === 'NEW_TRANSACTION') {
-          const txn = { ...data.transaction, _id: crypto.randomUUID() };
-          setToasts(prev => [...prev, txn]);
-          setHistory(prev => [txn, ...prev]);
+        } catch (err) {
+            console.error('[Transactions] Poll failed:', err);
         }
-      } catch {}
-    };
-
-    ws.onclose = () => {
-      reconnectRef.current = setTimeout(connect, 5000);
-    };
-
-    ws.onerror = () => ws.close();
-  }, []);
-
-  useEffect(() => {
-    connect();
-    return () => {
-      clearTimeout(reconnectRef.current);
-      wsRef.current?.close();
-    };
-  }, [connect]);
-
-  const dismissToast = useCallback((id) => {
-    setToasts(prev => prev.filter(t => t._id !== id));
-  }, []);
-
-  return { toasts, dismissToast, history };
+    }, []);
+    
+    useEffect(() => {
+        fetchTransactions();
+        
+        // poll every 60 seconds
+        const interval = setInterval(fetchTransactions, 60000);
+        
+        return () => clearInterval(interval);
+    }, [fetchTransactions]);
+    const dismissToast = useCallback((id) => {
+        setToasts(prev => prev.filter(t => t._id !== id));
+    }, []);
+    return { toasts, dismissToast, history };
 }
