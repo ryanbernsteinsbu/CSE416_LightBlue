@@ -372,7 +372,7 @@ export default function DraftSimulation({ league, onBack, onModeChange }) {
             {/* Main layout: table + sidebar */}
             <div className="sim-layout">
 
-                {/* ── Roster table ── */}
+                {/* Roster table */}
                 <div className="sim-main">
                     <div className="db-scroll">
                         <table className="db-table">
