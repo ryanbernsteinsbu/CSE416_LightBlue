@@ -27,7 +27,7 @@ const PIT_STATS = [
   ["WHIP", "WHIP"],
 ];
 
-function PlayerCompareCard({ player, onRemove }) {
+function PlayerCompareCard({ player, onRemove, mode }) {
   return (
     <div className="cmp-card">
       <button className="cmp-card-remove" onClick={() => onRemove(player.id)} type="button">
@@ -41,33 +41,37 @@ function PlayerCompareCard({ player, onRemove }) {
       </div>
 
       <div className="cmp-card-stats">
-        {/* Hitting */}
-        <div className="cmp-stat-col">
-          <div className="cmp-stat-heading">HITTING</div>
-          {HIT_STATS.map(([key, label]) => (
-            <div key={key} className="cmp-stat-row">
-              <span className="cmp-stat-label">{key}</span>
-              <span className="cmp-stat-val">{fmt(player.stats?.[key], key)}</span>
-            </div>
-          ))}
-        </div>
+        {/* Only show hitting stats when NOT in pitching mode */}
+        {mode !== "pitching" && (
+          <div className="cmp-stat-col">
+            <div className="cmp-stat-heading">HITTING</div>
+            {HIT_STATS.map(([key]) => (
+              <div key={key} className="cmp-stat-row">
+                <span className="cmp-stat-label">{key}</span>
+                <span className="cmp-stat-val">{fmt(player.stats?.[key], key)}</span>
+              </div>
+            ))}
+          </div>
+        )}
 
-        {/* Pitching */}
-        <div className="cmp-stat-col">
-          <div className="cmp-stat-heading">PITCHING</div>
-          {PIT_STATS.map(([key, label]) => (
-            <div key={key} className="cmp-stat-row">
-              <span className="cmp-stat-label">{key}</span>
-              <span className="cmp-stat-val">{fmt(player.stats?.[key], key)}</span>
-            </div>
-          ))}
-        </div>
+        {/* Only show pitching stats when NOT in hitting mode */}
+        {mode !== "hitting" && (
+          <div className="cmp-stat-col">
+            <div className="cmp-stat-heading">PITCHING</div>
+            {PIT_STATS.map(([key]) => (
+              <div key={key} className="cmp-stat-row">
+                <span className="cmp-stat-label">{key}</span>
+                <span className="cmp-stat-val">{fmt(player.stats?.[key], key)}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-export function PlayerCompareModal({ isOpen, selected, onRemove, onClose }) {
+export function PlayerCompareModal({ isOpen, selected, onRemove, onClose, mode }) {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -102,7 +106,7 @@ export function PlayerCompareModal({ isOpen, selected, onRemove, onClose }) {
       ) : (
         <div className="cmp-cards">
           {selected.map((p) => (
-            <PlayerCompareCard key={p.id} player={p} onRemove={onRemove} />
+            <PlayerCompareCard key={p.id} player={p} onRemove={onRemove} mode={mode} />
           ))}
         </div>
       )}
