@@ -1,5 +1,4 @@
 from pybaseball import batting_stats_range, pitching_stats_range
-from baseball_id import Lookup
 
 import pandas as pd
 import requests
