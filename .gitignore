@@ -25,6 +25,8 @@ out/
 # ===== Scripts =====
 backend/python/data.csv
 backend/python/pdata.csv
+backend/python/minorpdata.csv
+backend/python/minordata.csv
 backend/python/.venv/
 
 # ===== Logs / temp =====

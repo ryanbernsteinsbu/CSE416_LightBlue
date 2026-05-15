@@ -31,6 +31,7 @@ async function addPlayer(data: CreatePlayerInput): Promise<Player| null> {
             player.firstName = data.firstName;
             player.lastName = data.lastName;
             player.age = data.age;
+            player.status = data.status;
             player.realTeam = data.realTeam;
             player.realLeague = data.realLeague;
             player.depth = data.depth;
@@ -187,7 +188,7 @@ async function ingestHitters(csvPath: string) {
                 OBP: Number(row.OBP),
                 SLG: Number(row.SLG),
             }, 
-            status: Status.ACTIVE, 
+            status: (row.Tm == "minors" ? Status.MINORS : Status.ACTIVE), 
             seasonsLeft: 1, // placeholder (you can adjust later)
 
             realTeam: row.team_abbr,
@@ -292,7 +293,7 @@ async function ingestPitchers(csvPath: string) {
               SB: Number(row.SB),
               PO: Number(row.PO),
             },
-            status: Status.ACTIVE,
+            status: (row.Tm == "minors" ? Status.MINORS : Status.ACTIVE), 
             seasonsLeft: 1, // placeholder
             realTeam: row.team_abbr,
             realLeague: row.Lev === "Maj-AL" ? "AL" : "NL",
