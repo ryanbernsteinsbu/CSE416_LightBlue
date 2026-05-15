@@ -37,6 +37,7 @@ const PITCHING_COLUMNS = [
 export default function PlayerInformation() {
 
     const [mode, setMode] = useState(null);
+    const [minors, setMinors] = useState(false)
 
     const [nameQuery, setNameQuery] = useState("");
     const [teamQuery, setTeamQuery] = useState("");
@@ -62,7 +63,7 @@ export default function PlayerInformation() {
         const fetchPlayers = async () => {
             try {
                 setLoading(true);
-                const { data } = await queryPlayers(nameQuery, posQuery, teamQuery, sortKey, (sortDir === "asc"), (mode !== "pitching"), page, pageSize);
+                const { data } = await queryPlayers(nameQuery, posQuery, teamQuery, sortKey, (sortDir === "asc"), (mode !== "pitching"), page, pageSize, minors);
                 const { players, total } = data;
                 const mapped = players.map(p => ({
                     id: p.id,                                    // ← always carry id through
@@ -126,6 +127,13 @@ export default function PlayerInformation() {
                     <div className="pi-titleRow">
                         <h1 className="pi-title">Player Information</h1>
                         <div className="pi-tabs">
+                            <button
+                                    className={`pi-tab ${minors ? "is-active" : ""}`}
+                                    onClick={() => setMinors(!minors)}
+                                    type="button"
+                                    >
+                                    Minors
+                            </button>
                             {["hitting", "pitching"].map((t) => (
                                 <button
                                     key={t}
@@ -168,7 +176,7 @@ export default function PlayerInformation() {
                         <button
                             className="pi-btn pi-btn--ghost"
                             type="button"
-                            onClick={() => { setNameQuery(""); setTeamQuery(""); setPosQuery(""); setMode(null); setPage(1); }}
+                            onClick={() => { setNameQuery(""); setTeamQuery(""); setPosQuery(""); setMode(null); setPage(1); setMinors(False); }}
                         >
                             Clear
                         </button>
