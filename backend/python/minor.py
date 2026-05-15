@@ -1,7 +1,5 @@
 import requests
-import urllib.parse
 import pandas as pd
-import re
 from bs4 import BeautifulSoup
 
 def clean_name(html_name):
@@ -17,7 +15,7 @@ def parse_age(age_str):
 
 def transform_player(p):
     return {
-        "Name": clean_name(p.get("Name")),
+            "Name": repr(clean_name(p.get("Name")).encode("utf-8"))[2:-2],
         "Age": parse_age(p.get("MaxAge", p.get("Age"))),
 
         # IDs
@@ -56,7 +54,7 @@ def transform_player(p):
 
 def transform_pitcher(p):
     return {
-        "Name": clean_name(p.get("Name")),
+            "Name": repr(clean_name(p.get("Name")).encode("utf-8"))[2:-2],
         "Age": parse_age(p.get("MaxAge", p.get("Age"))),
 
         # IDs
@@ -90,11 +88,31 @@ def transform_pitcher(p):
         "depth": ""
     }
 
+COUNT_STATS = {
+    "Age", "PA", "AB", "R", "H", "1B", "2B", "3B", "HR",
+    "RBI", "BB", "K", "SB", "CS",
+    "G", "GS", "W", "SV", "ER", "SO", "BF", "PO"
+}
+
+RATE_STATS = {
+    "AVG", "OBP", "SLG", "ERA", "WHIP", "SO/W"
+}
+
+
+def format_dataframe(df):
+    for col in df.columns:
+        if col in COUNT_STATS:
+            df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0).astype(int)
+
+        elif col in RATE_STATS:
+            df[col] = pd.to_numeric(df[col], errors="coerce").round(3)
+
+    return df
 
 def to_dataframe(api_data, is_bat):
     cleaned = [(transform_player(p) if is_bat else transform_pitcher(p)) for p in api_data]
 
-    return pd.DataFrame(cleaned)
+    return format_dataframe(pd.DataFrame(cleaned))
 
 BASE_URL = "https://www.fangraphs.com/api/leaders/minor-league/data?pos=all&level=0&lg=2,4,5,6,7,8,9,10,11,14,12,13,15,16,17,18,30,32&stats={is_bat}&qual=y&type=0&team=&season={start_dt}&seasonEnd={end_dt}&org=&ind=0&splitTeam=false"
 

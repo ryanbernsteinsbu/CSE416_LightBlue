@@ -28,6 +28,8 @@ async function addPlayer(data: CreatePlayerInput): Promise<Player| null> {
         });
 
         if (player) {
+            player.firstName = data.firstName;
+            player.lastName = data.lastName;
             player.age = data.age;
             player.realTeam = data.realTeam;
             player.realLeague = data.realLeague;
