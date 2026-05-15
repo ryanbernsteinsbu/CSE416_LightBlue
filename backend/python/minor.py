@@ -1,9 +1,38 @@
 import requests
-import urllib.parse
 import pandas as pd
-import re
 from bs4 import BeautifulSoup
-
+team_leagues = {
+    "ARI": "Maj-NL",
+    "ATL": "Maj-NL",
+    "BAL": "Maj-AL",
+    "BOS": "Maj-AL",
+    "CHC": "Maj-NL",
+    "CHW": "Maj-AL",
+    "CIN": "Maj-NL",
+    "CLE": "Maj-AL",
+    "COL": "Maj-NL",
+    "DET": "Maj-AL",
+    "HOU": "Maj-AL",
+    "KCR": "Maj-AL",
+    "LAA": "Maj-AL",
+    "LAD": "Maj-NL",
+    "MIA": "Maj-NL",
+    "MIL": "Maj-NL",
+    "MIN": "Maj-AL",
+    "NYM": "Maj-NL",
+    "NYY": "Maj-AL",
+    "OAK": "Maj-AL",
+    "PHI": "Maj-NL",
+    "PIT": "Maj-NL",
+    "SDP": "Maj-NL",
+    "SEA": "Maj-AL",
+    "SFG": "Maj-NL",
+    "STL": "Maj-NL",
+    "TBR": "Maj-AL",
+    "TEX": "Maj-AL",
+    "TOR": "Maj-AL",
+    "WSN": "Maj-NL",
+}
 def clean_name(html_name):
     return BeautifulSoup(html_name, "html.parser").text
 
@@ -24,8 +53,8 @@ def transform_player(p):
         "mlbID": p.get("xMLBAMID"),
 
         # Level + team
-        "Lev": p.get("aLevel"),
-        "Tm":  p.get("AffAbbName"),
+        "Tm": "minors",
+        "Lev":  team_leagues[p.get('AffAbbName')],
         "team_abbr": f"{p.get('AffAbbName')} ({p.get('aLevel')})",
 
         # hitting stats
@@ -63,8 +92,8 @@ def transform_pitcher(p):
         "mlbID": p.get("xMLBAMID"),
 
         # Level + team
-        "Lev": p.get("aLevel"),
-        "Tm":  p.get("AffAbbName"),
+        "Lev":  team_leagues[p.get('AffAbbName')],
+        "Tm":  "minors",
         "team_abbr": f"{p.get('AffAbbName')} ({p.get('aLevel')})",
 
         # pitching stats
