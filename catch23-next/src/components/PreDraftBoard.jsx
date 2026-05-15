@@ -639,6 +639,7 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
                 position={selectedPosition}
                 players={allPlayers.filter(p => playerMatchesRowPosition(p, selectedPosition ?? ""))}
                 draftedIds={draftedIds}
+                league={league}
             />
 
             <PlayerProfileModal
