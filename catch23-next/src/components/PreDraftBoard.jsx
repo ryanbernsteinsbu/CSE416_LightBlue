@@ -3,12 +3,11 @@ import React, { useEffect, useState, useRef, useMemo } from "react";
 import { createTeam, getLeagueTeams, deleteTeam, getAllPlayers, saveDraftPicks, getTeamDraftPicks } from "../lib/api";
 import ConfirmDeleteModal from "./ConfirmDeleteModal.jsx";
 import { PositionPlayersModal, playerMatchesRowPosition } from "./PositionPlayersModal";
-
-// helper functions
+import { PlayerProfileModal } from "./PlayerProfileModal";
+import { MovePopup } from "./Movepopup";
 
 const buildPositions = (rosterSettings) => {
     if (!rosterSettings) return [];
-
     return [
         ...Array(rosterSettings.numCatchers).fill("C"),
         ...Array(rosterSettings.numFirstBase).fill("1B"),
@@ -20,8 +19,8 @@ const buildPositions = (rosterSettings) => {
         ...Array(rosterSettings.numOutfield).fill("OF"),
         ...Array(rosterSettings.numUtility).fill("U"),
         ...Array(rosterSettings.numPitchers).fill("P"),
-    ]
-}
+    ];
+};
 
 const positionToEnum = (pos, index, POSITIONS) => {
     const counts = {};
@@ -31,21 +30,13 @@ const positionToEnum = (pos, index, POSITIONS) => {
     }
     const n = counts[pos];
     const map = {
-        C: `CATCHER_${n}`,
-        "1B": "FIRST",
-        "2B": "SECOND",
-        "3B": "THIRD",
-        SS: "SHORTSTOP",
-        MI: "MIDDLE_INFIELD",
-        CI: "CORNER_INFIELD",
-        OF: `OUTFIELD_${n}`,
-        U: "UTILITY",
-        P: `PITCHER_${n}`,
+        C: `CATCHER_${n}`, "1B": "FIRST", "2B": "SECOND", "3B": "THIRD",
+        SS: "SHORTSTOP", MI: "MIDDLE_INFIELD", CI: "CORNER_INFIELD",
+        OF: `OUTFIELD_${n}`, U: "UTILITY", P: `PITCHER_${n}`,
     };
     return map[pos] || pos;
 };
 
-// initialize empty rows 
 function makeEmptyTeam(index, POSITIONS) {
     return {
         id: crypto.randomUUID(),
@@ -54,20 +45,26 @@ function makeEmptyTeam(index, POSITIONS) {
     };
 }
 
-// get player display name
+const getPlayerDisplayName = (p) => `${p?.firstName ?? ""} ${p?.lastName ?? ""}`.trim();
+const getPlayerName = (p) => getPlayerDisplayName(p).toLowerCase();
 
-const getPlayerDisplayName = (p) =>
-    `${p?.firstName ?? ""} ${p?.lastName ?? ""}`.trim();
-
-// unify player names
-const getPlayerName = (p) =>
-    getPlayerDisplayName(p).toLowerCase();
+const toProfilePlayer = (p) => ({
+    id: p.id,
+    username: getPlayerDisplayName(p),
+    team: p.team ?? p.mlbTeam ?? p.teamAbbreviation ?? "",
+    role: Array.isArray(p.playablePositions) ? p.playablePositions.join(", ") : (p.position ?? ""),
+    stats: {
+        HR: 0, RBI: 0, SB: 0, AVG: 0, R: 0, OBP: 0,
+        W: 0, SV: 0, K: 0, ERA: 0, WHIP: 0,
+        ...p.lastYearStats
+    }
+});
 
 export default function PreDraftBoard({ league, onBack, onModeChange }) {
-    const POSITIONS = buildPositions(league.rosterSettings)
+    const POSITIONS = buildPositions(league.rosterSettings);
 
     const [teams, setTeams] = useState([]);
-    const [editingCell, setEditingCell] = useState(null); // { teamId, rowIndex, field }
+    const [editingCell, setEditingCell] = useState(null);
     const [editValue, setEditValue] = useState("");
     const [editingTeamId, setEditingTeamId] = useState(null);
     const [editTeamValue, setEditTeamValue] = useState("");
@@ -78,51 +75,107 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
     const [errorBanner, setErrorBanner] = useState(false);
     const [selectedPosition, setSelectedPosition] = useState(null);
     const [budgetErrorTeam, setBudgetErrorTeam] = useState(null);
-
+    const [profilePlayer, setProfilePlayer] = useState(null);
+    const [movePopup, setMovePopup] = useState(null);
 
     const cellInputRef = useRef(null);
     const teamInputRef = useRef(null);
 
-    // get all already-drafted player ids across every team
     const draftedIds = useMemo(() =>
-        // flat map loops through every team and grabs the player_id from every row, filter removes null values
         new Set(teams.flatMap(t => t.rows.map(r => r.player_id).filter(Boolean)))
         , [teams]);
 
-    const remainingBudgets = useMemo(() => { // Used AI to help with this function
+    const remainingBudgets = useMemo(() => {
         const result = {};
         teams.forEach(team => {
             const spent = (team.rows ?? []).reduce((sum, row) => {
                 const price = parseFloat(row.price);
                 return sum + (isNaN(price) ? 0 : price);
             }, 0);
-            console.log("league:", league);
             result[team.id] = (league.draftSettings.budget ?? 0) - spent;
-        })
+        });
         return result;
     }, [teams, league.draftSettings.budget]);
+
+    const openProfile = (e, playerId) => {
+        e.stopPropagation();
+        const found = allPlayers.find(p => p.id === playerId);
+        if (found) setProfilePlayer(toProfilePlayer(found));
+    };
+
+    const openMove = (e, team, rowIndex, row) => {
+        e.stopPropagation();
+        const playerData = allPlayers.find(p => p.id === row.player_id);
+        setMovePopup({
+            fromTeamId: team.id,
+            fromRowIndex: rowIndex,
+            player: row.player,
+            player_id: row.player_id,
+            season: row.season,
+            price: row.price,
+            playablePositions: playerData?.playablePositions ?? [],
+            playerObj: playerData ?? null,  // ← add this
+        });
+    };
+
+    const confirmMove = (toTeamId, toRowIndex) => {
+        const { fromTeamId, fromRowIndex } = movePopup;
+        const movingPlayer = {
+            player: movePopup.player,
+            player_id: movePopup.player_id,
+            season: movePopup.season,
+            price: movePopup.price,
+        };
+
+        setTeams(prev => {
+            const destTeam = prev.find(t => t.id === toTeamId);
+            const destRow = destTeam?.rows[toRowIndex];
+            const destPlayer = destRow?.player_id
+                ? { player: destRow.player, player_id: destRow.player_id, season: destRow.season, price: destRow.price }
+                : { player: "", player_id: null, season: "", price: "" };
+
+            return prev.map(t => {
+                if (t.id === fromTeamId && t.id === toTeamId) {
+                    const newRows = t.rows.map((r, i) => {
+                        if (i === fromRowIndex) return { ...r, ...destPlayer };
+                        if (i === toRowIndex) return { ...r, ...movingPlayer };
+                        return r;
+                    });
+                    return { ...t, rows: newRows };
+                }
+                if (t.id === fromTeamId) {
+                    const newRows = t.rows.map((r, i) =>
+                        i === fromRowIndex ? { ...r, ...destPlayer } : r
+                    );
+                    return { ...t, rows: newRows };
+                }
+                if (t.id === toTeamId) {
+                    const newRows = t.rows.map((r, i) =>
+                        i === toRowIndex ? { ...r, ...movingPlayer } : r
+                    );
+                    return { ...t, rows: newRows };
+                }
+                return t;
+            });
+        });
+
+        setMovePopup(null);
+    };
 
     useEffect(() => {
         const fetchTeams = async () => {
             try {
                 const { data } = await getLeagueTeams(league.id);
-
                 const loaded = await Promise.all(
                     data.map(async (t) => {
                         const emptyRows = POSITIONS.map(() => ({
-                            player: "",
-                            player_id: null,
-                            season: "",
-                            price: ""
+                            player: "", player_id: null, season: "", price: ""
                         }));
-
                         const { data: picks } = await getTeamDraftPicks(t.id);
-
                         picks.forEach((pick) => {
                             const rowIndex = POSITIONS.findIndex((pos, idx) =>
                                 positionToEnum(pos, idx, POSITIONS) === pick.rosterPosition
                             );
-
                             if (rowIndex !== -1) {
                                 emptyRows[rowIndex] = {
                                     player: pick.player
@@ -134,46 +187,32 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
                                 };
                             }
                         });
-
-                        return {
-                            id: Number(t.id),
-                            name: t.name,
-                            rows: emptyRows
-                        };
+                        return { id: Number(t.id), name: t.name, rows: emptyRows };
                     })
                 );
-
                 setTeams(loaded);
             } catch (err) {
                 console.error("Failed to load teams/draft picks:", err);
             }
         };
-
         fetchTeams();
     }, [league.id]);
 
     useEffect(() => {
         getAllPlayers()
-            .then(({ data }) => {
-                console.log("players from api:", data);
-                setAllPlayers(data);
-            })
-            .catch(err => {
-                console.error("Failed to load players:", err);
-            });
+            .then(({ data }) => setAllPlayers(data))
+            .catch(err => console.error("Failed to load players:", err));
     }, []);
 
     const handleSaveDraft = async () => {
-        const missingPrice = teams.some(team =>
-            team.rows.some(row => row.player_id && !row.price)
+        const missingField = teams.some(team =>
+            team.rows.some(row => row.player_id && (!row.price || !row.season))
         );
-
-        if (missingPrice) {
+        if (missingField) {
             setErrorBanner(true);
             setTimeout(() => setErrorBanner(false), 3000);
             return;
         }
-
         if (league.draftSettings.budget != null) {
             const overBudgetTeam = teams.find(team => {
                 const spent = team.rows.reduce((sum, row) => {
@@ -182,7 +221,6 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
                 }, 0);
                 return spent > league.draftSettings.budget;
             });
-
             if (overBudgetTeam) {
                 const spent = overBudgetTeam.rows.reduce((sum, row) => {
                     const price = parseFloat(row.price);
@@ -195,11 +233,9 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
         }
 
         const picks = [];
-
         teams.forEach(team => {
             team.rows.forEach((row, i) => {
                 if (!row.player_id) return;
-
                 picks.push({
                     cost: parseFloat(row.price),
                     rosterPosition: positionToEnum(POSITIONS[i], i, POSITIONS),
@@ -210,29 +246,19 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
             });
         });
 
-        console.log("sending picks:", picks);
-
         try {
-            await saveDraftPicks({
-                picks,
-                teamIds: teams.map(t => t.id)
-            });
-
+            await saveDraftPicks({ picks, teamIds: teams.map(t => t.id) });
             setSaveBanner(true);
             setTimeout(() => setSaveBanner(false), 3000);
-
         } catch (err) {
             console.error("Failed to save draft:", err);
             setErrorBanner(true);
             setTimeout(() => setErrorBanner(false), 3000);
         }
     };
-    // adding a new team
+
     const addTeam = async () => {
-
-        // initialize column
         const newTeam = makeEmptyTeam(teams.length, POSITIONS);
-
         try {
             const { data } = await createTeam(newTeam.name, league.id);
             newTeam.id = Number(data.id);
@@ -242,7 +268,6 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
             alert("Error saving team to database.");
             return;
         }
-
         setTimeout(() => {
             setEditingTeamId(newTeam.id);
             setEditTeamValue(newTeam.name);
@@ -250,13 +275,11 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
         }, 0);
     };
 
-    // deleting a team
     const removeTeam = async (teamId) => {
         await deleteTeam(teamId);
         setTeams(prev => prev.filter(t => t.id !== teamId));
     };
 
-    // editing a team
     const startEditTeam = (team) => {
         setEditingTeamId(team.id);
         setEditTeamValue(team.name);
@@ -265,28 +288,16 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
 
     const commitTeamEdit = () => {
         if (!editingTeamId) return;
-
-        setTeams(prev =>
-            prev.map(t =>
-                t.id === editingTeamId
-                    ? { ...t, name: editTeamValue.trim() || t.name }
-                    : t
-            )
-        );
-
+        setTeams(prev => prev.map(t =>
+            t.id === editingTeamId ? { ...t, name: editTeamValue.trim() || t.name } : t
+        ));
         setEditingTeamId(null);
         setEditTeamValue("");
     };
 
     const handleTeamKeyDown = (e) => {
-        if (e.key === "Enter" || e.key === "Tab") {
-            e.preventDefault();
-            commitTeamEdit();
-        }
-        if (e.key === "Escape") {
-            setEditingTeamId(null);
-            setEditTeamValue("");
-        }
+        if (e.key === "Enter" || e.key === "Tab") { e.preventDefault(); commitTeamEdit(); }
+        if (e.key === "Escape") { setEditingTeamId(null); setEditTeamValue(""); }
     };
 
     const startEditCell = (teamId, rowIndex, field, currentValue) => {
@@ -297,59 +308,34 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
 
     const commitCellEdit = () => {
         if (!editingCell) return;
-
         const { teamId, rowIndex, field } = editingCell;
-
-        setTeams(prev =>
-            prev.map(t => {
-                if (t.id !== teamId) return t;
-
-                const newRows = t.rows.map((row, i) => {
-                    if (i !== rowIndex) return row;
-
-                    if (field === "player") {
-
-                        if (editValue.trim().toLowerCase() === row.player.toLowerCase()) {
-                            return row;
-                        }
-                        const matched = allPlayers.find(
-                            p => getPlayerName(p) === editValue.trim().toLowerCase()
-                        );
-
-                        // invalid if: doesn't exist OR already drafted by another team
-                        const isValid = matched && !draftedIds.has(matched.id);
-
-
-                        return {
-                            ...row,
-                            player: isValid ? getPlayerDisplayName(matched) : "", // null if not an existing player 
-                            player_id: isValid ? matched.id : null,
-                            season: isValid ? league.season : ""
-                        };
-                    }
-
-                    return { ...row, [field]: editValue };
-                });
-
-                return { ...t, rows: newRows };
-            })
-        );
-
+        setTeams(prev => prev.map(t => {
+            if (t.id !== teamId) return t;
+            const newRows = t.rows.map((row, i) => {
+                if (i !== rowIndex) return row;
+                if (field === "player") {
+                    if (editValue.trim().toLowerCase() === row.player.toLowerCase()) return row;
+                    const matched = allPlayers.find(p => getPlayerName(p) === editValue.trim().toLowerCase());
+                    const isValid = matched && !draftedIds.has(matched.id);
+                    return {
+                        ...row,
+                        player: isValid ? getPlayerDisplayName(matched) : "",
+                        player_id: isValid ? matched.id : null,
+                        season: isValid ? (row.season || "") : ""
+                    };
+                }
+                return { ...row, [field]: editValue };
+            });
+            return { ...t, rows: newRows };
+        }));
         setEditingCell(null);
         setEditValue("");
         setSuggestions([]);
     };
 
     const handleCellKeyDown = (e) => {
-        if (e.key === "Enter" || e.key === "Tab") {
-            e.preventDefault();
-            commitCellEdit();
-        }
-        if (e.key === "Escape") {
-            setEditingCell(null);
-            setEditValue("");
-            setSuggestions([]);
-        }
+        if (e.key === "Enter" || e.key === "Tab") { e.preventDefault(); commitCellEdit(); }
+        if (e.key === "Escape") { setEditingCell(null); setEditValue(""); setSuggestions([]); }
     };
 
     const isEditing = (teamId, rowIndex, field) =>
@@ -360,15 +346,14 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
     return (
         <div className="home" style={{ paddingTop: 80 }}>
             <div className="db-mode-banner">YOU ARE IN PRE-DRAFT MODE!</div>
-            <div className={`save-banner ${saveBanner ? "save-banner--visible" : ""}`}>
-                ✅ Draft saved!
-            </div>
+            <div className={`save-banner ${saveBanner ? "save-banner--visible" : ""}`}>✅ Draft saved!</div>
             <div className={`save-banner save-banner-error ${errorBanner ? "save-banner--visible" : ""}`}>
-                ❌ Draft did not save. Missing price for one or more players.
+                ❌ Draft did not save. One or more players is missing a required field (season or price).
             </div>
             <div className={`save-banner save-banner-error ${budgetErrorTeam ? "save-banner--visible" : ""}`}>
                 ❌ {budgetErrorTeam?.name} is over budget — spent ${budgetErrorTeam?.spent.toFixed(0)} of ${budgetErrorTeam?.budget}
             </div>
+
             <div className="db-header">
                 <div className="db-header-left">
                     <button className="db-back-btn" onClick={onBack}>← Back</button>
@@ -393,25 +378,16 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
 
             <div className="db-toolbar">
                 <div className="db-toolbar-left">
-                    <button className="db-tool-btn db-tool-primary" onClick={addTeam}>
-                        + Add Team
-                    </button>
+                    <button className="db-tool-btn db-tool-primary" onClick={addTeam}>+ Add Team</button>
                 </div>
                 <div className="db-toolbar-right">
                     {teams.length > 0 && (
                         <>
-                            <span className="db-progress-label">
-                                Click any cell to edit • Click team name to rename
-                            </span>
-                            <button className="db-tool-btn db-tool-secondary" onClick={() => onModeChange("simulation")}>
-                                Draft Simulation
-                            </button>
-                            <button className="db-tool-btn db-tool-secondary" onClick={() => onModeChange("live")}>
-                                Live Draft
-                            </button>
-                            <button className="db-tool-btn db-tool-primary" onClick={handleSaveDraft}>
-                                💾 Save Draft
-                            </button>
+                            <span className="db-progress-label">Click any cell to edit • Click team name to rename</span>
+                            <button className="db-tool-btn db-tool-secondary" onClick={() => onModeChange("taxi")}>Taxi Draft</button>
+                            <button className="db-tool-btn db-tool-secondary" onClick={() => onModeChange("simulation")}>Draft Simulation</button>
+                            <button className="db-tool-btn db-tool-secondary" onClick={() => onModeChange("live")}>Live Draft</button>
+                            <button className="db-tool-btn db-tool-primary" onClick={handleSaveDraft}>💾 Save Draft</button>
                         </>
                     )}
                 </div>
@@ -423,9 +399,7 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
                         <div className="db-empty-icon">📋</div>
                         <div className="db-empty-title">No teams yet</div>
                         <div className="db-empty-sub">Click "+ Add Team" to add your first team column</div>
-                        <button className="clm-primary" style={{ marginTop: 18 }} onClick={addTeam}>
-                            + Add Team
-                        </button>
+                        <button className="clm-primary" style={{ marginTop: 18 }} onClick={addTeam}>+ Add Team</button>
                     </div>
                 ) : (
                     <div className="db-scroll">
@@ -446,11 +420,7 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
                                                         onKeyDown={handleTeamKeyDown}
                                                     />
                                                 ) : (
-                                                    <span
-                                                        className="db-team-name"
-                                                        onClick={() => startEditTeam(team)}
-                                                        title="Click to rename"
-                                                    >
+                                                    <span className="db-team-name" onClick={() => startEditTeam(team)} title="Click to rename">
                                                         {team.name}
                                                     </span>
                                                 )}
@@ -458,22 +428,14 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
                                                     className="db-remove-team"
                                                     onClick={() => setTeamDeleteTarget({ id: team.id, name: team.name })}
                                                     title="Remove team"
-                                                >
-                                                    ×
-                                                </button>
+                                                >×</button>
                                             </div>
-
-                                            {league.draftSettings.budget != null && ( // Used AI
-                                                <div
-                                                    className="db-team-budget"
-                                                >
-                                                    ${remainingBudgets[team.id]?.toFixed(0)} left
-                                                </div>
+                                            {league.draftSettings.budget != null && (
+                                                <div className="db-team-budget">${remainingBudgets[team.id]?.toFixed(0)} left</div>
                                             )}
                                         </th>
                                     ))}
                                 </tr>
-
                                 <tr>
                                     {teams.map(team => (
                                         <React.Fragment key={team.id}>
@@ -487,25 +449,20 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
 
                             <tbody>
                                 {POSITIONS.map((pos, rowIndex) => (
-                                    <tr
-                                        key={rowIndex}
-                                        className={rowIndex % 2 === 0 ? "db-row" : "db-row db-row-alt"}
-                                    >
+                                    <tr key={rowIndex} className={rowIndex % 2 === 0 ? "db-row" : "db-row db-row-alt"}>
                                         <td
                                             className="db-td db-td-pos db-sticky-col"
                                             style={{ cursor: "pointer" }}
                                             onClick={() => setSelectedPosition(pos)}
                                         >
-                                            <div className="tooltip-wrap" data-tip="Click to view available players">
-                                                {pos}
-                                            </div>
+                                            <div className="tooltip-wrap" data-tip="Click to view available players">{pos}</div>
                                         </td>
 
                                         {teams.map(team => {
                                             const row = team.rows[rowIndex];
-
                                             return (
                                                 <React.Fragment key={`${team.id}-${rowIndex}`}>
+                                                    {/* Player cell */}
                                                     <td
                                                         className={[
                                                             "db-td db-td-pick",
@@ -527,21 +484,18 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
                                                                         const value = e.target.value;
                                                                         const q = value.toLowerCase();
                                                                         setEditValue(value);
-
                                                                         setSuggestions(
-                                                                            q.length < 2
-                                                                                ? []
-                                                                                : allPlayers
+                                                                            q.length < 2 ? [] :
+                                                                                allPlayers
                                                                                     .filter(p => playerMatchesRowPosition(p, pos))
                                                                                     .filter(p => getPlayerName(p).includes(q))
-                                                                                    .filter(p => !draftedIds.has(p.id)) // exclude players that are already drafted
+                                                                                    .filter(p => !draftedIds.has(p.id))
                                                                                     .slice(0, 8)
                                                                         );
                                                                     }}
                                                                     onBlur={commitCellEdit}
                                                                     onKeyDown={handleCellKeyDown}
                                                                 />
-
                                                                 {suggestions.length > 0 && (
                                                                     <ul className="db-suggestions">
                                                                         {suggestions.map(p => (
@@ -550,28 +504,16 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
                                                                                 className="db-suggestion-item"
                                                                                 onMouseDown={(e) => {
                                                                                     e.preventDefault();
-
                                                                                     const displayName = getPlayerDisplayName(p);
-
-                                                                                    setTeams(prev =>
-                                                                                        prev.map(t => {
-                                                                                            if (t.id !== team.id) return t;
-
-                                                                                            const newRows = t.rows.map((r, i) =>
-                                                                                                i === rowIndex
-                                                                                                    ? {
-                                                                                                        ...r,
-                                                                                                        player: displayName,
-                                                                                                        player_id: p.id,
-                                                                                                        season: league.season
-                                                                                                    }
-                                                                                                    : r
-                                                                                            );
-
-                                                                                            return { ...t, rows: newRows };
-                                                                                        })
-                                                                                    );
-
+                                                                                    setTeams(prev => prev.map(t => {
+                                                                                        if (t.id !== team.id) return t;
+                                                                                        const newRows = t.rows.map((r, i) =>
+                                                                                            i === rowIndex
+                                                                                                ? { ...r, player: displayName, player_id: p.id, season: r.season || "" }
+                                                                                                : r
+                                                                                        );
+                                                                                        return { ...t, rows: newRows };
+                                                                                    }));
                                                                                     setEditingCell(null);
                                                                                     setEditValue("");
                                                                                     setSuggestions([]);
@@ -579,10 +521,7 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
                                                                             >
                                                                                 {getPlayerDisplayName(p)}
                                                                                 <span className="db-suggestion-pos">
-                                                                                    {" "}
-                                                                                    {Array.isArray(p.playablePositions)
-                                                                                        ? p.playablePositions.join(", ")
-                                                                                        : ""}
+                                                                                    {" "}{Array.isArray(p.playablePositions) ? p.playablePositions.join(", ") : ""}
                                                                                 </span>
                                                                                 <span className="db-suggestion-season"> {league.season}</span>
                                                                             </li>
@@ -591,12 +530,33 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
                                                                 )}
                                                             </div>
                                                         ) : (
-                                                            <span className="db-cell-value">
-                                                                {row.player || <span className="db-cell-empty">—</span>}
-                                                            </span>
+                                                            row.player ? (
+                                                                <span className="db-cell-value db-cell-has-player">
+                                                                    <span className="db-cell-name">{row.player}</span>
+                                                                    <button
+                                                                        className="db-cell-detail-btn"
+                                                                        onClick={(e) => openProfile(e, row.player_id)}
+                                                                        title="View player profile"
+                                                                    >
+                                                                        Details
+                                                                    </button>
+                                                                    <button
+                                                                        className="db-cell-detail-btn"
+                                                                        onClick={(e) => openMove(e, team, rowIndex, row)}
+                                                                        title="Move player"
+                                                                    >
+                                                                        Move
+                                                                    </button>
+                                                                </span>
+                                                            ) : (
+                                                                <span className="db-cell-value">
+                                                                    <span className="db-cell-empty">—</span>
+                                                                </span>
+                                                            )
                                                         )}
                                                     </td>
 
+                                                    {/* Season cell */}
                                                     <td
                                                         className={[
                                                             "db-td db-td-pick db-td-narrow",
@@ -609,21 +569,30 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
                                                         }
                                                     >
                                                         {isEditing(team.id, rowIndex, "season") ? (
-                                                            <input
-                                                                ref={cellInputRef}
-                                                                className="db-cell-input"
-                                                                value={editValue}
-                                                                onChange={e => setEditValue(e.target.value)}
-                                                                onBlur={commitCellEdit}
-                                                                onKeyDown={handleCellKeyDown}
-                                                            />
+                                                            <>
+                                                                <input
+                                                                    ref={cellInputRef}
+                                                                    className="db-cell-input"
+                                                                    list={`season-options-${team.id}-${rowIndex}`}
+                                                                    value={editValue}
+                                                                    onChange={e => setEditValue(e.target.value)}
+                                                                    onBlur={commitCellEdit}
+                                                                    onKeyDown={handleCellKeyDown}
+                                                                    placeholder="e.g. 2024"
+                                                                />
+                                                                <datalist id={`season-options-${team.id}-${rowIndex}`}>
+                                                                    {[0, 1, 2, 3, 4, 5].map(offset => {
+                                                                        const yr = String(Number(league.season) - offset);
+                                                                        return <option key={yr} value={yr} />;
+                                                                    })}
+                                                                </datalist>
+                                                            </>
                                                         ) : (
-                                                            <span className="db-cell-value">
-                                                                {row.season || <span className="db-cell-empty">—</span>}
-                                                            </span>
+                                                            <span className="db-cell-value">{row.season || <span className="db-cell-empty">—</span>}</span>
                                                         )}
                                                     </td>
 
+                                                    {/* Price cell */}
                                                     <td
                                                         className={[
                                                             "db-td db-td-pick db-td-narrow",
@@ -636,18 +605,11 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
                                                         }
                                                     >
                                                         {isEditing(team.id, rowIndex, "price") ? (
-                                                            <input
-                                                                ref={cellInputRef}
-                                                                className="db-cell-input"
-                                                                value={editValue}
+                                                            <input ref={cellInputRef} className="db-cell-input" value={editValue}
                                                                 onChange={e => setEditValue(e.target.value)}
-                                                                onBlur={commitCellEdit}
-                                                                onKeyDown={handleCellKeyDown}
-                                                            />
+                                                                onBlur={commitCellEdit} onKeyDown={handleCellKeyDown} />
                                                         ) : (
-                                                            <span className="db-cell-value">
-                                                                {row.price || <span className="db-cell-empty">—</span>}
-                                                            </span>
+                                                            <span className="db-cell-value">{row.price || <span className="db-cell-empty">—</span>}</span>
                                                         )}
                                                     </td>
                                                 </React.Fragment>
@@ -666,13 +628,8 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
                 leagueName={teamDeleteTarget?.name || ""}
                 onCancel={() => setTeamDeleteTarget(null)}
                 onConfirm={async () => {
-                    try {
-                        await removeTeam(teamDeleteTarget.id);
-                        setTeamDeleteTarget(null);
-                    } catch (err) {
-                        console.error("Failed to delete team:", err);
-                        alert("Error deleting team.");
-                    }
+                    try { await removeTeam(teamDeleteTarget.id); setTeamDeleteTarget(null); }
+                    catch (err) { console.error("Failed to delete team:", err); alert("Error deleting team."); }
                 }}
             />
 
@@ -685,7 +642,23 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
                 league={league}
             />
 
+            <PlayerProfileModal
+                isOpen={!!profilePlayer}
+                onClose={() => setProfilePlayer(null)}
+                player={profilePlayer}
+            />
 
+            {movePopup && (
+                <MovePopup
+                    movePopup={movePopup}
+                    teams={teams}
+                    POSITIONS={POSITIONS}
+                    onConfirm={confirmMove}
+                    onClose={() => setMovePopup(null)}
+                    remainingBudgets={remainingBudgets}
+                    budget={league.draftSettings.budget}
+                />
+            )}
         </div>
     );
 }

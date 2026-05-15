@@ -10,6 +10,7 @@ type QueryParams = {
     sortDir?: boolean;
     isHitters?: boolean;
     pageNumber?: number;
+    pageSize?: number;
 };
 /* 
 create player, find all, find by id, find by mlb id, find by position, 
@@ -35,9 +36,9 @@ find by status, update a player, delete a player
 export const create = async (req: Request, res: Response): Promise<void> => {
     try {
         const { mlbPlayerId, age, firstName, lastName, isHitter, playablePositions, 
-            lastYearStats, threeYearAvg, projectedStats, status, seasonsLeft, realTeam, realLeague } = req.body;
+            lastYearStats, threeYearAvg, projectedStats, status, seasonsLeft, realTeam, realLeague, depth } = req.body;
         const player = await playerService.createPlayer(mlbPlayerId, age, firstName, lastName, isHitter, playablePositions, 
-            lastYearStats, threeYearAvg, projectedStats, status, seasonsLeft, realTeam, realLeague);
+            lastYearStats, threeYearAvg, projectedStats, status, seasonsLeft, realTeam, realLeague, depth);
         res.status(201).json({
             mlbPlayerId: player.mlbPlayerId,
             age: player.age,
@@ -46,6 +47,7 @@ export const create = async (req: Request, res: Response): Promise<void> => {
             isHitter: player.isHitter,
             realTeam: player.realTeam,
             realLeague: player.realLeague,
+            depth: player.depth,
             seasonsLeft: player.seasonsLeft,
             status: player.status,
             playablePositions: player.playablePositions,
@@ -121,8 +123,9 @@ export const queryPlayers = async (req: Request, res: Response): Promise<void> =
             sortDir = true,
             isHitters = true,
             pageNumber = 1,
+            pageSize = 50,
         } = req.body as QueryParams;
-    const players = await playerService.queryPlayers(nameQuery, posQuery, teamQuery, sortKey, sortDir, isHitters, pageNumber)
+    const players = await playerService.queryPlayers(nameQuery, posQuery, teamQuery, sortKey, sortDir, isHitters, pageNumber, pageSize)
         res.status(200).json(players);
     } catch(err: any) {
         res.status(404).json({ error: err.message });

@@ -1,8 +1,7 @@
 import * as playerRepository from '../repositories/playerRepository';
 import Player, { Position, Status } from '../models/player';
-import { Op } from "sequelize";
+import { Op, Sequelize } from "sequelize";
 import sequelize from '../config/database';
-const PAGE_SIZE = 50;
 /* 
 create player, find all, find by id, find by mlb id, find by position, 
 find by status, update a player, delete a player
@@ -22,13 +21,14 @@ export const createPlayer = async (
     status: Status,
     seasonsLeft: number,
     realTeam: string,
-    realLeague: string
+    realLeague: string,
+    depth: string
 ): Promise<Player> => {
     const existing = await playerRepository.findPlayerByMlbId(mlbPlayerId);
     if (existing) throw new Error('Player already exists');
 
     return await playerRepository.createPlayer(mlbPlayerId, age, firstName, lastName, isHitter, playablePositions,
-        lastYearStats, threeYearAvg, projectedStats, status, seasonsLeft, realTeam, realLeague );
+        lastYearStats, threeYearAvg, projectedStats, status, seasonsLeft, realTeam, realLeague, depth );
 }
 
 // GET /api/players/all
@@ -67,7 +67,7 @@ export const getPlayersByStatus = async (status: Status): Promise<Player[] | nul
 }
 
 // POST /api/players/query
-export const queryPlayers = async (nameQuery: string, posQuery: string, teamQuery: string, sortKey: string, sortDir: boolean, isHitters: boolean, page: number): Promise<Player[] | null> => {
+export const queryPlayers = async (nameQuery: string, posQuery: string, teamQuery: string, sortKey: string, sortDir: boolean, isHitters: boolean, page: number, pageSize:number): Promise<{players: Player[], total: number} | null> => {
     try {
         const where: any = {};
         
@@ -85,12 +85,19 @@ export const queryPlayers = async (nameQuery: string, posQuery: string, teamQuer
         }
 
         if (posQuery?.trim()) {
-            where.playablePositions = {
-                [Op.contains]: [posQuery.toUpperCase()],
-            };
+            where.playablePositions = Sequelize.where(
+                Sequelize.fn(
+                    "array_to_string",
+                    Sequelize.col("playablePositions"),
+                    ","
+                ),
+                {
+                    [Op.iLike]: `%${posQuery}%`,
+                }
+            );
         }
 
-        const offset = (page - 1) * PAGE_SIZE;
+        const offset = (page - 1) * pageSize;
 
         let order: any[] = [];
 
@@ -117,14 +124,18 @@ export const queryPlayers = async (nameQuery: string, posQuery: string, teamQuer
         }
         console.log(where);
         console.log(order);
-        const players = await Player.findAll({
-            where,
-            limit: PAGE_SIZE,
-            offset,
-            order,
-        });
-
-        return players;
+        const [players, total] = await Promise.all([
+            Player.findAll({
+                where,
+                limit: pageSize,
+                offset,
+                order,
+            }),
+            Player.count({
+                where,
+            }),
+        ]);
+        return {players, total};
     } catch(err: any) {
         console.error(err);
         return null;

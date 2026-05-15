@@ -87,8 +87,8 @@ export const deleteTeam = (id) =>
 export const getAllPlayers = () => 
   axios.get('/api/players/all');
 
-export const queryPlayers = (nameQuery, posQuery, teamQuery, sortKey, sortDir, isHitters, pageNumber) => 
-  axios.post('/api/players/query',{nameQuery, posQuery, teamQuery, sortKey, sortDir, isHitters, pageNumber});
+export const queryPlayers = (nameQuery, posQuery, teamQuery, sortKey, sortDir, isHitters, pageNumber, pageSize) => 
+  axios.post('/api/players/query',{nameQuery, posQuery, teamQuery, sortKey, sortDir, isHitters, pageNumber, pageSize});
 
 export const getPlayer = (id) => 
   axios.get(`/api/players/${id}`);
@@ -130,6 +130,24 @@ export const getRankedPlayers = async () => {
         headers: { "x-email": EMAIL, "x-signature": sign(data) }
     });
 };
+
+// Password Reset
+
+export const requestPasswordReset = (email) =>
+  axios.post("/api/auth/forgot-password", { email });
+
+// Submits the reset token + new password to finalize the reset
+export const resetPassword = (token, password) =>
+  axios.post("/api/auth/reset-password", { token, password });
+
+// Get a single user by ID (used to load playerNotes)
+export const getUser = (id) =>
+  axios.get(`/api/users/${id}`);
+ 
+// Update a user's playerNotes array
+export const updatePlayerNotes = (id, playerNotes) =>
+  axios.put(`/api/users/${id}`, { playerNotes });
+ 
  
 export const getDynamicRankedPlayers = async (league) => {
     return publicApi.post(`/api/ranking/ranks/dynamic`, league, {

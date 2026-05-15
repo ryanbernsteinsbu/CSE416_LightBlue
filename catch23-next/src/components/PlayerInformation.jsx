@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useMemo, useState } from "react";
-import { getAllPlayers } from "../lib/api";
+import { getAllPlayers, queryPlayers } from "../lib/api";
 import { PlayerProfileModal } from "./PlayerProfileModal";
+import { PlayerCompareModal } from "./PlayerCompareModal";
 
 // Base columns (shared columns that appear both hitting and pitching views)
 const BASE_COLUMNS = [
@@ -33,64 +34,43 @@ const PITCHING_COLUMNS = [
     { key: "WHIP", label: "WHIP", sortable: true, stat: "WHIP", format: "whip" },
 ];
 
-// Sort helpers
-
-// Converts any value into a number so we can sort numerically
-function toNum(v) {
-    const s = String(v ?? "").trim().replace(/^\./, "0.");
-    const n = Number(s);
-    return Number.isFinite(n) ? n : -Infinity;
-}
-
-// Returns the sortable value for a given player + column combination
-// what value should I use to sort this player for this column?
-function sortVal(player, col) {
-    const raw = col.stat ? player.stats?.[col.stat] : player[col.key];
-    if (col.key === "name" || col.key === "team" || col.key === "pos")
-        return String(raw ?? "").toLowerCase(); // string sort 
-    return toNum(raw); // numeric sort 
-}
-
 export default function PlayerInformation() {
 
-    // MLB-like tabs
-    const [mode, setMode] = useState("hitting") // hitting | pitching
+    const [mode, setMode] = useState(null);
 
-    // search filter inputs
     const [nameQuery, setNameQuery] = useState("");
     const [teamQuery, setTeamQuery] = useState("");
     const [posQuery, setPosQuery] = useState("");
 
-    // which column is currently sorted, and in which direction
-    const [sortKey, setSortKey] = useState("name")
-    const [sortDir, setSortDir] = useState("asc")
+    const [sortKey, setSortKey] = useState("name");
+    const [sortDir, setSortDir] = useState("asc");
 
-    // current page number, and how many rows to show per page
     const [page, setPage] = useState(1);
-    const [pageSize, setPageSize] = useState(25);
+    const [pageSize, setPageSize] = useState(50);
 
-    // pick the right column set based on the active tab 
-    const columns = mode === "hitting" ? HITTING_COLUMNS : PITCHING_COLUMNS;
+    const columns = mode === "pitching" ? PITCHING_COLUMNS : HITTING_COLUMNS;
 
-    // player selected
     const [selectedPlayer, setSelectedPlayer] = useState(null);
+    const [compareOpen, setCompareOpen] = useState(false);
+    const [compareSelected, setCompareSelected] = useState([]);
 
     const [players, setPlayers] = useState([]);
     const [loading, setLoading] = useState(true);
-
+    const [totalPlayers, setTotalPlayers] = useState(null);
 
     useEffect(() => {
         const fetchPlayers = async () => {
             try {
-                const { data } = await getAllPlayers();
-                // map DB fields to what the component expects
-                const mapped = data.map(p => ({
-                    id: p.id,
+                setLoading(true);
+                const { data } = await queryPlayers(nameQuery, posQuery, teamQuery, sortKey, (sortDir === "asc"), (mode !== "pitching"), page, pageSize);
+                const { players, total } = data;
+                const mapped = players.map(p => ({
+                    id: p.id,                                    // ← always carry id through
                     firstName: p.firstName || p.first_name,
                     lastName: p.lastName || p.last_name,
                     team: p.realTeam || p.real_team,
                     pos: p.playablePositions?.[0] || "—",
-                    age: p.age ?? "—",   // not in DB yet
+                    age: p.age ?? "—",
                     stats: {
                         HR: 0, RBI: 0, SB: 0, AVG: 0, R: 0, OBP: 0,
                         W: 0, SV: 0, K: 0, ERA: 0, WHIP: 0,
@@ -98,6 +78,7 @@ export default function PlayerInformation() {
                     }
                 }));
                 setPlayers(mapped);
+                setTotalPlayers(total);
             } catch (err) {
                 console.error("Failed to fetch players:", err);
             } finally {
@@ -105,61 +86,38 @@ export default function PlayerInformation() {
             }
         };
         fetchPlayers();
-    }, []);
+    }, [nameQuery, posQuery, teamQuery, sortKey, sortDir, mode, page, pageSize]);
 
-    // returns only te players that match all active filter inputs 
-    // Note: useMemo only re-runs when nameQuery or posQuery changes, not on every single render
-    const filtered = useMemo(() =>
-        players.filter((p) =>
-            (!nameQuery || `${p.firstName} ${p.lastName}`.toLowerCase().includes(nameQuery.toLowerCase())) &&
-            (!teamQuery || p.team?.toLowerCase().includes(teamQuery.toLowerCase())) &&
-            (!posQuery || p.pos?.toLowerCase().includes(posQuery.toLowerCase()))
-        ), [players, nameQuery, teamQuery, posQuery]);
-    // Sort
-
-    // takes the filtered array and returns a new sorted copy 
-    const sorted = useMemo(() => {
-        const col = columns.find((c) => c.key === sortKey);
-        if (!col) return filtered;
-        // converts sort direction into a number you can multiply with
-        const dir = sortDir === "asc" ? 1 : -1;
-        return [...filtered].sort((a, b) => {
-            const va = sortVal(a, col), vb = sortVal(b, col);
-            // alphabetically compare strings (asc v desc)
-            if (typeof va === "string") return va.localeCompare(vb) * dir;
-            // compare numbers (asc v desc)
-            return (va - vb) * dir;
-        });
-    }, [filtered, columns, sortKey, sortDir]);
-
-    // Pagination
-
-    // total number of pages based on how many players passed filtering
-    const pageCount = Math.max(1, Math.ceil(sorted.length / pageSize));
-    // clamp page to a valid range (prevents being stuck on page 5 if filters reduce results to 1 page)
+    const pageCount = totalPlayers == null ? 1 : Math.max(1, Math.ceil(totalPlayers / pageSize));
     const safePage = Math.min(Math.max(1, page), pageCount);
-    // slice just the rows for the current page to render in the table
-    const pageRows = sorted.slice((safePage - 1) * pageSize, safePage * pageSize);
 
-
-    // Event Handlers
-
-    // called when the user clicks a column eader to sort it
     const handleHeader = (col) => {
         setSortKey(col.key);
         setSortDir(sortKey === col.key && sortDir === "asc" ? "desc" : "asc");
         setPage(1);
     };
 
-    // called when the user switches between Hitting and Pitching tabs.
-    // resets sort and page so the new tab starts in a clean state.
     const switchTab = (next) => {
-        setMode(next);
+        setMode(prev => prev === next ? null : next);
         setSortKey("name");
         setSortDir("asc");
         setPage(1);
-        console.log(process.env.BASE_URL);
-    }
+    };
+
+    const addPlayer = (player) => {
+        if (!compareOpen) return;
+        if (compareSelected.find(p => p.id === player.id)) {
+            setCompareSelected(prev => prev.filter(p => p.id !== player.id));
+            return;
+        }
+        if (compareSelected.length >= 4) return;
+        setCompareSelected(prev => [...prev, player]);
+    };
+
+    const closeCompare = () => {
+        setCompareOpen(false);
+        setCompareSelected([]);
+    };
 
     return (
         <div className="pi-page">
@@ -167,7 +125,6 @@ export default function PlayerInformation() {
                 <div className="pi-header">
                     <div className="pi-titleRow">
                         <h1 className="pi-title">Player Information</h1>
-
                         <div className="pi-tabs">
                             {["hitting", "pitching"].map((t) => (
                                 <button
@@ -179,6 +136,13 @@ export default function PlayerInformation() {
                                     {t.charAt(0).toUpperCase() + t.slice(1)}
                                 </button>
                             ))}
+                            <button
+                                className={`pi-tab ${compareOpen ? "is-active" : ""}`}
+                                type="button"
+                                onClick={() => compareOpen ? closeCompare() : setCompareOpen(true)}
+                            >
+                                Compare
+                            </button>
                         </div>
                     </div>
 
@@ -204,7 +168,7 @@ export default function PlayerInformation() {
                         <button
                             className="pi-btn pi-btn--ghost"
                             type="button"
-                            onClick={() => { setNameQuery(""); setTeamQuery(""); setPosQuery(""); setPage(1); }}
+                            onClick={() => { setNameQuery(""); setTeamQuery(""); setPosQuery(""); setMode(null); setPage(1); }}
                         >
                             Clear
                         </button>
@@ -252,17 +216,14 @@ export default function PlayerInformation() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {pageRows.length === 0 ? (
+                                    {players.length === 0 ? (
                                         <tr>
-                                            <td className="pi-empty" colSpan={columns.length}>
-                                                No results.
-                                            </td>
+                                            <td className="pi-empty" colSpan={columns.length}>No results.</td>
                                         </tr>
                                     ) : (
-                                        pageRows.map((p) => (
+                                        players.map((p) => (
                                             <tr key={p.id} className="pi-row">
                                                 {columns.map((col) => {
-                                                    let val = "—";
                                                     if (col.key === "name") {
                                                         const fullName = `${p.firstName} ${p.lastName}`;
                                                         return (
@@ -273,7 +234,10 @@ export default function PlayerInformation() {
                                                                     style={{ display: "inline-block" }}
                                                                 >
                                                                     <span
-                                                                        onClick={() => setSelectedPlayer(p)}
+                                                                        onClick={() => {
+                                                                            if (!compareOpen) setSelectedPlayer(p);
+                                                                            addPlayer(p);
+                                                                        }}
                                                                         style={{ cursor: "pointer", color: "#e03030", fontWeight: "bold" }}
                                                                     >
                                                                         {fullName}
@@ -282,11 +246,8 @@ export default function PlayerInformation() {
                                                             </td>
                                                         );
                                                     }
-                                                    else if (col.stat) val = p.stats?.[col.stat] ?? "—";
-                                                    else val = p[col.key] ?? "—";
-                                                    return (
-                                                        <td key={col.key} className="pi-td">{val}</td>
-                                                    );
+                                                    const val = col.stat ? (p.stats?.[col.stat] ?? "—") : (p[col.key] ?? "—");
+                                                    return <td key={col.key} className="pi-td">{val}</td>;
                                                 })}
                                             </tr>
                                         ))
@@ -301,10 +262,10 @@ export default function PlayerInformation() {
                     <div className="pi-pagerInfo">
                         Showing{" "}
                         <b>
-                            {pageRows.length === 0 ? 0 : (safePage - 1) * pageSize + 1}–
-                            {(safePage - 1) * pageSize + pageRows.length}
+                            {players.length === 0 ? 0 : (safePage - 1) * pageSize + 1}–
+                            {(safePage - 1) * pageSize + players.length}
                         </b>{" "}
-                        of <b>{sorted.length}</b>
+                        of <b>{totalPlayers}</b>
                     </div>
                     <div className="pi-pagerBtns">
                         {[
@@ -329,19 +290,26 @@ export default function PlayerInformation() {
                     </div>
                 </div>
             </div>
+
+            {/* ── Player Profile Modal ── */}
             <PlayerProfileModal
                 isOpen={!!selectedPlayer}
                 onClose={() => setSelectedPlayer(null)}
-                player={{
-                    username: `${selectedPlayer?.firstName} ${selectedPlayer?.lastName}`,
-                    role: selectedPlayer?.pos,
-                    games: "—",
-                    wins: selectedPlayer?.stats?.W ?? "—",
-                    losses: "—",
-                    winRate: selectedPlayer?.stats?.AVG ?? "—",
-                    team: selectedPlayer?.team,
-                    stats: selectedPlayer?.stats,
-                }}
+                player={selectedPlayer ? {
+                    id:       selectedPlayer.id,      
+                    username: `${selectedPlayer.firstName} ${selectedPlayer.lastName}`,
+                    role:     selectedPlayer.pos,
+                    team:     selectedPlayer.team,
+                    stats:    selectedPlayer.stats,
+                } : null}
+            />
+
+            <PlayerCompareModal
+                isOpen={compareOpen}
+                selected={compareSelected}
+                mode={mode}                  // ← add this
+                onRemove={(id) => setCompareSelected(prev => prev.filter(p => p.id !== id))}
+                onClose={closeCompare}
             />
         </div>
     );
