@@ -328,3 +328,9 @@ ingestHitters("./python/minordata.csv")
 ingestPitchers("./python/minorpdata.csv")
   .then(() => console.log("Done"))
   .catch((err) => console.error("Error:", err));
+ingestHitters("./python/data.csv")
+  .then(() => console.log("Done"))
+  .catch((err) => console.error("Error:", err));
+ingestPitchers("./python/pdata.csv")
+  .then(() => console.log("Done"))
+  .catch((err) => console.error("Error:", err));
