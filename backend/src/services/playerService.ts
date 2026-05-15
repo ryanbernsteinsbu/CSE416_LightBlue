@@ -121,7 +121,7 @@ export const queryPlayers = async (nameQuery: string, posQuery: string, teamQuer
         } else {
             order = [
                 [
-                    sequelize.literal(`"lastYearStats"->>'${sortKey}'`),
+                    sequelize.literal(`CAST("lastYearStats"->>'${sortKey}' AS FLOAT)`),
                     direction,
                 ],
             ];
