@@ -67,12 +67,16 @@ export const getPlayersByStatus = async (status: Status): Promise<Player[] | nul
 }
 
 // POST /api/players/query
-export const queryPlayers = async (nameQuery: string, posQuery: string, teamQuery: string, sortKey: string, sortDir: boolean, isHitters: boolean, page: number, pageSize:number): Promise<{players: Player[], total: number} | null> => {
+export const queryPlayers = async (nameQuery: string, posQuery: string, teamQuery: string, sortKey: string, sortDir: boolean, isHitters: boolean, page: number, pageSize:number, minors:boolean): Promise<{players: Player[], total: number} | null> => {
     try {
         const where: any = {};
         
         where.isHitter = isHitters;
-        
+
+        where.status = minors
+            ? "MINORS"
+            : { [Op.ne]: "MINORS" };       
+
         if (nameQuery?.trim()) {
             where[Op.or] = [
                 { firstName: { [Op.iLike]: `%${nameQuery}%` } },
