@@ -87,7 +87,7 @@ export default function PlayerInformation() {
             }
         };
         fetchPlayers();
-    }, [nameQuery, posQuery, teamQuery, sortKey, sortDir, mode, page, pageSize]);
+    }, [nameQuery, posQuery, teamQuery, sortKey, sortDir, mode, page, pageSize, minors]);
 
     const pageCount = totalPlayers == null ? 1 : Math.max(1, Math.ceil(totalPlayers / pageSize));
     const safePage = Math.min(Math.max(1, page), pageCount);
