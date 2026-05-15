@@ -34,16 +34,19 @@ export const INITIAL_ROSTER_SETTINGS = {
 };
 
 export const INITIAL_SCORING_SETTINGS = {
-  useAvg: true,
-  useHr: true,
-  useRbi: true,
-  useSb: true,
-  useRuns: true,
-  useEra: true,
-  useWhip: true,
-  useWins: true,
-  useStrikeouts: true,
-  useSaves: true,
+  hrWeight: 0.175,
+  rbiWeight: 0.155,
+  sbWeight: 0.125,
+  avgWeight: 0.150,
+  runsWeight: 0.125,
+  eraWeight: 0.200,
+  whipWeight: 0.200,
+  winsWeight: 0.100,
+  strikeoutsWeight: 0.150,
+  savesWeight: 0.100,
+  useLastYear: true,
+  useThreeYearAvg: true,
+  useProjected: true,
 };
 
 export const INITIAL_DRAFT_SETTINGS = {

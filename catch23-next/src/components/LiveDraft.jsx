@@ -700,6 +700,7 @@ export default function LiveDraftBoard({ league, onBack, onModeChange }) {
                 position={selectedPosition}
                 players={allPlayers.filter(p => playerMatchesRowPosition(p, selectedPosition ?? ""))}
                 draftedIds={draftedIds}
+                league={league}
             />
 
             {/* Player Profile slide-in */}
