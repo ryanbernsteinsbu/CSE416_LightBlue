@@ -33,6 +33,7 @@ export default function TaxiDraft({ league, onBack, onModeChange }) {
                         <button className="db-tool-btn db-tool-secondary" onClick={() => onModeChange("live")}>
                             Live Draft
                         </button>
+                        <button className="db-tool-btn db-tool-secondary" onClick={() => onModeChange("minor")}>Minor League</button>
                         <button className="db-tool-btn db-tool-primary">
                             💾 Save Draft
                         </button>

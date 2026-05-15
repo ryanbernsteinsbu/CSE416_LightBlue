@@ -365,6 +365,7 @@ export default function DraftSimulation({ league, onBack, onModeChange }) {
                     <button className="db-tool-btn db-tool-secondary" onClick={() => onModeChange("predraft")}>Pre-Draft</button>
                     <button className="db-tool-btn db-tool-secondary" onClick={() => onModeChange("live")}>Live Draft</button>
                     <button className="db-tool-btn db-tool-secondary" onClick={() => onModeChange("taxi")}>Taxi Draft</button>
+                    <button className="db-tool-btn db-tool-secondary" onClick={() => onModeChange("minor")}>Minor League</button>
                     <button className="db-tool-btn db-tool-primary"   onClick={handleSave}>💾 Save Simulation</button>
                 </div>
             </div>

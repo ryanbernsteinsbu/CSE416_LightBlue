@@ -5,6 +5,7 @@ import DraftSimulation from "./DraftSimulation";
 import LiveDraft from "./LiveDraft";
 import DraftSummary from "./DraftSummary";
 import TaxiDraft from "./TaxiDraft";
+import MinorLeagueDraft from "./MinorLeague";
 
 export default function LeagueDraftController({ league, onBack, initialMode }) {
     const defaultMode = initialMode || (league.status === "DRAFTED" ? "summary" : "predraft"); 
@@ -44,6 +45,13 @@ export default function LeagueDraftController({ league, onBack, initialMode }) {
                 <TaxiDraft
                     league={league}
                     onBack={() => setMode("taxi")}
+                    onModeChange={setMode}
+                />
+            )}
+            {mode === "minor" && (
+                <MinorLeagueDraft
+                    league={league}
+                    onBack={() => setMode("predraft")}
                     onModeChange={setMode}
                 />
             )}
