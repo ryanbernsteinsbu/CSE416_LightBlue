@@ -3620,3 +3620,64 @@ button {
   background: #5060b0;
   color: #fff;
 }
+
+/* ── Move Player Popup ─────────────────────────────────────────────────────── */
+
+.move-popup-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin: 14px 0;
+}
+
+.move-popup-label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    color: rgba(255, 255, 255, 0.7);
+    font-family: "Trade Gothic", Arial, sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.move-popup-select {
+    background: #0f1628;
+    border: 1px solid #2e3a7a;
+    border-radius: 8px;
+    color: #fff;
+    padding: 9px 12px;
+    font-family: "Trade Gothic", Arial, sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    width: 100%;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.15s;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%237a9fff' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 30px;
+}
+
+.move-popup-select:focus {
+    border-color: #7a9fff;
+}
+
+.move-popup-select option {
+    background: #1a2340;
+    color: #fff;
+}
+
+.move-popup-no-slots {
+    color: #ff4d4f;
+    font-family: "Trade Gothic", Arial, sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 8px 0;
+    font-style: italic;
+    text-transform: none;
+    letter-spacing: 0;
+}

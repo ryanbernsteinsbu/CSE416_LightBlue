@@ -4,8 +4,7 @@ import { createTeam, getLeagueTeams, deleteTeam, getAllPlayers, saveDraftPicks, 
 import ConfirmDeleteModal from "./ConfirmDeleteModal.jsx";
 import { PositionPlayersModal, playerMatchesRowPosition } from "./PositionPlayersModal";
 import { PlayerProfileModal } from "./PlayerProfileModal";
-
-// helper functions
+import { MovePopup } from "./Movepopup";
 
 const buildPositions = (rosterSettings) => {
     if (!rosterSettings) return [];
@@ -31,16 +30,9 @@ const positionToEnum = (pos, index, POSITIONS) => {
     }
     const n = counts[pos];
     const map = {
-        C: `CATCHER_${n}`,
-        "1B": "FIRST",
-        "2B": "SECOND",
-        "3B": "THIRD",
-        SS: "SHORTSTOP",
-        MI: "MIDDLE_INFIELD",
-        CI: "CORNER_INFIELD",
-        OF: `OUTFIELD_${n}`,
-        U: "UTILITY",
-        P: `PITCHER_${n}`,
+        C: `CATCHER_${n}`, "1B": "FIRST", "2B": "SECOND", "3B": "THIRD",
+        SS: "SHORTSTOP", MI: "MIDDLE_INFIELD", CI: "CORNER_INFIELD",
+        OF: `OUTFIELD_${n}`, U: "UTILITY", P: `PITCHER_${n}`,
     };
     return map[pos] || pos;
 };
@@ -56,7 +48,6 @@ function makeEmptyTeam(index, POSITIONS) {
 const getPlayerDisplayName = (p) => `${p?.firstName ?? ""} ${p?.lastName ?? ""}`.trim();
 const getPlayerName = (p) => getPlayerDisplayName(p).toLowerCase();
 
-// Maps a raw player object from allPlayers into the shape PlayerProfileModal expects
 const toProfilePlayer = (p) => ({
     id: p.id,
     username: getPlayerDisplayName(p),
@@ -65,7 +56,7 @@ const toProfilePlayer = (p) => ({
     stats: {
         HR: 0, RBI: 0, SB: 0, AVG: 0, R: 0, OBP: 0,
         W: 0, SV: 0, K: 0, ERA: 0, WHIP: 0,
-        ...p.lastYearStats   
+        ...p.lastYearStats
     }
 });
 
@@ -84,7 +75,8 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
     const [errorBanner, setErrorBanner] = useState(false);
     const [selectedPosition, setSelectedPosition] = useState(null);
     const [budgetErrorTeam, setBudgetErrorTeam] = useState(null);
-    const [profilePlayer, setProfilePlayer] = useState(null); // for PlayerProfileModal
+    const [profilePlayer, setProfilePlayer] = useState(null);
+    const [movePopup, setMovePopup] = useState(null);
 
     const cellInputRef = useRef(null);
     const teamInputRef = useRef(null);
@@ -105,11 +97,69 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
         return result;
     }, [teams, league.draftSettings.budget]);
 
-    // Open the player profile slide-in for a given player_id
     const openProfile = (e, playerId) => {
         e.stopPropagation();
         const found = allPlayers.find(p => p.id === playerId);
         if (found) setProfilePlayer(toProfilePlayer(found));
+    };
+
+    const openMove = (e, team, rowIndex, row) => {
+        e.stopPropagation();
+        const playerData = allPlayers.find(p => p.id === row.player_id);
+        setMovePopup({
+            fromTeamId: team.id,
+            fromRowIndex: rowIndex,
+            player: row.player,
+            player_id: row.player_id,
+            season: row.season,
+            price: row.price,
+            playablePositions: playerData?.playablePositions ?? [],
+            playerObj: playerData ?? null,  // ← add this
+        });
+    };
+
+    const confirmMove = (toTeamId, toRowIndex) => {
+        const { fromTeamId, fromRowIndex } = movePopup;
+        const movingPlayer = {
+            player: movePopup.player,
+            player_id: movePopup.player_id,
+            season: movePopup.season,
+            price: movePopup.price,
+        };
+
+        setTeams(prev => {
+            const destTeam = prev.find(t => t.id === toTeamId);
+            const destRow = destTeam?.rows[toRowIndex];
+            const destPlayer = destRow?.player_id
+                ? { player: destRow.player, player_id: destRow.player_id, season: destRow.season, price: destRow.price }
+                : { player: "", player_id: null, season: "", price: "" };
+
+            return prev.map(t => {
+                if (t.id === fromTeamId && t.id === toTeamId) {
+                    const newRows = t.rows.map((r, i) => {
+                        if (i === fromRowIndex) return { ...r, ...destPlayer };
+                        if (i === toRowIndex) return { ...r, ...movingPlayer };
+                        return r;
+                    });
+                    return { ...t, rows: newRows };
+                }
+                if (t.id === fromTeamId) {
+                    const newRows = t.rows.map((r, i) =>
+                        i === fromRowIndex ? { ...r, ...destPlayer } : r
+                    );
+                    return { ...t, rows: newRows };
+                }
+                if (t.id === toTeamId) {
+                    const newRows = t.rows.map((r, i) =>
+                        i === toRowIndex ? { ...r, ...movingPlayer } : r
+                    );
+                    return { ...t, rows: newRows };
+                }
+                return t;
+            });
+        });
+
+        setMovePopup(null);
     };
 
     useEffect(() => {
@@ -490,6 +540,13 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
                                                                     >
                                                                         Details
                                                                     </button>
+                                                                    <button
+                                                                        className="db-cell-detail-btn"
+                                                                        onClick={(e) => openMove(e, team, rowIndex, row)}
+                                                                        title="Move player"
+                                                                    >
+                                                                        Move
+                                                                    </button>
                                                                 </span>
                                                             ) : (
                                                                 <span className="db-cell-value">
@@ -584,12 +641,23 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
                 draftedIds={draftedIds}
             />
 
-            {/* Player Profile slide-in */}
             <PlayerProfileModal
                 isOpen={!!profilePlayer}
                 onClose={() => setProfilePlayer(null)}
                 player={profilePlayer}
             />
+
+            {movePopup && (
+                <MovePopup
+                    movePopup={movePopup}
+                    teams={teams}
+                    POSITIONS={POSITIONS}
+                    onConfirm={confirmMove}
+                    onClose={() => setMovePopup(null)}
+                    remainingBudgets={remainingBudgets}
+                    budget={league.draftSettings.budget}
+                />
+            )}
         </div>
     );
 }
