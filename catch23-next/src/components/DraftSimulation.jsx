@@ -657,6 +657,7 @@ export default function DraftSimulation({ league, onBack, onModeChange }) {
                                     })
                                     .filter(p => p.status !== "MINORS")}
                 draftedIds={draftedIds}
+                league={league}
             />
 
             {/* Player Profile slide-in */}
