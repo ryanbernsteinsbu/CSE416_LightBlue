@@ -117,11 +117,11 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
                         }));
                         const { data: picks } = await getTeamDraftPicks(t.id);
                         picks.forEach((pick) => {
-                            const rowIndex = POSITIONS.findIndex((pos, idx) =>
+                            const rowIndex = pick.slotIndex ?? POSITIONS.findIndex((pos, idx) =>
                                 positionToEnum(pos) === pick.rosterPosition &&
-                                !emptyRows[idx].player_id  // find first unfilled slot of that position
+                                !emptyRows[idx].player_id
                             );
-                            if (rowIndex !== -1) {
+                            if (rowIndex !== -1 && rowIndex < POSITIONS.length) {
                                 emptyRows[rowIndex] = {
                                     player: pick.player
                                         ? `${pick.player.firstName ?? ""} ${pick.player.lastName ?? ""}`.trim()
@@ -187,7 +187,8 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
                     rosterPosition: positionToEnum(POSITIONS[i], i, POSITIONS),
                     team_id: team.id,
                     player_id: row.player_id,
-                    season: row.season || league.season
+                    season: row.season || league.season,
+                    slotIndex: i
                 });
             });
         });

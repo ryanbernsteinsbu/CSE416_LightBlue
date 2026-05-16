@@ -21,6 +21,7 @@ class DraftPick extends Model {
     public draft_time?: string; // ← new
     public createdAt!: Date;
     public updatedAt!: Date;
+    public slotIndex!: number;
 
     public static associations: {
         team: Association<DraftPick, Team>;
@@ -57,8 +58,12 @@ DraftPick.init({
         type: DataTypes.STRING,
         allowNull: true
     },
-    draft_time: {           // ← new
+    draft_time: {
         type: DataTypes.STRING(50),
+        allowNull: true
+    },
+    slotIndex: {
+        type: DataTypes.INTEGER,
         allowNull: true
     },
 }, {
