@@ -39,6 +39,11 @@ function PlayerCompareCard({ player, onRemove, mode }) {
       <div className="cmp-card-sub">
         {player.team} · {player.pos}
       </div>
+      {player.depth && player.depth !== "—" && (
+        <div className="cmp-card-sub" style={{ marginTop: "2px", opacity: 0.7 }}>
+            Depth: {player.depth}
+        </div>
+      )}
 
       <div className="cmp-card-stats">
         {/* Only show hitting stats when NOT in pitching mode */}
