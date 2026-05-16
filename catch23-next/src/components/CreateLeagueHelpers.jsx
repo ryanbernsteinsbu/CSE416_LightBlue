@@ -6,17 +6,8 @@ export const TABS = [
 ];
 
 export const INITIAL_PLAYER_SETTINGS = {
-  positionEligibilityRule: true,
-  multiPositionEnabled: false,
-  prospectEligibility: false,
-  rookieStatusFilter: false,
-  prospects: false,
-  minorLeaguePlayers: false,
-  freeAgents: false,
-  twoWayPlayerSplit: false,
-  injuredPlayersDraftable: false,
-  autoInjuryRiskIndicator: false,
-  hideLongTermIL: false,
+  ohtaniRule: "MIXED",
+  division: "MIXED",
 };
 
 export const INITIAL_ROSTER_SETTINGS = {
@@ -93,18 +84,8 @@ export function buildLeaguePayload({
       useProjected: scoringSettings.useProjected,
     },
     playerSettings: {
-      positionEligibility: playerSettings.positionEligibilityRule,
-      multiPositionEnabled: playerSettings.multiPositionEnabled,
-      prospectEligibility: playerSettings.prospectEligibility,
-      rookieStatusFilter: playerSettings.rookieStatusFilter,
-      mlbOnly: playerSettings.mlbOnly,
-      mlbPlusProspects: playerSettings.mlbPlusProspects,
-      minorLeaguePlayers: playerSettings.minorLeaguePlayers,
-      freeAgents: playerSettings.freeAgents,
-      draftInjuredPlayers: playerSettings.draftInjuredPlayers,
-      autoInjuryRisk: playerSettings.autoInjuryRiskIndicator,
-      hideLongTermIL: playerSettings.hideLongTermIL,
       ohtaniRule: playerSettings.ohtaniRule,
+      division: playerSettings.division
     },
     rosterSettings: {
       numCatchers: rosterSettings.numCatchers,

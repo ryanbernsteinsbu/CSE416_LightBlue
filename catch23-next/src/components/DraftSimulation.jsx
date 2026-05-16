@@ -446,6 +446,12 @@ export default function DraftSimulation({ league, onBack, onModeChange }) {
                                                                     q.length < 2 ? [] :
                                                                         allPlayers
                                                                             .filter(p => playerMatchesRowPosition(p, pos))
+                                                                            .filter(p => {
+                                                                                const div = league.playerSettings?.division;
+                                                                                if(div && div !== "MIXED") return p.realLeague === div;
+                                                                                return true;
+                                                                            })
+                                                                            .filter(p => p.status !== "MINORS")
                                                                             .filter(p => getPlayerName(p).includes(q))
                                                                             .filter(p => !draftedIds.has(p.id))
                                                                             .slice(0, 8)
@@ -643,7 +649,13 @@ export default function DraftSimulation({ league, onBack, onModeChange }) {
                 isOpen={!!selectedPosition}
                 onClose={() => setSelectedPosition(null)}
                 position={selectedPosition}
-                players={allPlayers.filter(p => playerMatchesRowPosition(p, selectedPosition ?? ""))}
+                players={allPlayers.filter(p => playerMatchesRowPosition(p, selectedPosition ?? ""))
+                                    .filter(p => {
+                                        const div = league.playerSettings?.division;
+                                        if (div && div !== "MIXED") return p.realLeague === div;
+                                        return true;
+                                    })
+                                    .filter(p => p.status !== "MINORS")}
                 draftedIds={draftedIds}
             />
 
