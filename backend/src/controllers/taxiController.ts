@@ -7,26 +7,14 @@ export const saveTaxiPicks = async (req: Request, res: Response) => {
         const { picks, teamIds } = req.body;
 
         if (!Array.isArray(picks) || !Array.isArray(teamIds)) {
-            return res.status(400).json({ error: 'picks and teamIds must be arrays'});
+            return res.status(400).json({ error: 'picks and teamIds must be arrays' });
         }
 
-        for (const pick of picks) {
-            const existingPick = await TaxiPick.findOne({
-                where: {
-                    team_id: pick.team_id,
-                    slot: pick.slot
-                }
-            });
+        // wipe existing picks for these teams, then reinsert clean
+        await TaxiPick.destroy({ where: { team_id: teamIds } });
 
-            if (existingPick) {
-                await existingPick?.update({
-                    player_id: pick.player_id,
-                    season: pick.season,
-                    cost: pick.cost
-                });
-            } else {
-                await TaxiPick.create(pick);
-            }
+        if (picks.length > 0) {
+            await TaxiPick.bulkCreate(picks);
         }
 
         res.status(201).json({ success: true });
@@ -47,6 +35,7 @@ export const getTeamTaxiPicks = async (req: Request, res: Response) => {
         })
         res.status(200).json(picks);
     } catch (err) {
+        console.error('Failed to fetch taxi picks:', err);
         res.status(500).json({ error: 'Failed to fetch taxi picks', details: err });
     }
 };
