@@ -16,6 +16,7 @@ import TaxiPick from './models/taxiPick';
 import League from './models/league';
 import PasswordResetToken from './models/passwordResetToken';
 
+
 //const ApiUser = require('./models/apiUser')
 
 // associations
