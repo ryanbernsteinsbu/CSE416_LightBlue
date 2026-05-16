@@ -14,7 +14,7 @@ export const saveDraftPicks = async (req: Request, res: Response) => {
             const existingPick = await DraftPick.findOne({
                 where: {
                     team_id: pick.team_id,
-                    rosterPosition: pick.rosterPosition
+                    slotIndex: pick.slotIndex  // ← use slotIndex instead
                 }
             });
 
@@ -23,7 +23,8 @@ export const saveDraftPicks = async (req: Request, res: Response) => {
                     cost: pick.cost,
                     player_id: pick.player_id,
                     season: pick.season,
-                    draft_time: pick.draft_time  // ← new
+                    rosterPosition: pick.rosterPosition,
+                    draft_time: pick.draft_time
                 });
             } else {
                 await DraftPick.create(pick);
@@ -31,24 +32,25 @@ export const saveDraftPicks = async (req: Request, res: Response) => {
         }
 
         res.status(201).json({ success: true });
-    } catch (err) {
-        console.error('Failed to save draft picks:', err);
-        res.status(500).json({ error: 'Failed to save draft picks', details: err });
+    } catch (err: any) {
+        console.error('Failed to save draft picks:', err.message);
+        console.error('Detail:', err.original?.message);
+        res.status(500).json({ error: 'Failed to save draft picks', details: err.message, detail: err.original?.message });
     }
 };
 
 export const getTeamDraftPicks = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-
         const picks = await DraftPick.findAll({
             where: { team_id: id },
             include: [{ model: Player, as: 'player' }],
             order: [['id', 'DESC']]
         });
-
         res.status(200).json(picks);
-    } catch (err) {
-        res.status(500).json({ error: 'Failed to fetch draft picks', details: err });
+    } catch (err: any) {
+        console.error('Failed to fetch draft picks:', err.message);
+        console.error('Detail:', err.original?.message);
+        res.status(500).json({ error: 'Failed to fetch draft picks', detail: err.message, original: err.original?.message });
     }
 };

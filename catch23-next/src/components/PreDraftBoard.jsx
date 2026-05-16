@@ -22,7 +22,7 @@ const buildPositions = (rosterSettings) => {
     ];
 };
 
-const positionToEnum = (pos, index, POSITIONS) => {
+const positionToEnum = (pos) => {
     const map = {
         C: 'CATCHER',
         '1B': 'FIRST',
@@ -258,7 +258,7 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
                 if (!row.player_id) return;
                 picks.push({
                     cost: parseFloat(row.price),
-                    rosterPosition: positionToEnum(POSITIONS[i], i, POSITIONS),
+                    rosterPosition: positionToEnum(POSITIONS[i]),
                     team_id: team.id,
                     player_id: row.player_id,
                     season: row.season || league.season,

@@ -64,7 +64,8 @@ DraftPick.init({
     },
     slotIndex: {
         type: DataTypes.INTEGER,
-        allowNull: true
+        allowNull: true,
+        field: 'slot_index'
     },
 }, {
     sequelize,
