@@ -176,7 +176,7 @@ export default function PlayerInformation() {
                         <button
                             className="pi-btn pi-btn--ghost"
                             type="button"
-                            onClick={() => { setNameQuery(""); setTeamQuery(""); setPosQuery(""); setMode(null); setPage(1); setMinors(False); }}
+                            onClick={() => { setNameQuery(""); setTeamQuery(""); setPosQuery(""); setMode(null); setPage(1); setMinors(false); }}
                         >
                             Clear
                         </button>
