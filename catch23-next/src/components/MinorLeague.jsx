@@ -59,7 +59,7 @@ export default function MinorLeagueDraftBoard({ league, onBack, onModeChange }) 
         , [teams]);
 
     // numSlots comes from the league's taxi/minor league setting, fallback to 10
-    const numSlots = league?.rosterSettings?.numTaxi ?? 10;
+    const numSlots = league?.rosterSettings?.numMinor ?? 10;
 
     useEffect(() => {
         const fetchTeams = async () => {
