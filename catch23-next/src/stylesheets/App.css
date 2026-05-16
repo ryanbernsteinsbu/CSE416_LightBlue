@@ -1905,6 +1905,14 @@ button {
   color: #aab0d0;
   letter-spacing: 0.08em;
 }
+
+.ppm-cost {
+    font-size: 12px;
+    font-weight: 600;
+    color: #aab0d0;
+    text-align: right;
+    min-width: 36px;
+}
  
 /* Footer note */
 .ppm-footer {

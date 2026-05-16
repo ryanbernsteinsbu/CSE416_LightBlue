@@ -25,8 +25,8 @@ export async function rankPlayers(players) {
         const sorted = [...players]
             .map(p => ({
                 ...p,
-                rank: rankMap.get(String(p.mlbPlayerId))?.rank ?? Number.POSITIVE_INFINITY,
-                cost: rankMap.get(String(p.mlbPlayerId))?.cost ?? null,
+                rank: rankMap.get(String(p.mlbPlayerId)) ?? -Infinity,
+                cost: null
             }))
             .sort((a, b) => b.rank - a.rank);
 
@@ -51,15 +51,15 @@ export async function dynamicRankPlayers(players, league) {
             ? response.data
             : Object.values(response.data);
 
-        const rankMap = new Map(rankData.map(r => [String(r.mlbPlayerId), { rank: r.rank, cost: r.cost }]));
+        const rankMap = new Map(rankData.map(r => [String(r.mlbPlayerId), {rank: r.rank, cost: r.cost}]));
         console.log("Ohtani rank:", rankMap.get(String(players.find(p => p.lastName === "Ohtani")?.mlbPlayerId)));
         console.log("Jorge Alfaro rank:", rankMap.get(String(players.find(p => p.lastName === "Alfaro")?.mlbPlayerId)));
 
         const sorted = [...players]
             .map(p => ({
                 ...p,
-                rank: rankMap.get(String(p.mlbPlayerId))?.rank ?? Number.POSITIVE_INFINITY,
-                cost: rankMap.get(String(p.mlbPlayerId))?.cost ?? null,
+                rank: rankMap.get(String(p.mlbPlayerId))?.rank ?? -Infinity,
+                cost: rankMap.get(String(p.mlbPlayerId))?.cost ?? null
             }))
             .sort((a, b) => b.rank - a.rank);
 

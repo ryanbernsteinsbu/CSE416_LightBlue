@@ -171,6 +171,22 @@ export default function DraftSimulation({ league, onBack, onModeChange }) {
         if (found) setProfilePlayer(toProfilePlayer(found));
     };
 
+    const [suggestAnchor, setSuggestAnchor] = useState(null);
+
+    useEffect(() => {
+        if (suggestions.length > 0 && cellInputRef.current) {
+            const rect = cellInputRef.current.getBoundingClientRect();
+            const spaceBelow = window.innerHeight - rect.bottom;
+            const dropdownHeight = Math.min(suggestions.length * 42, 280);
+            setSuggestAnchor({
+                top: rect.top,
+                bottom: rect.bottom,
+                left: rect.left,
+                width: rect.width,
+                openUpward: spaceBelow < dropdownHeight,
+            });
+        }
+    }, [suggestions.length]);
 
     useEffect(() => {
         const init = async () => {
@@ -522,7 +538,7 @@ export default function DraftSimulation({ league, onBack, onModeChange }) {
                                                                             .filter(p => playerMatchesRowPosition(p, pos))
                                                                             .filter(p => {
                                                                                 const div = league.playerSettings?.division;
-                                                                                if(div && div !== "MIXED") return p.realLeague === div;
+                                                                                if (div && div !== "MIXED") return p.realLeague === div;
                                                                                 return true;
                                                                             })
                                                                             .filter(p => p.status !== "MINORS")
@@ -535,7 +551,20 @@ export default function DraftSimulation({ league, onBack, onModeChange }) {
                                                             onKeyDown={handleCellKeyDown}
                                                         />
                                                         {suggestions.length > 0 && (
-                                                            <ul className="db-suggestions">
+                                                            <ul
+                                                                className="db-suggestions"
+                                                                style={suggestAnchor ? {
+                                                                    position: 'fixed',
+                                                                    top: suggestAnchor.openUpward
+                                                                        ? suggestAnchor.top - Math.min(suggestions.length * 42, 280)
+                                                                        : suggestAnchor.bottom,
+                                                                    left: suggestAnchor.left,
+                                                                    width: Math.max(suggestAnchor.width, 220),
+                                                                    margin: 0,
+                                                                    maxHeight: 280,
+                                                                    overflowY: 'auto',
+                                                                } : {}}
+                                                            >
                                                                 {suggestions.map(p => (
                                                                     <li
                                                                         key={p.id}
@@ -719,18 +748,17 @@ export default function DraftSimulation({ league, onBack, onModeChange }) {
                 </div>
             </div>
 
-            {/* Position Players Modal */}
             <PositionPlayersModal
                 isOpen={!!selectedPosition}
                 onClose={() => setSelectedPosition(null)}
                 position={selectedPosition}
                 players={allPlayers.filter(p => playerMatchesRowPosition(p, selectedPosition ?? ""))
-                                    .filter(p => {
-                                        const div = league.playerSettings?.division;
-                                        if (div && div !== "MIXED") return p.realLeague === div;
-                                        return true;
-                                    })
-                                    .filter(p => p.status !== "MINORS")}
+                    .filter(p => {
+                        const div = league.playerSettings?.division;
+                        if (div && div !== "MIXED") return p.realLeague === div;
+                        return true;
+                    })
+                    .filter(p => p.status !== "MINORS")}
                 draftedIds={draftedIds}
             />
 

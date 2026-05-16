@@ -133,11 +133,11 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
     };
 
     const draftedIds = useMemo(() =>
-    new Set([
-        ...taxiRosterIds,
-        ...teams.flatMap(t => t.rows.map(r => r.player_id).filter(Boolean))
-    ])
-    , [teams, taxiRosterIds]);
+        new Set([
+            ...taxiRosterIds,
+            ...teams.flatMap(t => t.rows.map(r => r.player_id).filter(Boolean))
+        ])
+        , [teams, taxiRosterIds]);
 
     const remainingBudgets = useMemo(() => {
         const result = {};
@@ -218,6 +218,23 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
         setMovePopup(null);
     };
 
+    const [suggestAnchor, setSuggestAnchor] = useState(null);
+
+    useEffect(() => {
+        if (suggestions.length > 0 && cellInputRef.current) {
+            const rect = cellInputRef.current.getBoundingClientRect();
+            const spaceBelow = window.innerHeight - rect.bottom;
+            const dropdownHeight = Math.min(suggestions.length * 42, 280);
+            setSuggestAnchor({
+                top: rect.top,
+                bottom: rect.bottom,
+                left: rect.left,
+                width: rect.width,
+                openUpward: spaceBelow < dropdownHeight,
+            });
+        }
+    }, [suggestions.length]);
+
     useEffect(() => {
         const fetchTeams = async () => {
             try {
@@ -258,7 +275,7 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
                             taxiPicks.forEach(p => {
                                 if (p.player_id) allTaxiIds.add(p.player_id);
                             });
-                        } catch {}
+                        } catch { }
                     })
                 );
                 setTaxiRosterIds(allTaxiIds);
@@ -590,7 +607,7 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
                                                                                     .filter(p => playerMatchesRowPosition(p, pos))
                                                                                     .filter(p => {
                                                                                         const div = league.playerSettings?.division;
-                                                                                        if(div && div !== "MIXED") return p.realLeague === div;
+                                                                                        if (div && div !== "MIXED") return p.realLeague === div;
                                                                                         return true;
                                                                                     })
                                                                                     .filter(p => getPlayerName(p).includes(q))
@@ -602,7 +619,20 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
                                                                     onKeyDown={handleCellKeyDown}
                                                                 />
                                                                 {suggestions.length > 0 && (
-                                                                    <ul className="db-suggestions">
+                                                                    <ul
+                                                                        className="db-suggestions"
+                                                                        style={suggestAnchor ? {
+                                                                            position: 'fixed',
+                                                                            top: suggestAnchor.openUpward
+                                                                                ? suggestAnchor.top - Math.min(suggestions.length * 42, 280)
+                                                                                : suggestAnchor.bottom,
+                                                                            left: suggestAnchor.left,
+                                                                            width: Math.max(suggestAnchor.width, 220),
+                                                                            margin: 0,
+                                                                            maxHeight: 280,
+                                                                            overflowY: 'auto',
+                                                                        } : {}}
+                                                                    >
                                                                         {suggestions.map(p => (
                                                                             <li
                                                                                 key={p.id}
@@ -744,11 +774,11 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
                 onClose={() => setSelectedPosition(null)}
                 position={selectedPosition}
                 players={allPlayers.filter(p => playerMatchesRowPosition(p, selectedPosition ?? ""))
-                                    .filter(p => {
-                                        const div = league.playerSettings?.division;
-                                        if(div && div !== "MIXED") return p.realLeague === div;
-                                        return true;
-                                    })}
+                    .filter(p => {
+                        const div = league.playerSettings?.division;
+                        if (div && div !== "MIXED") return p.realLeague === div;
+                        return true;
+                    })}
                 draftedIds={draftedIds}
                 league={league}
             />

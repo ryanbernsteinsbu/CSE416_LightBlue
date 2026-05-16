@@ -335,7 +335,7 @@ export default function LiveDraftBoard({ league, onBack, onModeChange }) {
         try {
             const { data } = await createTeam(newTeam.name, league.id);
             newTeam.id = Number(data.id);
-      
+
             setTeams(prev => [...prev, newTeam]);
         } catch (err) {
             console.error("Failed to save team:", err);
@@ -506,7 +506,7 @@ export default function LiveDraftBoard({ league, onBack, onModeChange }) {
                                 ↷ Redo
                             </button>
 
-                            <div className="tooltip-wrap" data-tip={allFilled ? "Finalize and view draft summary" : `${emptyCount} slot${emptyCount !== 1 ? "s" : ""} still need to be filled`}>
+                            <div className="tooltip-wrap tooltip-bottom" data-tip={allFilled ? "Finalize and view draft summary" : `${emptyCount} slot${emptyCount !== 1 ? "s" : ""} still need to be filled`}>
                                 <button
                                     className={`db-tool-btn ${allFilled ? "end-draft-btn--active" : "end-draft-btn--disabled"}`}
                                     disabled={!allFilled}
@@ -709,7 +709,7 @@ export default function LiveDraftBoard({ league, onBack, onModeChange }) {
                                                 .filter(p => playerMatchesRowPosition(p, draftPopup.pos))
                                                 .filter(p => {
                                                     const div = league.playerSettings?.division;
-                                                    if(div && div !== "MIXED") return p.realLeague === div;
+                                                    if (div && div !== "MIXED") return p.realLeague === div;
                                                     return true;
                                                 })
                                                 .filter(p => p.status !== "MINORS")
@@ -765,7 +765,7 @@ export default function LiveDraftBoard({ league, onBack, onModeChange }) {
                         <div className="draft-popup-title">🏁 End Draft?</div>
                         <p className="end-draft-confirm-text">
                             All {teams.length} teams and {teams.length * POSITIONS.length} roster slots are filled.
-                            This will finalize the draft and take you to the summary page.
+                            This will finalize your draft picks and take you to <strong style={{ color: "#7a9fff" }}>Taxi Draft</strong> — where you can assign minor league call-ups before viewing your full draft summary.
                         </p>
                         <div className="draft-popup-actions">
                             <button className="db-tool-btn db-tool-secondary" onClick={() => setEndDraftConfirm(false)} disabled={endingDraft}>Keep Drafting</button>
@@ -792,12 +792,12 @@ export default function LiveDraftBoard({ league, onBack, onModeChange }) {
                 onClose={() => setSelectedPosition(null)}
                 position={selectedPosition}
                 players={allPlayers.filter(p => playerMatchesRowPosition(p, selectedPosition ?? ""))
-                                    .filter(p => {
-                                        const div = league.playerSettings?.division;
-                                        if (div && div !== "MIXED") return p.realLeague === div;
-                                        return true;
-                                    })
-                                    .filter(p => p.status !== "MINORS")}
+                    .filter(p => {
+                        const div = league.playerSettings?.division;
+                        if (div && div !== "MIXED") return p.realLeague === div;
+                        return true;
+                    })
+                    .filter(p => p.status !== "MINORS")}
                 draftedIds={draftedIds}
                 league={league}
             />
