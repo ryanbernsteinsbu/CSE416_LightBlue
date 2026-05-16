@@ -31,6 +31,7 @@ export const INITIAL_ROSTER_SETTINGS = {
   numUtility: 1,
   numPitchers: 9,
   numTaxi: 8,
+  numMinor: 8
 };
 
 export const INITIAL_SCORING_SETTINGS = {
@@ -117,6 +118,7 @@ export function buildLeaguePayload({
       numUtility: rosterSettings.numUtility,
       numPitchers: rosterSettings.numPitchers,
       numTaxi: rosterSettings.numTaxi,
+      numMinor: rosterSettings.numMinor
     },
     logoFile,
   };

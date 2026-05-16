@@ -230,6 +230,7 @@ export default function CreateLeagueSettings({
               ["Number of Utility Players", "numUtility"],
               ["Number of Pitchers", "numPitchers"],
               ["Number of Taxi Players", "numTaxi"],
+              ["Number of Minor League Players", "numMinor"]
             ].map(([label, key]) => (
               <div className="clm-num-row" key={key}>
                 <span className="clm-num-label">{label}</span>
