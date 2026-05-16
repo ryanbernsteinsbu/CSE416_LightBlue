@@ -35,184 +35,57 @@ export default function CreateLeagueSettings({
         <div className="clm-title">Settings</div>
         <div className="clm-subtitle">{leagueName}</div>
 
-        {activeTab === "players" ? (
+        { activeTab === "players" ? (
           <div className="clm-panel">
+
             <div className="clm-section">
-              <h3 className="clm-section-title">Eligibility</h3>
-
-              <div className="clm-toggle-row">
-                <span className="clm-toggle-label">Position Eligibility Rule</span>
-                <button
-                  className={`clm-toggle ${playerSettings.positionEligibilityRule ? "on" : "off"}`}
-                  onClick={() =>
-                    setPlayerSettings((prev) => ({
-                      ...prev,
-                      positionEligibilityRule: !prev.positionEligibilityRule,
-                    }))
-                  }
-                >
-                  {playerSettings.positionEligibilityRule ? "ON" : "OFF"}
-                </button>
-              </div>
-
-              <div className="clm-toggle-row">
-                <span className="clm-toggle-label">Multi-Position Enabled</span>
-                <button
-                  className={`clm-toggle ${playerSettings.multiPositionEnabled ? "on" : "off"}`}
-                  onClick={() =>
-                    setPlayerSettings((prev) => ({
-                      ...prev,
-                      multiPositionEnabled: !prev.multiPositionEnabled,
-                    }))
-                  }
-                >
-                  {playerSettings.multiPositionEnabled ? "ON" : "OFF"}
-                </button>
-              </div>
-
-              <div className="clm-toggle-row">
-                <span className="clm-toggle-label">Prospect Eligibility</span>
-                <button
-                  className={`clm-toggle ${playerSettings.prospectEligibility ? "on" : "off"}`}
-                  onClick={() =>
-                    setPlayerSettings((prev) => ({
-                      ...prev,
-                      prospectEligibility: !prev.prospectEligibility,
-                    }))
-                  }
-                >
-                  {playerSettings.prospectEligibility ? "ON" : "OFF"}
-                </button>
-              </div>
-
-              <div className="clm-toggle-row">
-                <span className="clm-toggle-label">Rookie Status Filter</span>
-                <button
-                  className={`clm-toggle ${playerSettings.rookieStatusFilter ? "on" : "off"}`}
-                  onClick={() =>
-                    setPlayerSettings((prev) => ({
-                      ...prev,
-                      rookieStatusFilter: !prev.rookieStatusFilter,
-                    }))
-                  }
-                >
-                  {playerSettings.rookieStatusFilter ? "ON" : "OFF"}
-                </button>
-              </div>
+              <h3 className="clm-section-title">Ohtani Rule</h3>
+              {[
+                { value: "ONE_PLAYER", label: "One Player" },
+                { value: "TWO_PLAYERS", label: "Two Players" },
+                { value: "MIXED", label: "Mixed" },
+              ].map((option) => (
+                <div className="clm-toggle-row" key={option.value}>
+                  <span className="clm-toggle-label">{option.label}</span>
+                  <button
+                    className={`clm-toggle ${playerSettings.ohtaniRule === option.value ? "on" : "off"}`}
+                    onClick={() =>
+                      setPlayerSettings((prev) => ({
+                        ...prev,
+                        ohtaniRule: option.value,
+                      }))
+                    }
+                  >
+                    {playerSettings.ohtaniRule === option.value ? "ON" : "OFF"}
+                  </button>
+                </div>
+              ))}
             </div>
 
             <div className="clm-section">
-              <h3 className="clm-section-title">Player Pool</h3>
-
-              <div className="clm-toggle-row">
-                <span className="clm-toggle-label">Include Prospects</span>
-                <button
-                  className={`clm-toggle ${playerSettings.prospects ? "on" : "off"}`}
-                  onClick={() =>
-                    setPlayerSettings((prev) => ({
-                      ...prev,
-                      prospects: !prev.prospects,
-                    }))
-                  }
-                >
-                  {playerSettings.prospects ? "ON" : "OFF"}
-                </button>
-              </div>
-
-              <div className="clm-toggle-row">
-                <span className="clm-toggle-label">Include Minor League Players</span>
-                <button
-                  className={`clm-toggle ${playerSettings.minorLeaguePlayers ? "on" : "off"}`}
-                  onClick={() =>
-                    setPlayerSettings((prev) => ({
-                      ...prev,
-                      minorLeaguePlayers: !prev.minorLeaguePlayers,
-                    }))
-                  }
-                >
-                  {playerSettings.minorLeaguePlayers ? "ON" : "OFF"}
-                </button>
-              </div>
-
-              <div className="clm-toggle-row">
-                <span className="clm-toggle-label">Include Free Agents</span>
-                <button
-                  className={`clm-toggle ${playerSettings.freeAgents ? "on" : "off"}`}
-                  onClick={() =>
-                    setPlayerSettings((prev) => ({
-                      ...prev,
-                      freeAgents: !prev.freeAgents,
-                    }))
-                  }
-                >
-                  {playerSettings.freeAgents ? "ON" : "OFF"}
-                </button>
-              </div>
-
-              <div className="clm-toggle-row">
-                <span className="clm-toggle-label">Include Two Way Player Split</span>
-                <button
-                  className={`clm-toggle ${playerSettings.twoWayPlayerSplit ? "on" : "off"}`}
-                  onClick={() =>
-                    setPlayerSettings((prev) => ({
-                      ...prev,
-                      twoWayPlayerSplit: !prev.twoWayPlayerSplit,
-                    }))
-                  }
-                >
-                  {playerSettings.twoWayPlayerSplit ? "ON" : "OFF"}
-                </button>
-              </div>
+              <h3 className="clm-section-title">Division</h3>
+              {[
+                { value: "AL", label: "American League (AL)" },
+                { value: "NL", label: "National League (NL)" },
+                { value: "MIXED", label: "Mixed" },
+              ].map((option) => (
+                <div className="clm-toggle-row" key={option.value}>
+                  <span className="clm-toggle-label">{option.label}</span>
+                  <button
+                    className={`clm-toggle ${playerSettings.division === option.value ? "on" : "off"}`}
+                    onClick={() =>
+                      setPlayerSettings((prev) => ({
+                        ...prev,
+                        division: option.value,
+                      }))
+                    }
+                  >
+                    {playerSettings.division === option.value ? "ON" : "OFF"}
+                  </button>
+                </div>
+              ))}
             </div>
 
-            <div className="clm-section">
-              <h3 className="clm-section-title">Injury Handling</h3>
-
-              <div className="clm-toggle-row">
-                <span className="clm-toggle-label">Injured Players Draftable</span>
-                <button
-                  className={`clm-toggle ${playerSettings.injuredPlayersDraftable ? "on" : "off"}`}
-                  onClick={() =>
-                    setPlayerSettings((prev) => ({
-                      ...prev,
-                      injuredPlayersDraftable: !prev.injuredPlayersDraftable,
-                    }))
-                  }
-                >
-                  {playerSettings.injuredPlayersDraftable ? "ON" : "OFF"}
-                </button>
-              </div>
-
-              <div className="clm-toggle-row">
-                <span className="clm-toggle-label">Auto Injury Risk Indicator</span>
-                <button
-                  className={`clm-toggle ${playerSettings.autoInjuryRiskIndicator ? "on" : "off"}`}
-                  onClick={() =>
-                    setPlayerSettings((prev) => ({
-                      ...prev,
-                      autoInjuryRiskIndicator: !prev.autoInjuryRiskIndicator,
-                    }))
-                  }
-                >
-                  {playerSettings.autoInjuryRiskIndicator ? "ON" : "OFF"}
-                </button>
-              </div>
-
-              <div className="clm-toggle-row">
-                <span className="clm-toggle-label">Hide Long Term IL</span>
-                <button
-                  className={`clm-toggle ${playerSettings.hideLongTermIL ? "on" : "off"}`}
-                  onClick={() =>
-                    setPlayerSettings((prev) => ({
-                      ...prev,
-                      hideLongTermIL: !prev.hideLongTermIL,
-                    }))
-                  }
-                >
-                  {playerSettings.hideLongTermIL ? "ON" : "OFF"}
-                </button>
-              </div>
-            </div>
           </div>
         ) : activeTab === "roster" ? (
           <div className="clm-panel">
