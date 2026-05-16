@@ -335,7 +335,7 @@ export default function TaxiDraftBoard({ league, onBack, onModeChange }) {
 
             {/* post-draft prompt — shown until all slots are filled */}
             {isPostDraft && !allSlotsFilled && (
-                <div className="taxi-postdraft-banner">
+                <div className="taxi-postdraft-banner" style={{ color: "white" }}>
                     🏁 The live draft is complete. Fill all taxi slots to finish —
                     <strong> {filledCount}/{totalSlots}</strong> filled.
                 </div>
