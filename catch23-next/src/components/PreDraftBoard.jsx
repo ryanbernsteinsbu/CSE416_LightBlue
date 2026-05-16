@@ -61,7 +61,7 @@ const toProfilePlayer = (p) => ({
     }
 });
 
-export default function PreDraftBoard({ league, onBack, onModeChange }) {
+export default function PreDraftBoard({ league, onBack, onModeChange, onLeagueUpdate }) {
     const POSITIONS = buildPositions(league.rosterSettings);
 
     const [teams, setTeams] = useState([]);
@@ -351,7 +351,9 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
         try {
             const { data } = await createTeam(newTeam.name, league.id);
             newTeam.id = Number(data.id);
-            setTeams(prev => [...prev, newTeam]);
+            const updated = [...teams, newTeam];
+            setTeams(updated);
+            onLeagueUpdate({ teams: updated.map(t => ({ id: t.id, name: t.name })) });
         } catch (err) {
             console.error("Failed to save team:", err);
             alert("Error saving team to database.");
@@ -366,7 +368,9 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
 
     const removeTeam = async (teamId) => {
         await deleteTeam(teamId);
-        setTeams(prev => prev.filter(t => t.id !== teamId));
+        const updated = teams.filter(t => t.id !== teamId);
+        setTeams(updated);
+        onLeagueUpdate({ teams: updated.map(t => ({ id: t.id, name: t.name })) });
     };
 
     const startEditTeam = (team) => {

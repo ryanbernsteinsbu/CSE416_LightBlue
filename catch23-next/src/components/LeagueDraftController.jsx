@@ -7,9 +7,14 @@ import DraftSummary from "./DraftSummary";
 import TaxiDraft from "./TaxiDraft";
 import MinorLeagueDraft from "./MinorLeague";
 
-export default function LeagueDraftController({ league, onBack, initialMode }) {
+export default function LeagueDraftController({ league: initialLeague, onBack, initialMode }) {
+    const [league, setLeague] = useState(initialLeague);
     const defaultMode = initialMode || (league.status === "DRAFTED" ? "summary" : "predraft"); 
     const [mode, setMode] = useState(defaultMode); 
+
+    const updateLeague = (updates) => {
+        setLeague(prev => ({ ...prev, ...updates}));
+    };
 
     return (
         <>
@@ -18,6 +23,7 @@ export default function LeagueDraftController({ league, onBack, initialMode }) {
                     league={league}
                     onBack={onBack}
                     onModeChange={setMode}
+                    onLeagueUpdate={updateLeague}
                 />
             )}
             {mode === "simulation" && (
@@ -25,6 +31,7 @@ export default function LeagueDraftController({ league, onBack, initialMode }) {
                     league={league}
                     onBack={() => setMode("predraft")}
                     onModeChange={setMode}
+                    onLeagueUpdate={updateLeague}
                 />
             )}
             {mode === "live" && (
@@ -32,6 +39,7 @@ export default function LeagueDraftController({ league, onBack, initialMode }) {
                     league={league}
                     onBack={() => setMode("predraft")}
                     onModeChange={setMode}
+                    onLeagueUpdate={updateLeague}
                 />
             )}
             {mode === "summary" && (
