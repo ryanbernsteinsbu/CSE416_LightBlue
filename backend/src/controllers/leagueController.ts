@@ -71,8 +71,14 @@ export const createLeague = async (req: Request, res: Response) => {
 
 
         res.status(201).json(createdLeague);
-    } catch (error) {
+    } catch (error: any) {
         res.status(500).json({ message: 'Error creating league', error });
+        console.error('Full error:', JSON.stringify(error, null, 2));
+        res.status(500).json({ 
+            message: 'Error creating league', 
+            error: error.message,  // add this
+            detail: error.original?.message  // adds the raw DB error
+        });
     }
 };
 
