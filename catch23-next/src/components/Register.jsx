@@ -10,7 +10,6 @@ export default function Register({ onCreateUserClick, onShowLogin }) {
     const [saveBanner, setSaveBanner] = useState(false);
     const [errorBanner, setErrorBanner] = useState("");
 
-
     const showBanner = () => {
         setSaveBanner(true);
         setTimeout(() => setSaveBanner(false), 3000);
@@ -29,6 +28,7 @@ export default function Register({ onCreateUserClick, onShowLogin }) {
         if (firstPassword === "") return showError("Password is required");
         if (secondPassword === "") return showError("Re-type Password is required");
         if (firstPassword !== secondPassword) return showError("Passwords do not match, please try again");
+        if (firstPassword.length < 8) return showError("Password must be at least 8 characters.");
 
         const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
         if (!emailRegex.test(email)) return showError("Please enter a valid email address.");
@@ -56,6 +56,8 @@ export default function Register({ onCreateUserClick, onShowLogin }) {
 
             if (backendMsg === "Email is connected to existing account") {
                 showError("There's already an account associated with that email");
+            } else if (backendMsg === "Password must be at least 8 characters.") {
+                showError("Password must be at least 8 characters.");
             } else {
                 showError("Error creating user. Please try again later.");
             }
@@ -122,5 +124,3 @@ export default function Register({ onCreateUserClick, onShowLogin }) {
         </div>
     );
 }
-
-
