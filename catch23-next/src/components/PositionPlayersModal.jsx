@@ -23,7 +23,8 @@ export async function rankPlayers(players) {
         const sorted = [...players]
             .map(p => ({
                 ...p,
-                rank: rankMap.get(String(p.mlbPlayerId)) ?? Number.POSITIVE_INFINITY
+                rank: rankMap.get(String(p.mlbPlayerId)) ?? -Infinity,
+                cost: null
             }))
             .sort((a, b) => b.rank - a.rank);
 
@@ -48,14 +49,15 @@ export async function dynamicRankPlayers(players, league) {
             ? response.data
             : Object.values(response.data);
 
-        const rankMap = new Map(rankData.map(r => [String(r.mlbPlayerId), r.rank]));
+        const rankMap = new Map(rankData.map(r => [String(r.mlbPlayerId), {rank: r.rank, cost: r.cost}]));
         console.log("Ohtani rank:", rankMap.get(String(players.find(p => p.lastName === "Ohtani")?.mlbPlayerId)));
         console.log("Jorge Alfaro rank:", rankMap.get(String(players.find(p => p.lastName === "Alfaro")?.mlbPlayerId)));
 
         const sorted = [...players]
             .map(p => ({
                 ...p,
-                rank: rankMap.get(String(p.mlbPlayerId)) ?? Number.POSITIVE_INFINITY
+                rank: rankMap.get(String(p.mlbPlayerId))?.rank ?? -Infinity,
+                cost: rankMap.get(String(p.mlbPlayerId))?.cost ?? null
             }))
             .sort((a, b) => b.rank - a.rank);
 
@@ -148,6 +150,7 @@ export function PositionPlayersModal({ isOpen, onClose, position, players, draft
                 <div className="ppm-col-labels">
                     <span>PLAYER</span>
                     <span>TEAM</span>
+                    <span>VALUE</span>
                 </div>
 
                 {/* Player rows */}
@@ -181,6 +184,10 @@ export function PositionPlayersModal({ isOpen, onClose, position, players, draft
                                     {/* Team */}
                                     <span className="ppm-team">
                                         {p.realTeam ?? p.real_team ?? "—"}
+                                    </span>
+
+                                    <span className="ppm-cost">
+                                        {p.cost != null ? `$${p.cost}`: "-"}
                                     </span>
                                 </div>
                             );
