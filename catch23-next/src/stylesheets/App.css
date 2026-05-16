@@ -1557,8 +1557,7 @@ button {
 
 .profile-card {
   width: 100%;
-  max-width: 600px;
-  aspect-ratio: 1 / 1;
+  max-width: 480px;
   background: rgba(255,255,255,0.07);
   border: 1px solid rgba(255,255,255,0.15);
   border-radius: 20px;
@@ -1566,7 +1565,7 @@ button {
   padding: 32px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  gap: 24px;             /* ← add this */
   align-items: center;
   box-shadow: 0 8px 40px rgba(0,0,0,0.4);
 }
@@ -3680,4 +3679,105 @@ button {
     font-style: italic;
     text-transform: none;
     letter-spacing: 0;
+}
+
+/* ── Profile page — change password / edit profile forms ───────────────────── */
+
+.profile-pw-form {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.profile-pw-title {
+    font-family: "Trade Gothic", Arial, sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.45);
+    margin: 0 0 4px;
+}
+
+.profile-pw-input {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.07);
+    color: white;
+    font-family: "Trade Gothic", Arial, sans-serif;
+    font-size: 14px;
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.profile-pw-input:focus {
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+.profile-pw-input::placeholder {
+    color: rgba(255, 255, 255, 0.25);
+}
+
+.profile-pw-error {
+    color: #ff9090;
+    font-family: "Trade Gothic", Arial, sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.profile-edit-hint {
+    font-family: "Trade Gothic", Arial, sans-serif;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.3);
+    margin: 0;
+    text-align: right;
+}
+
+.profile-pw-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 4px;
+}
+
+.profile-btn--ghost {
+    flex: 1;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: transparent;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.profile-btn--ghost:hover {
+    background: rgba(255, 255, 255, 0.07);
+    color: white;
+}
+
+.profile-btn--save {
+    flex: 2;
+    border: 1px solid rgba(82, 196, 26, 0.4);
+    background: rgba(82, 196, 26, 0.15);
+    color: #52c41a;
+}
+
+.profile-btn--save:hover:not(:disabled) {
+    background: rgba(82, 196, 26, 0.25);
+}
+
+.profile-btn--save:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.profile-btn--change-pw {
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.07);
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.profile-btn--change-pw:hover {
+    background: rgba(255, 255, 255, 0.12);
 }
