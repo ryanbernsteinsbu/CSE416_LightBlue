@@ -13,6 +13,10 @@ export default function Navbar() {
 
   useEffect(() => {
     setIsLoggedIn(!!localStorage.getItem("token"));
+
+    const handleStorage = () => setIsLoggedIn(!!localStorage.getItem("token"));
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
   }, []);
 
   useEffect(() => {

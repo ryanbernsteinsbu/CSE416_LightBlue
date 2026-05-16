@@ -16,14 +16,17 @@ export async function rankPlayers(players) {
             ? response.data
             : Object.values(response.data);
 
-        const rankMap = new Map(rankData.map(r => [String(r.mlbPlayerId), r.rank]));
+        console.log("Sample rank entry:", rankData[0]);
+
+        const rankMap = new Map(rankData.map(r => [String(r.mlbPlayerId), { rank: r.rank, cost: r.cost }]));
         console.log("Ohtani rank:", rankMap.get(String(players.find(p => p.lastName === "Ohtani")?.mlbPlayerId)));
         console.log("Jorge Alfaro rank:", rankMap.get(String(players.find(p => p.lastName === "Alfaro")?.mlbPlayerId)));
 
         const sorted = [...players]
             .map(p => ({
                 ...p,
-                rank: rankMap.get(String(p.mlbPlayerId)) ?? Number.POSITIVE_INFINITY
+                rank: rankMap.get(String(p.mlbPlayerId))?.rank ?? Number.POSITIVE_INFINITY,
+                cost: rankMap.get(String(p.mlbPlayerId))?.cost ?? null,
             }))
             .sort((a, b) => b.rank - a.rank);
 
@@ -48,14 +51,15 @@ export async function dynamicRankPlayers(players, league) {
             ? response.data
             : Object.values(response.data);
 
-        const rankMap = new Map(rankData.map(r => [String(r.mlbPlayerId), r.rank]));
+        const rankMap = new Map(rankData.map(r => [String(r.mlbPlayerId), { rank: r.rank, cost: r.cost }]));
         console.log("Ohtani rank:", rankMap.get(String(players.find(p => p.lastName === "Ohtani")?.mlbPlayerId)));
         console.log("Jorge Alfaro rank:", rankMap.get(String(players.find(p => p.lastName === "Alfaro")?.mlbPlayerId)));
 
         const sorted = [...players]
             .map(p => ({
                 ...p,
-                rank: rankMap.get(String(p.mlbPlayerId)) ?? Number.POSITIVE_INFINITY
+                rank: rankMap.get(String(p.mlbPlayerId))?.rank ?? Number.POSITIVE_INFINITY,
+                cost: rankMap.get(String(p.mlbPlayerId))?.cost ?? null,
             }))
             .sort((a, b) => b.rank - a.rank);
 
@@ -107,16 +111,15 @@ export function PositionPlayersModal({ isOpen, onClose, position, players, draft
     }, [isOpen]);
 
     useEffect(() => {
-        if(!isOpen || !players?.length) return;
+        if (!isOpen || !players?.length) return;
 
         const ranking = league ? dynamicRankPlayers(players, league) : rankPlayers(players);
-        console.log("players passed in:", players); // check this isn't empty
-        ranking.then(result => setRanked(result.slice(0,10)));
-    }, [isOpen, players, league])
+        console.log("players passed in:", players);
+        console.log("Sample player:", players[0]);
+        ranking.then(result => setRanked(result.slice(0, 10)));
+    }, [isOpen, players, league]);
 
     if (!isOpen) return null;
-
-    // const ranked = rankPlayers(players).slice(0, 10);
 
     return (
         <>
@@ -147,7 +150,10 @@ export function PositionPlayersModal({ isOpen, onClose, position, players, draft
                 {/* Column labels */}
                 <div className="ppm-col-labels">
                     <span>PLAYER</span>
-                    <span>TEAM</span>
+                    <div style={{ display: "flex", gap: "32px" }}>
+                        <span>$</span>
+                        <span>TEAM</span>
+                    </div>
                 </div>
 
                 {/* Player rows */}
@@ -178,10 +184,15 @@ export function PositionPlayersModal({ isOpen, onClose, position, players, draft
                                         </div>
                                     </div>
 
-                                    {/* Team */}
-                                    <span className="ppm-team">
-                                        {p.realTeam ?? p.real_team ?? "—"}
-                                    </span>
+                                    {/* Cost + Team */}
+                                    <div style={{ display: "flex", gap: "32px", alignItems: "center" }}>
+                                        <span className="ppm-cost">
+                                            {p.cost != null ? `$${p.cost}` : "—"}
+                                        </span>
+                                        <span className="ppm-team">
+                                            {p.realTeam ?? p.real_team ?? "—"}
+                                        </span>
+                                    </div>
                                 </div>
                             );
                         })

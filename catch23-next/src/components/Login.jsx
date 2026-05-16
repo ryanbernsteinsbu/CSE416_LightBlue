@@ -29,6 +29,7 @@ export default function Login({ onLoginSuccess, handleError, onShowRegister, onS
             const { data } = await loginUser(email, password);
             console.log("LOGIN:", data);
             onLoginSuccess?.(data);
+            window.dispatchEvent(new Event("storage"));
         } catch (err) {
             const backendMsg = err.response?.data?.message;
 

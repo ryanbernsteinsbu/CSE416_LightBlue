@@ -1859,6 +1859,15 @@ button {
   align-items: center;
   gap: 14px;
 }
+
+.ppm-cost {
+    font-size: 13px;
+    color: #52c41a;
+    font-family: "Trade Gothic", Arial, sans-serif;
+    font-weight: 700;
+    min-width: 36px;
+    text-align: right;
+}
  
 /* Rank number */
 .ppm-rank {
