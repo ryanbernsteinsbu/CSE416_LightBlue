@@ -8,6 +8,7 @@ import teamRoutes from './routes/teamRoutes';
 import draftPickRoutes from './routes/draftPickRoutes';
 import authRoutes from './routes/authRoutes'
 import minorRoutes from './routes/minorRoutes';
+import taxiRoutes from './routes/taxiRoutes';
 import Team from './models/team';
 import Player from './models/player';
 import DraftPick from './models/draftPick';
@@ -55,6 +56,7 @@ app.use('/api/teams', teamRoutes);
 app.use('/api/draft-picks', draftPickRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/minorleague', minorRoutes);
+app.use('/api/taxi', taxiRoutes);
 
 const PORT = process.env.PORT || 8000;
 sequelize.sync().then(() => {
