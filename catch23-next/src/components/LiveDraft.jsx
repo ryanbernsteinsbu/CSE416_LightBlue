@@ -264,7 +264,7 @@ export default function LiveDraftBoard({ league, onBack, onModeChange }) {
         setEndingDraft(true);
         try {
             await updateLeague(league.id, { status: "DRAFTED" });
-            onModeChange("summary");
+            onModeChange("taxi");
         } catch (err) {
             console.error("Failed to end draft:", err);
             alert("Error ending draft. Please try again.");
@@ -419,6 +419,7 @@ export default function LiveDraftBoard({ league, onBack, onModeChange }) {
                             <button className="db-tool-btn db-tool-secondary" onClick={() => onModeChange("predraft")}>Pre-Draft</button>
                             <button className="db-tool-btn db-tool-secondary" onClick={() => onModeChange("simulation")}>Simulation</button>
                             <button className="db-tool-btn db-tool-secondary" onClick={() => onModeChange("taxi")}>Taxi Draft</button>
+                            <button className="db-tool-btn db-tool-secondary" onClick={() => onModeChange("minor")}>Minor League</button>
                             <div className="tooltip-wrap" data-tip={allFilled ? "Finalize and view draft summary" : `${emptyCount} slot${emptyCount !== 1 ? "s" : ""} still need to be filled`}>
                                 <button
                                     className={`db-tool-btn ${allFilled ? "end-draft-btn--active" : "end-draft-btn--disabled"}`}

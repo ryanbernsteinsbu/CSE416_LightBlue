@@ -1,6 +1,9 @@
 import { Request, Response } from 'express';
 import Team from '../models/team';
 import DraftPick from '../models/draftPick';
+import MinorTable from '../models/minorTable';
+import League from '../models/league';
+import MinorLeaguePick from '../models/minorLeaguePick';
 
 // Create Team
 export const createTeam = async (req: Request, res: Response) => {
@@ -10,6 +13,14 @@ export const createTeam = async (req: Request, res: Response) => {
         const team = await Team.create({
             name, budget, league_id
         })
+
+        const league = await League.findByPk(league_id);
+        const numPlayers = (league as any)?.rosterSettings?.numMinor ?? 10;
+
+        await MinorTable.create({
+            team_id: team.id,
+            numPlayers
+        });
 
         res.status(201).json(team);
     } catch (error: any) {
@@ -77,18 +88,24 @@ export const updateTeam = async (req: Request, res: Response) => {
     }
 }
 
-// Delete Team
 export const deleteTeam = async (req: Request, res: Response) => {
     try {
         const team = await Team.findByPk(Number(req.params.id));
         if (!team) throw new Error('Team not found');
 
         await DraftPick.destroy({ where: { team_id: team.id } });
+
+        const minorTable = await MinorTable.findOne({ where: { team_id: team.id } });
+        if (minorTable) {
+            await MinorLeaguePick.destroy({ where: { table_id: minorTable.id } });
+            await minorTable.destroy();
+        }
+
         await team.destroy();
 
-        res.status(200).json({ message: 'Team deleted successfully ' });
+        res.status(200).json({ message: 'Team deleted successfully' });
     } catch (error: any) {
         console.error('Error deleting team:', error.message);
         res.status(500).json({ message: 'Error deleting team', error });
     }
-}
+};

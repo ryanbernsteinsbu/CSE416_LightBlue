@@ -122,6 +122,12 @@ export const getTeamDraftPicks = (teamId) =>
   axios.get(`/api/draft-picks/team/${teamId}`);
 
 
+// Taxi Pick
+export const saveTaxiPicks = (payload) => 
+    axios.post('/api/taxi/bulk', payload);
+export const getTeamTaxiPicks = (teamId) => 
+    axios.get(`/api/taxi/team/${teamId}`);
+
 // Getting Ranked Players
 
 export const getRankedPlayers = async () => {
