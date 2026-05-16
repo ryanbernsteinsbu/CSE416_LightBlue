@@ -16,7 +16,12 @@ export default function Login({ onLoginSuccess, handleError, onShowRegister, onS
         e.preventDefault();
 
         if (!email) {
-            alert("Please enter email");
+            showError("Please enter your email.");
+            return;
+        }
+
+        if (!password) {
+            showError("Please enter your password.");
             return;
         }
 
@@ -24,11 +29,12 @@ export default function Login({ onLoginSuccess, handleError, onShowRegister, onS
             const { data } = await loginUser(email, password);
             console.log("LOGIN:", data);
             onLoginSuccess?.(data);
+            window.dispatchEvent(new Event("storage"));
         } catch (err) {
             const backendMsg = err.response?.data?.message;
 
             if (backendMsg === "Invalid user credentials") {
-                showError("Invalid user credentials");
+                showError("Invalid email or password.");
             } else {
                 showError("An error has occurred.");
                 console.error(err);
@@ -39,7 +45,6 @@ export default function Login({ onLoginSuccess, handleError, onShowRegister, onS
 
     return (
         <div id="login_setup">
-
             {errorBanner && (
                 <div
                     className="save-banner save-banner--visible"
@@ -60,6 +65,7 @@ export default function Login({ onLoginSuccess, handleError, onShowRegister, onS
                 />
 
                 <br /><br />
+
                 <input
                     placeholder="Password"
                     type="password"
@@ -72,7 +78,8 @@ export default function Login({ onLoginSuccess, handleError, onShowRegister, onS
                         Forgot password?
                     </button>
                 </div>
-                <br /><br />
+
+                <br />
 
                 <button id="submit_login" type="submit">Sign in</button>
 
@@ -83,4 +90,3 @@ export default function Login({ onLoginSuccess, handleError, onShowRegister, onS
         </div>
     );
 }
-

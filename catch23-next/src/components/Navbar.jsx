@@ -6,9 +6,18 @@ import { useRouter, usePathname } from "next/navigation";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const menuRef = useRef(null);
   const router = useRouter();
   const pathname = usePathname();
+
+  useEffect(() => {
+    setIsLoggedIn(!!localStorage.getItem("token"));
+
+    const handleStorage = () => setIsLoggedIn(!!localStorage.getItem("token"));
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, []);
 
   useEffect(() => {
     const onDocClick = (e) => {
@@ -51,7 +60,6 @@ export default function Navbar() {
               type="button"
               onClick={() => {
                 setOpen(false);
-
                 if (pathname === "/") {
                   window.location.href = "/";
                 } else {
@@ -72,16 +80,18 @@ export default function Navbar() {
         )}
       </div>
 
-      <div className="tooltip-wrap tooltip-left" data-tip="View Profile">
-        <button
-          className="navbar-iconbtn"
-          type="button"
-          onClick={() => router.push("/profile")}
-          aria-label="Profile"
-        >
-          <i className="fa-solid fa-user" />
-        </button>
-      </div>
+      {isLoggedIn && (
+        <div className="tooltip-wrap tooltip-left" data-tip="View Profile">
+          <button
+            className="navbar-iconbtn"
+            type="button"
+            onClick={() => router.push("/profile")}
+            aria-label="Profile"
+          >
+            <i className="fa-solid fa-user" />
+          </button>
+        </div>
+      )}
     </header>
   );
 }

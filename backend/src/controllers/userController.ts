@@ -10,18 +10,21 @@ export const register = async (req: Request, res: Response) => {
     try {
         const { email, password, displayName } = req.body;
 
+        // Validate password length
+        if (!password || password.length < 8) {
+            return res.status(400).json({ error: { message: 'Password must be at least 8 characters.' } });
+        }
+
         // Check if email already has an associated account
         const existing = await User.findOne({ where: { email } });
-        if(existing) throw new Error('Email is connected to existing account');
+        if (existing) throw new Error('Email is connected to existing account');
 
         // Hashing the password
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        const user = await User.create({
-            email, hashedPassword, displayName
-        })
+        const user = await User.create({ email, hashedPassword, displayName });
 
-        res.status(201).json( { email, displayName } );
+        res.status(201).json({ email, displayName });
     } catch (error) {
         res.status(500).json({ message: 'Error registering new user', error });
     }
@@ -42,8 +45,9 @@ export const login = async (req: Request, res: Response) => {
             return res.status(401).json({ message: 'Invalid user credentials' });
         }
 
+        // Include displayName in JWT so the profile page can read it without an extra API call
         const token = jwt.sign(
-            { id: user.id, email: user.email },
+            { id: user.id, email: user.email, displayName: user.displayName },
             process.env.JWT_SECRET as string,
             { expiresIn: '75d' }
         );
@@ -59,8 +63,8 @@ export const login = async (req: Request, res: Response) => {
 export const getUser = async (req: Request, res: Response): Promise<void> => {
     try {
         const user = await User.findByPk(Number(req.params.id));
-        if(!user) throw new Error('User not found');
-        
+        if (!user) throw new Error('User not found');
+
         res.status(200).json(user);
     } catch (error) {
         res.status(500).json({ message: 'Error getting user', error });
@@ -69,13 +73,13 @@ export const getUser = async (req: Request, res: Response): Promise<void> => {
 
 // Update User
 export const updateUser = async (req: Request, res: Response): Promise<void> => {
-    try {        
+    try {
         const user = await User.findByPk(Number(req.params.id));
-        if(!user) throw new Error('User not found');
+        if (!user) throw new Error('User not found');
 
         await user.update(req.body);
-        
-        res.status(200).json( user.email );
+
+        res.status(200).json(user.email);
     } catch (error) {
         res.status(500).json({ message: 'Error updating user', error });
     }
@@ -85,12 +89,11 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
 export const deleteUser = async (req: Request, res: Response): Promise<void> => {
     try {
         const user = await User.findByPk(Number(req.params.id));
-
-        if(!user) throw new Error('User not found');
+        if (!user) throw new Error('User not found');
 
         await user.destroy();
 
-        res.status(200).json({ message: 'User deleted successfully '});
+        res.status(200).json({ message: 'User deleted successfully' });
     } catch (error) {
         res.status(500).json({ message: 'Error deleting user', error });
     }
