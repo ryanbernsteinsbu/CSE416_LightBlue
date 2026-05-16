@@ -1,6 +1,7 @@
 import { DataTypes, Model, Association} from 'sequelize';
 import sequelize from '../config/database';
 import MinorLeaguePick from './minorLeaguePick'
+import Player from './player'
 
 class MinorTable extends Model {
     // Fields
@@ -29,5 +30,9 @@ MinorTable.init({
     tableName:'minor_league',
     timestamps: false
 });
+
+MinorTable.hasMany(MinorLeaguePick, { foreignKey: 'table_id', as: 'players' });
+MinorLeaguePick.belongsTo(MinorTable, { foreignKey: 'table_id' });
+MinorLeaguePick.belongsTo(Player, { foreignKey: 'player_id', as: 'player' });
 
 export default MinorTable;

@@ -22,24 +22,18 @@ const buildPositions = (rosterSettings) => {
     ];
 };
 
-const positionToEnum = (pos, index, POSITIONS) => {
-    const counts = {};
-    for (let i = 0; i <= index; i++) {
-        const p = POSITIONS[i];
-        counts[p] = (counts[p] || 0) + 1;
-    }
-    const n = counts[pos];
+const positionToEnum = (pos) => {
     const map = {
-        C: `CATCHER_${n}`,
-        "1B": "FIRST",
-        "2B": "SECOND",
-        "3B": "THIRD",
-        SS: "SHORTSTOP",
-        MI: "MIDDLE_INFIELD",
-        CI: "CORNER_INFIELD",
-        OF: `OUTFIELD_${n}`,
-        U: "UTILITY",
-        P: `PITCHER_${n}`,
+        C: 'CATCHER',
+        '1B': 'FIRST',
+        '2B': 'SECOND',
+        '3B': 'THIRD',
+        SS: 'SHORTSTOP',
+        CI: 'CORNER',
+        MI: 'MIDDLE',
+        OF: 'OUTFIELD',
+        U: 'UTILITY',
+        P: 'PITCHER',
     };
     return map[pos] || pos;
 };
@@ -197,10 +191,11 @@ export default function DraftSimulation({ league, onBack, onModeChange }) {
 
                 picks.forEach(pick => {
                     if (!pick.draft_time && pick.player_id) {
-                        const rowIndex = POSITIONS.findIndex((pos, idx) =>
-                            positionToEnum(pos, idx, POSITIONS) === pick.rosterPosition
+                        const rowIndex = pick.slotIndex ?? POSITIONS.findIndex((pos, idx) =>
+                            positionToEnum(pos) === pick.rosterPosition &&
+                            !newRows[idx].player_id
                         );
-                        if (rowIndex !== -1) {
+                        if (rowIndex !== -1 && rowIndex < newRows.length) {
                             newRows[rowIndex] = {
                                 player: pick.player
                                     ? `${pick.player.firstName ?? ""} ${pick.player.lastName ?? ""}`.trim()
@@ -525,6 +520,12 @@ export default function DraftSimulation({ league, onBack, onModeChange }) {
                                                                     q.length < 2 ? [] :
                                                                         allPlayers
                                                                             .filter(p => playerMatchesRowPosition(p, pos))
+                                                                            .filter(p => {
+                                                                                const div = league.playerSettings?.division;
+                                                                                if(div && div !== "MIXED") return p.realLeague === div;
+                                                                                return true;
+                                                                            })
+                                                                            .filter(p => p.status !== "MINORS")
                                                                             .filter(p => getPlayerName(p).includes(q))
                                                                             .filter(p => !draftedIds.has(p.id))
                                                                             .slice(0, 8)
@@ -723,7 +724,13 @@ export default function DraftSimulation({ league, onBack, onModeChange }) {
                 isOpen={!!selectedPosition}
                 onClose={() => setSelectedPosition(null)}
                 position={selectedPosition}
-                players={allPlayers.filter(p => playerMatchesRowPosition(p, selectedPosition ?? ""))}
+                players={allPlayers.filter(p => playerMatchesRowPosition(p, selectedPosition ?? ""))
+                                    .filter(p => {
+                                        const div = league.playerSettings?.division;
+                                        if (div && div !== "MIXED") return p.realLeague === div;
+                                        return true;
+                                    })
+                                    .filter(p => p.status !== "MINORS")}
                 draftedIds={draftedIds}
             />
 

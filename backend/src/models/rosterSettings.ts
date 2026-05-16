@@ -16,6 +16,7 @@ class RosterSettings extends Model {
     public numUtility!: number;
     public numPitchers!: number;
     public numTaxi!: number;
+    public numMinor!: number;
     public league_id!: number;
     //public league!: League;
 
@@ -97,11 +98,15 @@ RosterSettings.init({
         defaultValue: 8,
         field: 'num_taxi'
     },
+    numMinor: {
+        type: DataTypes.INTEGER,
+        defaultValue: 8,
+        field: 'num_minor'
+    },
     league_id: {
         type: DataTypes.BIGINT,
         allowNull: true
     }
-
 }, {
     sequelize,
     tableName:'roster_settings',

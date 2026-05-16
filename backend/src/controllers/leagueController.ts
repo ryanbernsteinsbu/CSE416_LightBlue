@@ -6,6 +6,8 @@ import RosterSettings from '../models/rosterSettings';
 import PlayerSettings from '../models/playerSettings';
 import Team from '../models/team';
 import DraftPick from '../models/draftPick';
+import MinorTable from '../models/minorTable';
+import MinorLeaguePick from '../models/minorLeaguePick';
 
 // Used AI to help with dealing with associations
 
@@ -71,8 +73,14 @@ export const createLeague = async (req: Request, res: Response) => {
 
 
         res.status(201).json(createdLeague);
-    } catch (error) {
+    } catch (error: any) {
         res.status(500).json({ message: 'Error creating league', error });
+        console.error('Full error:', JSON.stringify(error, null, 2));
+        res.status(500).json({ 
+            message: 'Error creating league', 
+            error: error.message,  // add this
+            detail: error.original?.message  // adds the raw DB error
+        });
     }
 };
 
@@ -144,6 +152,21 @@ export const deleteLeague = async (req: Request, res: Response) => {
 
         const teams = await Team.findAll({ where: { league_id: league.id } });
         const teamIds = teams.map(t => t.id);
+
+        // delete draft picks for all teams in the league
+        if (teamIds.length > 0) {
+            await DraftPick.destroy({ where: { team_id: teamIds } });
+
+            // clean up minor league data
+            const minorTables = await MinorTable.findAll({ where: { team_id: teamIds } });
+            const minorTableIds = minorTables.map(mt => mt.id);
+            if (minorTableIds.length > 0) {
+                await MinorLeaguePick.destroy({ where: { table_id: minorTableIds } });
+                await MinorTable.destroy({ where: { team_id: teamIds } });
+            }
+        }
+
+        await Team.destroy({ where: { league_id: league.id } });
 
         // delete fraft picks for all teams in the league
         if (teamIds.length > 0) {

@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useState, useRef, useMemo } from "react";
-import { createTeam, getLeagueTeams, deleteTeam, getAllPlayers, saveDraftPicks, getTeamDraftPicks } from "../lib/api";
+import { createTeam, getLeagueTeams, deleteTeam, getAllPlayers, saveDraftPicks, getTeamDraftPicks, getTeamTaxiPicks } from "../lib/api";
 import ConfirmDeleteModal from "./ConfirmDeleteModal.jsx";
 import { PositionPlayersModal, playerMatchesRowPosition } from "./PositionPlayersModal";
 import { PlayerProfileModal } from "./PlayerProfileModal";
@@ -22,17 +22,18 @@ const buildPositions = (rosterSettings) => {
     ];
 };
 
-const positionToEnum = (pos, index, POSITIONS) => {
-    const counts = {};
-    for (let i = 0; i <= index; i++) {
-        const p = POSITIONS[i];
-        counts[p] = (counts[p] || 0) + 1;
-    }
-    const n = counts[pos];
+const positionToEnum = (pos) => {
     const map = {
-        C: `CATCHER_${n}`, "1B": "FIRST", "2B": "SECOND", "3B": "THIRD",
-        SS: "SHORTSTOP", MI: "MIDDLE_INFIELD", CI: "CORNER_INFIELD",
-        OF: `OUTFIELD_${n}`, U: "UTILITY", P: `PITCHER_${n}`,
+        C: 'CATCHER',
+        '1B': 'FIRST',
+        '2B': 'SECOND',
+        '3B': 'THIRD',
+        SS: 'SHORTSTOP',
+        CI: 'CORNER',
+        MI: 'MIDDLE',
+        OF: 'OUTFIELD',
+        U: 'UTILITY',
+        P: 'PITCHER',
     };
     return map[pos] || pos;
 };
@@ -64,6 +65,7 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
     const POSITIONS = buildPositions(league.rosterSettings);
 
     const [teams, setTeams] = useState([]);
+    const [taxiRosterIds, setTaxiRosterIds] = useState(new Set());
     const [editingCell, setEditingCell] = useState(null);
     const [editValue, setEditValue] = useState("");
     const [editingTeamId, setEditingTeamId] = useState(null);
@@ -131,8 +133,11 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
     };
 
     const draftedIds = useMemo(() =>
-        new Set(teams.flatMap(t => t.rows.map(r => r.player_id).filter(Boolean)))
-        , [teams]);
+    new Set([
+        ...taxiRosterIds,
+        ...teams.flatMap(t => t.rows.map(r => r.player_id).filter(Boolean))
+    ])
+    , [teams, taxiRosterIds]);
 
     const remainingBudgets = useMemo(() => {
         const result = {};
@@ -224,17 +229,19 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
                         }));
                         const { data: picks } = await getTeamDraftPicks(t.id);
                         picks.forEach((pick) => {
-                            const rowIndex = POSITIONS.findIndex((pos, idx) =>
-                                positionToEnum(pos, idx, POSITIONS) === pick.rosterPosition
+                            const rowIndex = pick.slotIndex ?? POSITIONS.findIndex((pos, idx) =>
+                                positionToEnum(pos) === pick.rosterPosition &&
+                                !emptyRows[idx].player_id
                             );
-                            if (rowIndex !== -1) {
+                            if (rowIndex !== -1 && rowIndex < POSITIONS.length) {
                                 emptyRows[rowIndex] = {
                                     player: pick.player
                                         ? `${pick.player.firstName ?? ""} ${pick.player.lastName ?? ""}`.trim()
                                         : "",
                                     player_id: pick.player_id,
                                     season: pick.season ?? "",
-                                    price: pick.cost ?? ""
+                                    price: pick.cost ?? "",
+                                    draft_time: pick.draft_time ?? ""
                                 };
                             }
                         });
@@ -242,6 +249,19 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
                     })
                 );
                 setTeams(loaded);
+
+                const allTaxiIds = new Set();
+                await Promise.all(
+                    data.map(async (t) => {
+                        try {
+                            const { data: taxiPicks } = await getTeamTaxiPicks(t.id);
+                            taxiPicks.forEach(p => {
+                                if (p.player_id) allTaxiIds.add(p.player_id);
+                            });
+                        } catch {}
+                    })
+                );
+                setTaxiRosterIds(allTaxiIds);
             } catch (err) {
                 console.error("Failed to load teams/draft picks:", err);
             }
@@ -289,10 +309,11 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
                 if (!row.player_id) return;
                 picks.push({
                     cost: parseFloat(row.price),
-                    rosterPosition: positionToEnum(POSITIONS[i], i, POSITIONS),
+                    rosterPosition: positionToEnum(POSITIONS[i]),
                     team_id: team.id,
                     player_id: row.player_id,
-                    season: row.season || league.season
+                    season: row.season || league.season,
+                    slotIndex: i
                 });
             });
         });
@@ -567,6 +588,11 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
                                                                             q.length < 2 ? [] :
                                                                                 allPlayers
                                                                                     .filter(p => playerMatchesRowPosition(p, pos))
+                                                                                    .filter(p => {
+                                                                                        const div = league.playerSettings?.division;
+                                                                                        if(div && div !== "MIXED") return p.realLeague === div;
+                                                                                        return true;
+                                                                                    })
                                                                                     .filter(p => getPlayerName(p).includes(q))
                                                                                     .filter(p => !draftedIds.has(p.id))
                                                                                     .slice(0, 8)
@@ -717,7 +743,12 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
                 isOpen={!!selectedPosition}
                 onClose={() => setSelectedPosition(null)}
                 position={selectedPosition}
-                players={allPlayers.filter(p => playerMatchesRowPosition(p, selectedPosition ?? ""))}
+                players={allPlayers.filter(p => playerMatchesRowPosition(p, selectedPosition ?? ""))
+                                    .filter(p => {
+                                        const div = league.playerSettings?.division;
+                                        if(div && div !== "MIXED") return p.realLeague === div;
+                                        return true;
+                                    })}
                 draftedIds={draftedIds}
                 league={league}
             />
