@@ -67,3 +67,5 @@ sequelize.sync().then(() => {
         console.log(`Server running on port ${PORT}`);
     });
 });
+
+

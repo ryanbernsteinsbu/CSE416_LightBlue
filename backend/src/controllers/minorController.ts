@@ -10,7 +10,7 @@ export const getTable = async (req: Request, res: Response) => {
             include: [{
                 model: MinorLeaguePick,
                 as: "players",
-                include: [{ model: Player }],
+                include: [{ model: Player, as: "player" }],
             }],
             order: [[{ model: MinorLeaguePick, as: "players" }, "slotIndex", "ASC"]]
         });

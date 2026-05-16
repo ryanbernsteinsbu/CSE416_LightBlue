@@ -22,17 +22,18 @@ const buildPositions = (rosterSettings) => {
     ];
 };
 
-const positionToEnum = (pos, index, POSITIONS) => {
-    const counts = {};
-    for (let i = 0; i <= index; i++) {
-        const p = POSITIONS[i];
-        counts[p] = (counts[p] || 0) + 1;
-    }
-    const n = counts[pos];
+const positionToEnum = (pos) => {
     const map = {
-        C: `CATCHER_${n}`, "1B": "FIRST", "2B": "SECOND", "3B": "THIRD",
-        SS: "SHORTSTOP", MI: "MIDDLE_INFIELD", CI: "CORNER_INFIELD",
-        OF: `OUTFIELD_${n}`, U: "UTILITY", P: `PITCHER_${n}`,
+        C: 'CATCHER',
+        '1B': 'FIRST',
+        '2B': 'SECOND',
+        '3B': 'THIRD',
+        SS: 'SHORTSTOP',
+        CI: 'CORNER',
+        MI: 'MIDDLE',
+        OF: 'OUTFIELD',
+        U: 'UTILITY',
+        P: 'PITCHER',
     };
     return map[pos] || pos;
 };
@@ -177,17 +178,19 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
                         }));
                         const { data: picks } = await getTeamDraftPicks(t.id);
                         picks.forEach((pick) => {
-                            const rowIndex = POSITIONS.findIndex((pos, idx) =>
-                                positionToEnum(pos, idx, POSITIONS) === pick.rosterPosition
+                            const rowIndex = pick.slotIndex ?? POSITIONS.findIndex((pos, idx) =>
+                                positionToEnum(pos) === pick.rosterPosition &&
+                                !emptyRows[idx].player_id
                             );
-                            if (rowIndex !== -1) {
+                            if (rowIndex !== -1 && rowIndex < POSITIONS.length) {
                                 emptyRows[rowIndex] = {
                                     player: pick.player
                                         ? `${pick.player.firstName ?? ""} ${pick.player.lastName ?? ""}`.trim()
                                         : "",
                                     player_id: pick.player_id,
                                     season: pick.season ?? "",
-                                    price: pick.cost ?? ""
+                                    price: pick.cost ?? "",
+                                    draft_time: pick.draft_time ?? ""
                                 };
                             }
                         });
@@ -255,10 +258,11 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
                 if (!row.player_id) return;
                 picks.push({
                     cost: parseFloat(row.price),
-                    rosterPosition: positionToEnum(POSITIONS[i], i, POSITIONS),
+                    rosterPosition: positionToEnum(POSITIONS[i]),
                     team_id: team.id,
                     player_id: row.player_id,
-                    season: row.season || league.season
+                    season: row.season || league.season,
+                    slotIndex: i
                 });
             });
         });
