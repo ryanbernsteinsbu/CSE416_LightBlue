@@ -624,6 +624,12 @@ export default function LiveDraftBoard({ league, onBack, onModeChange }) {
                                         q.length < 2 ? [] :
                                             allPlayers
                                                 .filter(p => playerMatchesRowPosition(p, draftPopup.pos))
+                                                .filter(p => {
+                                                    const div = league.playerSettings?.division;
+                                                    if(div && div !== "MIXED") return p.realLeague === div;
+                                                    return true;
+                                                })
+                                                .filter(p => p.status !== "MINORS")
                                                 .filter(p => getPlayerName(p).includes(q))
                                                 .filter(p => !draftedIds.has(p.id) || p.id === draftPopup.originalPlayerId)
                                                 .slice(0, 8)
@@ -702,7 +708,13 @@ export default function LiveDraftBoard({ league, onBack, onModeChange }) {
                 isOpen={!!selectedPosition}
                 onClose={() => setSelectedPosition(null)}
                 position={selectedPosition}
-                players={allPlayers.filter(p => playerMatchesRowPosition(p, selectedPosition ?? ""))}
+                players={allPlayers.filter(p => playerMatchesRowPosition(p, selectedPosition ?? ""))
+                                    .filter(p => {
+                                        const div = league.playerSettings?.division;
+                                        if (div && div !== "MIXED") return p.realLeague === div;
+                                        return true;
+                                    })
+                                    .filter(p => p.status !== "MINORS")}
                 draftedIds={draftedIds}
                 league={league}
             />
