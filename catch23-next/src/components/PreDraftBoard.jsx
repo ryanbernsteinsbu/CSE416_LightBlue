@@ -81,6 +81,55 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
     const cellInputRef = useRef(null);
     const teamInputRef = useRef(null);
 
+    const [undoStack, setUndoStack] = useState([]);
+    const [redoStack, setRedoStack] = useState([]);
+
+    const cloneDraftState = (state) => JSON.parse(JSON.stringify(state));
+
+    const getDraftSnapshot = () => ({
+        teams: cloneDraftState(teams)
+    });
+
+    const applyDraftSnapshot = (snapshot) => {
+        setTeams(cloneDraftState(snapshot.teams));
+
+        setEditingCell(null);
+        setEditValue("");
+        setSuggestions([]);
+        setEditingTeamId(null);
+        setEditTeamValue("");
+        setMovePopup(null);
+    };
+
+    const recordDraftHistory = () => {
+        setUndoStack(prev => [...prev.slice(-49), getDraftSnapshot()]);
+        setRedoStack([]);
+    };
+
+    const handleUndo = () => {
+        if (undoStack.length === 0) return;
+
+        const previousSnapshot = undoStack[undoStack.length - 1];
+        const currentSnapshot = getDraftSnapshot();
+
+        setUndoStack(prev => prev.slice(0, -1));
+        setRedoStack(prev => [...prev, currentSnapshot]);
+
+        applyDraftSnapshot(previousSnapshot);
+    };
+
+    const handleRedo = () => {
+        if (redoStack.length === 0) return;
+
+        const nextSnapshot = redoStack[redoStack.length - 1];
+        const currentSnapshot = getDraftSnapshot();
+
+        setRedoStack(prev => prev.slice(0, -1));
+        setUndoStack(prev => [...prev, currentSnapshot]);
+
+        applyDraftSnapshot(nextSnapshot);
+    };
+
     const draftedIds = useMemo(() =>
         new Set(teams.flatMap(t => t.rows.map(r => r.player_id).filter(Boolean)))
         , [teams]);
@@ -126,6 +175,8 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
             season: movePopup.season,
             price: movePopup.price,
         };
+
+        recordDraftHistory();
 
         setTeams(prev => {
             const destTeam = prev.find(t => t.id === toTeamId);
@@ -288,9 +339,18 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
 
     const commitTeamEdit = () => {
         if (!editingTeamId) return;
+
+        const currentTeam = teams.find(t => t.id === editingTeamId);
+        const nextName = editTeamValue.trim() || currentTeam?.name;
+
+        if (currentTeam && nextName !== currentTeam.name) {
+            recordDraftHistory();
+        }
+
         setTeams(prev => prev.map(t =>
-            t.id === editingTeamId ? { ...t, name: editTeamValue.trim() || t.name } : t
+            t.id === editingTeamId ? { ...t, name: nextName || t.name } : t
         ));
+
         setEditingTeamId(null);
         setEditTeamValue("");
     };
@@ -309,6 +369,7 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
     const commitCellEdit = () => {
         if (!editingCell) return;
         const { teamId, rowIndex, field } = editingCell;
+        recordDraftHistory();
         setTeams(prev => prev.map(t => {
             if (t.id !== teamId) return t;
             const newRows = t.rows.map((row, i) => {
@@ -388,6 +449,23 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
                             <button className="db-tool-btn db-tool-secondary" onClick={() => onModeChange("simulation")}>Draft Simulation</button>
                             <button className="db-tool-btn db-tool-secondary" onClick={() => onModeChange("live")}>Live Draft</button>
                             <button className="db-tool-btn db-tool-secondary" onClick={() => onModeChange("minor")}>Minor League</button>
+
+                            <button
+                                className="db-tool-btn db-tool-secondary"
+                                disabled={undoStack.length === 0}
+                                onClick={handleUndo}
+                            >
+                                ↶ Undo
+                            </button>
+
+                            <button
+                                className="db-tool-btn db-tool-secondary"
+                                disabled={redoStack.length === 0}
+                                onClick={handleRedo}
+                            >
+                                ↷ Redo
+                            </button>
+
                             <button className="db-tool-btn db-tool-primary" onClick={handleSaveDraft}>💾 Save Draft</button>
                         </>
                     )}
@@ -505,6 +583,7 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
                                                                                 className="db-suggestion-item"
                                                                                 onMouseDown={(e) => {
                                                                                     e.preventDefault();
+                                                                                    recordDraftHistory();
                                                                                     const displayName = getPlayerDisplayName(p);
                                                                                     setTeams(prev => prev.map(t => {
                                                                                         if (t.id !== team.id) return t;

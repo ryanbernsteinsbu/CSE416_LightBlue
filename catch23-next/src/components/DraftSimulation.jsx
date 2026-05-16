@@ -48,7 +48,7 @@ const getPlayerDisplayName = (p) => `${p?.firstName ?? ""} ${p?.lastName ?? ""}`
 const getPlayerName = (p) => getPlayerDisplayName(p).toLowerCase();
 
 // localStorage keys
-const simPicksKey  = (id) => `sim_picks_${id}`;
+const simPicksKey = (id) => `sim_picks_${id}`;
 const simTeamIdKey = (id) => `sim_team_${id}`;
 
 // Maps raw player from allPlayers into the shape PlayerProfileModal expects
@@ -60,7 +60,7 @@ const toProfilePlayer = (p) => ({
     stats: {
         HR: 0, RBI: 0, SB: 0, AVG: 0, R: 0, OBP: 0,
         W: 0, SV: 0, K: 0, ERA: 0, WHIP: 0,
-        ...p.lastYearStats  
+        ...p.lastYearStats
     }
 });
 
@@ -68,9 +68,9 @@ export default function DraftSimulation({ league, onBack, onModeChange }) {
     const POSITIONS = buildPositions(league.rosterSettings);
 
     // team identity
-    const [simTeamId,     setSimTeamId]     = useState(null);
-    const [teamName,      setTeamName]      = useState("My Team");
-    const [editingName,   setEditingName]   = useState(false);
+    const [simTeamId, setSimTeamId] = useState(null);
+    const [teamName, setTeamName] = useState("My Team");
+    const [editingName, setEditingName] = useState(false);
     const [editNameValue, setEditNameValue] = useState("");
 
     // rows: one per position slot
@@ -80,45 +80,94 @@ export default function DraftSimulation({ league, onBack, onModeChange }) {
     const [rows, setRows] = useState(emptyRows);
 
     // players / autocomplete
-    const [allPlayers,  setAllPlayers]  = useState([]);
+    const [allPlayers, setAllPlayers] = useState([]);
     const [editingCell, setEditingCell] = useState(null); // { rowIndex, field }
-    const [editValue,   setEditValue]   = useState("");
+    const [editValue, setEditValue] = useState("");
     const [suggestions, setSuggestions] = useState([]);
 
     // ui state
     const [selectedPosition, setSelectedPosition] = useState(null);
-    const [saveBanner,  setSaveBanner]  = useState(false);
-    const [errorMsg,    setErrorMsg]    = useState(null);
+    const [saveBanner, setSaveBanner] = useState(false);
+    const [errorMsg, setErrorMsg] = useState(null);
     const [budgetError, setBudgetError] = useState(null);
-    const [loading,     setLoading]     = useState(true);
+    const [loading, setLoading] = useState(true);
     const [profilePlayer, setProfilePlayer] = useState(null); // PlayerProfileModal
 
     const cellInputRef = useRef(null);
     const teamInputRef = useRef(null);
 
+    const [undoStack, setUndoStack] = useState([]);
+    const [redoStack, setRedoStack] = useState([]);
+
+    const cloneDraftState = (state) => JSON.parse(JSON.stringify(state));
+
+    const getDraftSnapshot = () => ({
+        rows: cloneDraftState(rows),
+        teamName
+    });
+
+    const applyDraftSnapshot = (snapshot) => {
+        setRows(cloneDraftState(snapshot.rows));
+        setTeamName(snapshot.teamName || "My Team");
+
+        setEditingCell(null);
+        setEditValue("");
+        setSuggestions([]);
+        setEditingName(false);
+    };
+
+    const recordDraftHistory = () => {
+        setUndoStack(prev => [...prev.slice(-49), getDraftSnapshot()]);
+        setRedoStack([]);
+    };
+
+    const handleUndo = () => {
+        if (undoStack.length === 0) return;
+
+        const previousSnapshot = undoStack[undoStack.length - 1];
+        const currentSnapshot = getDraftSnapshot();
+
+        setUndoStack(prev => prev.slice(0, -1));
+        setRedoStack(prev => [...prev, currentSnapshot]);
+
+        applyDraftSnapshot(previousSnapshot);
+    };
+
+    const handleRedo = () => {
+        if (redoStack.length === 0) return;
+
+        const nextSnapshot = redoStack[redoStack.length - 1];
+        const currentSnapshot = getDraftSnapshot();
+
+        setRedoStack(prev => prev.slice(0, -1));
+        setUndoStack(prev => [...prev, currentSnapshot]);
+
+        applyDraftSnapshot(nextSnapshot);
+    };
+
     const draftedIds = useMemo(() =>
         new Set(rows.map(r => r.player_id).filter(Boolean))
-    , [rows]);
+        , [rows]);
 
     const totalSpent = useMemo(() =>
         rows.reduce((s, r) => s + (parseFloat(r.price) || 0), 0)
-    , [rows]);
+        , [rows]);
 
     const remainingBudget = useMemo(() =>
         (league.draftSettings?.budget ?? 0) - totalSpent
-    , [totalSpent, league.draftSettings?.budget]);
+        , [totalSpent, league.draftSettings?.budget]);
 
     const keeperRows = useMemo(() =>
         rows.map((r, i) => ({ ...r, pos: POSITIONS[i] })).filter(r => r.isKeeper)
-    , [rows]);
+        , [rows]);
 
     const targetRows = useMemo(() =>
         rows.map((r, i) => ({ ...r, pos: POSITIONS[i] })).filter(r => r.player_id && !r.isKeeper)
-    , [rows]);
+        , [rows]);
 
     const emptySlots = useMemo(() =>
         POSITIONS.filter((_, i) => !rows[i]?.player_id)
-    , [rows]);
+        , [rows]);
 
     // open profile
 
@@ -134,7 +183,7 @@ export default function DraftSimulation({ league, onBack, onModeChange }) {
             try {
                 const { data: teams } = await getLeagueTeams(league.id);
 
-                const storedId   = typeof window !== "undefined" ? localStorage.getItem(simTeamIdKey(league.id)) : null;
+                const storedId = typeof window !== "undefined" ? localStorage.getItem(simTeamIdKey(league.id)) : null;
                 const targetTeam = (storedId ? teams.find(t => String(t.id) === storedId) : null) ?? teams[0];
 
                 if (!targetTeam) { setLoading(false); return; }
@@ -157,9 +206,9 @@ export default function DraftSimulation({ league, onBack, onModeChange }) {
                                     ? `${pick.player.firstName ?? ""} ${pick.player.lastName ?? ""}`.trim()
                                     : "",
                                 player_id: pick.player_id,
-                                season:    pick.season ?? "",
-                                price:     pick.cost   ?? "",
-                                isKeeper:  true
+                                season: pick.season ?? "",
+                                price: pick.cost ?? "",
+                                isKeeper: true
                             };
                         }
                     }
@@ -167,7 +216,7 @@ export default function DraftSimulation({ league, onBack, onModeChange }) {
 
                 let storedPayload = null;
                 if (typeof window !== "undefined") {
-                    try { storedPayload = JSON.parse(localStorage.getItem(simPicksKey(league.id)) ?? "null"); } catch {}
+                    try { storedPayload = JSON.parse(localStorage.getItem(simPicksKey(league.id)) ?? "null"); } catch { }
                 }
 
                 if (storedPayload) {
@@ -176,11 +225,11 @@ export default function DraftSimulation({ league, onBack, onModeChange }) {
                         const ri = pick.rowIndex;
                         if (ri >= 0 && ri < newRows.length && !newRows[ri].isKeeper) {
                             newRows[ri] = {
-                                player:    pick.player    ?? "",
+                                player: pick.player ?? "",
                                 player_id: pick.player_id ?? null,
-                                season:    pick.season    ?? league.season,
-                                price:     pick.price     ?? "",
-                                isKeeper:  false
+                                season: pick.season ?? league.season,
+                                price: pick.price ?? "",
+                                isKeeper: false
                             };
                         }
                     });
@@ -243,7 +292,13 @@ export default function DraftSimulation({ league, onBack, onModeChange }) {
     };
 
     const commitNameEdit = () => {
-        setTeamName(editNameValue.trim() || teamName);
+        const nextName = editNameValue.trim() || teamName;
+
+        if (nextName !== teamName) {
+            recordDraftHistory();
+        }
+
+        setTeamName(nextName);
         setEditingName(false);
     };
 
@@ -264,6 +319,8 @@ export default function DraftSimulation({ league, onBack, onModeChange }) {
         if (!editingCell) return;
         const { rowIndex, field } = editingCell;
 
+        recordDraftHistory();
+
         setRows(prev => prev.map((row, i) => {
             if (i !== rowIndex) return row;
             if (field === "player") {
@@ -272,9 +329,9 @@ export default function DraftSimulation({ league, onBack, onModeChange }) {
                 const isValid = matched && !draftedIds.has(matched.id);
                 return {
                     ...row,
-                    player:    isValid ? getPlayerDisplayName(matched) : "",
+                    player: isValid ? getPlayerDisplayName(matched) : "",
                     player_id: isValid ? matched.id : null,
-                    season:    isValid ? league.season : ""
+                    season: isValid ? league.season : ""
                 };
             }
             return { ...row, [field]: editValue };
@@ -366,7 +423,24 @@ export default function DraftSimulation({ league, onBack, onModeChange }) {
                     <button className="db-tool-btn db-tool-secondary" onClick={() => onModeChange("live")}>Live Draft</button>
                     <button className="db-tool-btn db-tool-secondary" onClick={() => onModeChange("taxi")}>Taxi Draft</button>
                     <button className="db-tool-btn db-tool-secondary" onClick={() => onModeChange("minor")}>Minor League</button>
-                    <button className="db-tool-btn db-tool-primary"   onClick={handleSave}>💾 Save Simulation</button>
+
+                    <button
+                        className="db-tool-btn db-tool-secondary"
+                        disabled={undoStack.length === 0}
+                        onClick={handleUndo}
+                    >
+                        ↶ Undo
+                    </button>
+
+                    <button
+                        className="db-tool-btn db-tool-secondary"
+                        disabled={redoStack.length === 0}
+                        onClick={handleRedo}
+                    >
+                        ↷ Redo
+                    </button>
+
+                    <button className="db-tool-btn db-tool-primary" onClick={handleSave}>💾 Save Simulation</button>
                 </div>
             </div>
 
@@ -467,6 +541,7 @@ export default function DraftSimulation({ league, onBack, onModeChange }) {
                                                                         className="db-suggestion-item"
                                                                         onMouseDown={e => {
                                                                             e.preventDefault();
+                                                                            recordDraftHistory();
                                                                             setRows(prev => prev.map((r, i) =>
                                                                                 i === rowIndex
                                                                                     ? { ...r, player: getPlayerDisplayName(p), player_id: p.id, season: league.season }

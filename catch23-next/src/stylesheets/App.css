@@ -3790,3 +3790,8 @@ button {
 .profile-btn--change-pw:hover {
     background: rgba(255, 255, 255, 0.12);
 }
+
+.db-tool-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
