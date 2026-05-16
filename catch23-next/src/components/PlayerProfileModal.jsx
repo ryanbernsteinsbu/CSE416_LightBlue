@@ -135,11 +135,16 @@ export function PlayerProfileModal({ isOpen, onClose, player }) {
           <div className="pprof-name-section">
             <div className="pprof-name">{player?.username || "PLAYER"}</div>
             <div className="pprof-sub">
-              {player?.team
-                ? `${player.team} · ${player.role}`
-                : player?.role || "—"}
+                {player?.team
+                    ? `${player.team} · ${player.role}`
+                    : player?.role || "—"}
             </div>
-          </div>
+            {player?.depth && player.depth !== "—" && (
+                <div className="pprof-sub" style={{ marginTop: "2px", opacity: 0.7 }}>
+                    Depth: {player.depth}
+                </div>
+            )}
+        </div>
 
           {player?.stats && (
             <div>
