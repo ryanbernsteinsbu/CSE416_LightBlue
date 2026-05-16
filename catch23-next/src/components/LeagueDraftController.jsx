@@ -44,7 +44,7 @@ export default function LeagueDraftController({ league, onBack, initialMode }) {
             {mode === "taxi" && (
                 <TaxiDraft
                     league={league}
-                    onBack={() => setMode("taxi")}
+                    onBack={() => setMode("predraft")}
                     onModeChange={setMode}
                 />
             )}

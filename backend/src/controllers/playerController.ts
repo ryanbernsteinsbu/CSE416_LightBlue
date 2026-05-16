@@ -11,6 +11,7 @@ type QueryParams = {
     isHitters?: boolean;
     pageNumber?: number;
     pageSize?: number;
+    minors?: boolean;
 };
 /* 
 create player, find all, find by id, find by mlb id, find by position, 
@@ -124,8 +125,9 @@ export const queryPlayers = async (req: Request, res: Response): Promise<void> =
             isHitters = true,
             pageNumber = 1,
             pageSize = 50,
+            minors = false
         } = req.body as QueryParams;
-    const players = await playerService.queryPlayers(nameQuery, posQuery, teamQuery, sortKey, sortDir, isHitters, pageNumber, pageSize)
+    const players = await playerService.queryPlayers(nameQuery, posQuery, teamQuery, sortKey, sortDir, isHitters, pageNumber, pageSize, minors)
         res.status(200).json(players);
     } catch(err: any) {
         res.status(404).json({ error: err.message });

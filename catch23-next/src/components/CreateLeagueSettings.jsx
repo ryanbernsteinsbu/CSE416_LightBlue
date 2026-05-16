@@ -254,25 +254,28 @@ export default function CreateLeagueSettings({
               <h3 className="clm-section-title">Hitters</h3>
 
               {[
-                ["Use Batting Average", "useAvg"],
-                ["Use Home Runs", "useHr"],
-                ["Use Runs Batted In", "useRbi"],
-                ["Use Stolen Bases", "useSb"],
-                ["Use Runs", "useRuns"],
+                ["Home Run Weight", "hrWeight"],
+                ["RBI Weight", "rbiWeight"],
+                ["Stolen Base Weight", "sbWeight"],
+                ["Batting Average Weight", "avgWeight"],
+                ["Runs Weight", "runsWeight"],
               ].map(([label, key]) => (
-                <div className="clm-toggle-row" key={key}>
-                  <span className="clm-toggle-label">{label}</span>
-                  <button
-                    className={`clm-toggle ${scoringSettings[key] ? "on" : "off"}`}
-                    onClick={() =>
+                <div className="clm-num-row" key={key}>
+                  <span className="clm-num-label">{label}</span>
+                  <input
+                    type="number"
+                    className="clm-num-input"
+                    value={scoringSettings[key]}
+                    min={0}
+                    max={1}
+                    step={0.01}
+                    onChange={(e) =>
                       setScoringSettings((prev) => ({
                         ...prev,
-                        [key]: !prev[key],
+                        [key]: parseFloat(e.target.value) || 0,
                       }))
                     }
-                  >
-                    {scoringSettings[key] ? "ON" : "OFF"}
-                  </button>
+                  />
                 </div>
               ))}
             </div>
@@ -281,11 +284,38 @@ export default function CreateLeagueSettings({
               <h3 className="clm-section-title">Pitchers</h3>
 
               {[
-                ["Use Earned Run Average", "useEra"],
-                ["Use WHIP", "useWhip"],
-                ["Use Wins", "useWins"],
-                ["Use Strikeouts", "useStrikeouts"],
-                ["Use Saves", "useSaves"],
+                ["ERA Weight", "eraWeight"],
+                ["WHIP Weight", "whipWeight"],
+                ["Wins Weight", "winsWeight"],
+                ["Strikeouts Weight", "strikeoutsWeight"],
+                ["Saves Weight", "savesWeight"],
+              ].map(([label, key]) => (
+                <div className="clm-num-row" key={key}>
+                  <span className="clm-num-label">{label}</span>
+                  <input
+                    type="number"
+                    className="clm-num-input"
+                    value={scoringSettings[key]}
+                    min={0}
+                    max={1}
+                    step={0.01}
+                    onChange={(e) =>
+                      setScoringSettings((prev) => ({
+                        ...prev,
+                        [key]: parseFloat(e.target.value) || 0,
+                      }))
+                    }
+                  />
+                </div>
+              ))}
+            </div>
+            <div className="clm-section">
+              <h3 className="clm-section-title">Stat Windows</h3>
+
+              {[
+                ["Use Last Year Stats", "useLastYear"],
+                ["Use 3-Year Average", "useThreeYearAvg"],
+                ["Use Projected Stats", "useProjected"],
               ].map(([label, key]) => (
                 <div className="clm-toggle-row" key={key}>
                   <span className="clm-toggle-label">{label}</span>

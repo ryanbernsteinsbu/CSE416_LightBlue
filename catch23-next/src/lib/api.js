@@ -87,8 +87,8 @@ export const deleteTeam = (id) =>
 export const getAllPlayers = () => 
   axios.get('/api/players/all');
 
-export const queryPlayers = (nameQuery, posQuery, teamQuery, sortKey, sortDir, isHitters, pageNumber, pageSize) => 
-  axios.post('/api/players/query',{nameQuery, posQuery, teamQuery, sortKey, sortDir, isHitters, pageNumber, pageSize});
+export const queryPlayers = (nameQuery, posQuery, teamQuery, sortKey, sortDir, isHitters, pageNumber, pageSize, minors) => 
+  axios.post('/api/players/query',{nameQuery, posQuery, teamQuery, sortKey, sortDir, isHitters, pageNumber, pageSize, minors});
 
 export const getPlayer = (id) => 
   axios.get(`/api/players/${id}`);
@@ -122,6 +122,12 @@ export const getTeamDraftPicks = (teamId) =>
   axios.get(`/api/draft-picks/team/${teamId}`);
 
 
+// Taxi Pick
+export const saveTaxiPicks = (payload) => 
+    axios.post('/api/taxi/bulk', payload);
+export const getTeamTaxiPicks = (teamId) => 
+    axios.get(`/api/taxi/team/${teamId}`);
+
 // Getting Ranked Players
 
 export const getRankedPlayers = async () => {
@@ -149,3 +155,8 @@ export const updatePlayerNotes = (id, playerNotes) =>
   axios.put(`/api/users/${id}`, { playerNotes });
  
  
+export const getDynamicRankedPlayers = async (league) => {
+    return publicApi.post(`/api/ranking/ranks/dynamic`, league, {
+        headers: { "x-email": EMAIL, "x-signature": sign(league) }
+    });
+};

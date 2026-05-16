@@ -1,10 +1,20 @@
 from pybaseball import batting_stats_range, pitching_stats_range
-from baseball_id import Lookup
 
 import pandas as pd
 import requests
 yesterday = "2026-04-11"
+PLAYER_MAP_DF = pd.read_csv("playermap.csv", low_memory=False)
+valid_rows = PLAYER_MAP_DF[
+    PLAYER_MAP_DF["ESPNID"].notna() &
+    PLAYER_MAP_DF["MLBID"].notna()
+]
 
+ESPN_TO_MLB = dict(
+    zip(
+        valid_rows["ESPNID"].astype(int).astype(str),
+        valid_rows["MLBID"].astype(int)
+    )
+)
 # helpers
 def chunk(lst, size=50): #custom iterator reads 50 of list
     for i in range(0, len(lst), size):
@@ -60,7 +70,7 @@ ROLES = ["rp", "p", "c", "1b", "2b", "3b", "ss", "lf", "cf", "rf", "dh", "cl"]
 
 def fill_depth_chart():
     for team in range(1, 31):  #TEAM_MAP.values():
-        
+        # print(list(TEAM_MAP.values())[team - 1]) 
         url = BASE_URL.format(team)
 
         try:
@@ -79,6 +89,12 @@ def fill_depth_chart():
                     ref = player["athlete"]["$ref"]
 
                     athlete_id = ref.split("/")[-1].split("?")[0]
+
+                    # athlete_data = requests.get(f"https://sports.core.api.espn.com/v2/sports/baseball/leagues/mlb/seasons/2026/athletes/{athlete_id}?lang=en&region=us")
+                    # athlete_data.raise_for_status()
+                    # athlete_data = athlete_data.json()
+                    # print(athlete_data["fullName"])
+
                     rank = player["rank"]
                     depthchart[athlete_id] = f"{rank} {role}"
                     teamchart[athlete_id] = list(TEAM_MAP.values())[team - 1]
@@ -87,29 +103,19 @@ def fill_depth_chart():
         # print(team)
 
 fill_depth_chart()
-print(teamchart)
 
 def map_espn_to_mlb(input_dict):
-    # get lookup dataframe
-    lookup_df = Lookup.from_espn_ids(list(input_dict.keys()))
-    
-    # build mapping (ensure strings for consistency)
-    espn_to_mlb = dict(
-        zip(
-            lookup_df["espn_id"].astype(str),
-            lookup_df["mlb_id"]
-        )
-    )
-    
-    # build new dict with MLB IDs
     return {
-        espn_to_mlb[espn_id]: value
+        ESPN_TO_MLB[str(espn_id)]: value
         for espn_id, value in input_dict.items()
-        if espn_id in espn_to_mlb
+        if str(espn_id) in ESPN_TO_MLB
     }
 
 mlb_depth = map_espn_to_mlb(depthchart)
 mlb_teams = map_espn_to_mlb(teamchart)
+# print(teamchart["4990055"])
+# print(ESPN_TO_MLB)
+# print(mlb_teams["677800"])
 
 # lastYearStats: { AB,R,H,"1B":_1B,"2B":_2B,"3B":_3B,HR,RBI,BB,K,SB,CS,AVG,OBP,SLG,FPTS },
     # Index(['Name', 'Age', '#days', 'Lev', 'Tm', 'G', 'PA', 'AB', 'R', 'H', '2B',

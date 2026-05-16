@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useState } from "react";
-import { getRankedPlayers } from "../lib/api";
+import { getRankedPlayers, getDynamicRankedPlayers } from "../lib/api";
 
 // RANKING FUNCTION
 export async function rankPlayers(players) {
@@ -34,6 +34,39 @@ export async function rankPlayers(players) {
     }
 }
 
+// DYNAMIC RANKING FUNCTION
+export async function dynamicRankPlayers(players, league) {
+    try {
+        const response = await getDynamicRankedPlayers(league);
+
+        if (!response?.data) {
+            console.error("Dynamic Ranking API failed:", response);
+            return players;
+        }
+
+        const rankData = Array.isArray(response.data)
+            ? response.data
+            : Object.values(response.data);
+
+        const rankMap = new Map(rankData.map(r => [String(r.mlbPlayerId), r.rank]));
+        console.log("Ohtani rank:", rankMap.get(String(players.find(p => p.lastName === "Ohtani")?.mlbPlayerId)));
+        console.log("Jorge Alfaro rank:", rankMap.get(String(players.find(p => p.lastName === "Alfaro")?.mlbPlayerId)));
+
+        const sorted = [...players]
+            .map(p => ({
+                ...p,
+                rank: rankMap.get(String(p.mlbPlayerId)) ?? Number.POSITIVE_INFINITY
+            }))
+            .sort((a, b) => b.rank - a.rank);
+
+        return sorted;
+    } catch (err) {
+        console.error("Error fetching ranked players:", err?.response?.data || err.message);
+        return players;
+    }
+}
+
+
 export const playerMatchesRowPosition = (player, rowPos) => {
     const positions = player?.playablePositions || [];
 
@@ -64,7 +97,7 @@ const POSITION_LABELS = {
     P: "PITCHERS",
 };
 
-export function PositionPlayersModal({ isOpen, onClose, position, players, draftedIds = new Set() }) {
+export function PositionPlayersModal({ isOpen, onClose, position, players, draftedIds = new Set(), league }) {
     const [visible, setVisible] = useState(false);
     const [ranked, setRanked] = useState([]);
 
@@ -75,9 +108,11 @@ export function PositionPlayersModal({ isOpen, onClose, position, players, draft
 
     useEffect(() => {
         if(!isOpen || !players?.length) return;
+
+        const ranking = league ? dynamicRankPlayers(players, league) : rankPlayers(players);
         console.log("players passed in:", players); // check this isn't empty
-        rankPlayers(players).then(result => setRanked(result.slice(0,10)));
-    }, [isOpen, players])
+        ranking.then(result => setRanked(result.slice(0,10)));
+    }, [isOpen, players, league])
 
     if (!isOpen) return null;
 
