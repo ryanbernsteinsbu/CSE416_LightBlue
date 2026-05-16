@@ -1,11 +1,10 @@
 'use client';
 import React, { useEffect, useState, useRef, useMemo } from "react";
-import { createTeam, getLeagueTeams, deleteTeam, getAllPlayers, saveDraftPicks, getTeamDraftPicks } from "../lib/api";
+import { createTeam, getLeagueTeams, deleteTeam, getAllPlayers, saveDraftPicks, getTeamDraftPicks, getTeamTaxiPicks } from "../lib/api";
 import ConfirmDeleteModal from "./ConfirmDeleteModal.jsx";
 import { PositionPlayersModal, playerMatchesRowPosition } from "./PositionPlayersModal";
 import { PlayerProfileModal } from "./PlayerProfileModal";
-
-// helper functions
+import { MovePopup } from "./Movepopup";
 
 const buildPositions = (rosterSettings) => {
     if (!rosterSettings) return [];
@@ -50,7 +49,6 @@ function makeEmptyTeam(index, POSITIONS) {
 const getPlayerDisplayName = (p) => `${p?.firstName ?? ""} ${p?.lastName ?? ""}`.trim();
 const getPlayerName = (p) => getPlayerDisplayName(p).toLowerCase();
 
-// Maps a raw player object from allPlayers into the shape PlayerProfileModal expects
 const toProfilePlayer = (p) => ({
     id: p.id,
     username: getPlayerDisplayName(p),
@@ -59,7 +57,7 @@ const toProfilePlayer = (p) => ({
     stats: {
         HR: 0, RBI: 0, SB: 0, AVG: 0, R: 0, OBP: 0,
         W: 0, SV: 0, K: 0, ERA: 0, WHIP: 0,
-        ...p.lastYearStats   
+        ...p.lastYearStats
     }
 });
 
@@ -67,6 +65,7 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
     const POSITIONS = buildPositions(league.rosterSettings);
 
     const [teams, setTeams] = useState([]);
+    const [taxiRosterIds, setTaxiRosterIds] = useState(new Set());
     const [editingCell, setEditingCell] = useState(null);
     const [editValue, setEditValue] = useState("");
     const [editingTeamId, setEditingTeamId] = useState(null);
@@ -78,14 +77,18 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
     const [errorBanner, setErrorBanner] = useState(false);
     const [selectedPosition, setSelectedPosition] = useState(null);
     const [budgetErrorTeam, setBudgetErrorTeam] = useState(null);
-    const [profilePlayer, setProfilePlayer] = useState(null); // for PlayerProfileModal
+    const [profilePlayer, setProfilePlayer] = useState(null);
+    const [movePopup, setMovePopup] = useState(null);
 
     const cellInputRef = useRef(null);
     const teamInputRef = useRef(null);
 
     const draftedIds = useMemo(() =>
-        new Set(teams.flatMap(t => t.rows.map(r => r.player_id).filter(Boolean)))
-        , [teams]);
+    new Set([
+        ...taxiRosterIds,
+        ...teams.flatMap(t => t.rows.map(r => r.player_id).filter(Boolean))
+    ])
+    , [teams, taxiRosterIds]);
 
     const remainingBudgets = useMemo(() => {
         const result = {};
@@ -99,11 +102,69 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
         return result;
     }, [teams, league.draftSettings.budget]);
 
-    // Open the player profile slide-in for a given player_id
     const openProfile = (e, playerId) => {
         e.stopPropagation();
         const found = allPlayers.find(p => p.id === playerId);
         if (found) setProfilePlayer(toProfilePlayer(found));
+    };
+
+    const openMove = (e, team, rowIndex, row) => {
+        e.stopPropagation();
+        const playerData = allPlayers.find(p => p.id === row.player_id);
+        setMovePopup({
+            fromTeamId: team.id,
+            fromRowIndex: rowIndex,
+            player: row.player,
+            player_id: row.player_id,
+            season: row.season,
+            price: row.price,
+            playablePositions: playerData?.playablePositions ?? [],
+            playerObj: playerData ?? null,  // ← add this
+        });
+    };
+
+    const confirmMove = (toTeamId, toRowIndex) => {
+        const { fromTeamId, fromRowIndex } = movePopup;
+        const movingPlayer = {
+            player: movePopup.player,
+            player_id: movePopup.player_id,
+            season: movePopup.season,
+            price: movePopup.price,
+        };
+
+        setTeams(prev => {
+            const destTeam = prev.find(t => t.id === toTeamId);
+            const destRow = destTeam?.rows[toRowIndex];
+            const destPlayer = destRow?.player_id
+                ? { player: destRow.player, player_id: destRow.player_id, season: destRow.season, price: destRow.price }
+                : { player: "", player_id: null, season: "", price: "" };
+
+            return prev.map(t => {
+                if (t.id === fromTeamId && t.id === toTeamId) {
+                    const newRows = t.rows.map((r, i) => {
+                        if (i === fromRowIndex) return { ...r, ...destPlayer };
+                        if (i === toRowIndex) return { ...r, ...movingPlayer };
+                        return r;
+                    });
+                    return { ...t, rows: newRows };
+                }
+                if (t.id === fromTeamId) {
+                    const newRows = t.rows.map((r, i) =>
+                        i === fromRowIndex ? { ...r, ...destPlayer } : r
+                    );
+                    return { ...t, rows: newRows };
+                }
+                if (t.id === toTeamId) {
+                    const newRows = t.rows.map((r, i) =>
+                        i === toRowIndex ? { ...r, ...movingPlayer } : r
+                    );
+                    return { ...t, rows: newRows };
+                }
+                return t;
+            });
+        });
+
+        setMovePopup(null);
     };
 
     useEffect(() => {
@@ -137,6 +198,19 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
                     })
                 );
                 setTeams(loaded);
+
+                const allTaxiIds = new Set();
+                await Promise.all(
+                    data.map(async (t) => {
+                        try {
+                            const { data: taxiPicks } = await getTeamTaxiPicks(t.id);
+                            taxiPicks.forEach(p => {
+                                if (p.player_id) allTaxiIds.add(p.player_id);
+                            });
+                        } catch {}
+                    })
+                );
+                setTaxiRosterIds(allTaxiIds);
             } catch (err) {
                 console.error("Failed to load teams/draft picks:", err);
             }
@@ -487,6 +561,13 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
                                                                     >
                                                                         Details
                                                                     </button>
+                                                                    <button
+                                                                        className="db-cell-detail-btn"
+                                                                        onClick={(e) => openMove(e, team, rowIndex, row)}
+                                                                        title="Move player"
+                                                                    >
+                                                                        Move
+                                                                    </button>
                                                                 </span>
                                                             ) : (
                                                                 <span className="db-cell-value">
@@ -579,14 +660,26 @@ export default function PreDraftBoard({ league, onBack, onModeChange }) {
                 position={selectedPosition}
                 players={allPlayers.filter(p => playerMatchesRowPosition(p, selectedPosition ?? ""))}
                 draftedIds={draftedIds}
+                league={league}
             />
 
-            {/* Player Profile slide-in */}
             <PlayerProfileModal
                 isOpen={!!profilePlayer}
                 onClose={() => setProfilePlayer(null)}
                 player={profilePlayer}
             />
+
+            {movePopup && (
+                <MovePopup
+                    movePopup={movePopup}
+                    teams={teams}
+                    POSITIONS={POSITIONS}
+                    onConfirm={confirmMove}
+                    onClose={() => setMovePopup(null)}
+                    remainingBudgets={remainingBudgets}
+                    budget={league.draftSettings.budget}
+                />
+            )}
         </div>
     );
 }

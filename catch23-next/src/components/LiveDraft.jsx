@@ -264,7 +264,7 @@ export default function LiveDraftBoard({ league, onBack, onModeChange }) {
         setEndingDraft(true);
         try {
             await updateLeague(league.id, { status: "DRAFTED" });
-            onModeChange("summary");
+            onModeChange("taxi");
         } catch (err) {
             console.error("Failed to end draft:", err);
             alert("Error ending draft. Please try again.");
@@ -701,6 +701,7 @@ export default function LiveDraftBoard({ league, onBack, onModeChange }) {
                 position={selectedPosition}
                 players={allPlayers.filter(p => playerMatchesRowPosition(p, selectedPosition ?? ""))}
                 draftedIds={draftedIds}
+                league={league}
             />
 
             {/* Player Profile slide-in */}
