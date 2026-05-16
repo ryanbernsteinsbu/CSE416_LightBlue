@@ -71,6 +71,7 @@ export default function PlayerInformation() {
                     lastName: p.lastName || p.last_name,
                     team: p.realTeam || p.real_team,
                     pos: p.playablePositions?.[0] || "—",
+                    depth: p.depth ?? null,
                     age: p.age ?? "—",
                     stats: {
                         HR: 0, RBI: 0, SB: 0, AVG: 0, R: 0, OBP: 0,
@@ -308,6 +309,7 @@ export default function PlayerInformation() {
                     username: `${selectedPlayer.firstName} ${selectedPlayer.lastName}`,
                     role:     selectedPlayer.pos,
                     team:     selectedPlayer.team,
+                    depth:    selectedPlayer.depth,
                     stats:    selectedPlayer.stats,
                 } : null}
             />
