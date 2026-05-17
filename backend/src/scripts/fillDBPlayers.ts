@@ -328,9 +328,9 @@ ingestHitters("./python/rsrc/minordata.csv")
 ingestPitchers("./python/rsrc/minorpdata.csv")
   .then(() => console.log("Done"))
   .catch((err) => console.error("Error:", err));
-// ingestHitters("./python/rsrc/batting_3avg.csv")
-//   .then(() => console.log("Done"))
-//   .catch((err) => console.error("Error:", err));
-// ingestPitchers("./python/rsrc/pitching_3avg.csv")
-//   .then(() => console.log("Done"))
-//   .catch((err) => console.error("Error:", err));
+ingestHitters("./python/rsrc/batting_3avg.csv")
+  .then(() => console.log("Done"))
+  .catch((err) => console.error("Error:", err));
+ingestPitchers("./python/rsrc/pitching_3avg.csv")
+  .then(() => console.log("Done"))
+  .catch((err) => console.error("Error:", err));
