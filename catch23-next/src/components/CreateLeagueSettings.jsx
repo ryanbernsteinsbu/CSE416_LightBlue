@@ -37,7 +37,7 @@ export default function CreateLeagueSettings({
 
         { activeTab === "players" ? (
           <div className="clm-panel">
-
+            {false && (
             <div className="clm-section">
               <h3 className="clm-section-title">Ohtani Rule</h3>
               {[
@@ -60,7 +60,7 @@ export default function CreateLeagueSettings({
                   </button>
                 </div>
               ))}
-            </div>
+            </div>)}
 
             <div className="clm-section">
               <h3 className="clm-section-title">Division</h3>
