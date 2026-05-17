@@ -23,10 +23,7 @@ out/
 .settings/
 
 # ===== Scripts =====
-backend/python/data.csv
-backend/python/pdata.csv
-backend/python/minorpdata.csv
-backend/python/minordata.csv
+backend/python/rsrc/*.csv
 backend/python/.venv/
 
 # ===== Logs / temp =====
