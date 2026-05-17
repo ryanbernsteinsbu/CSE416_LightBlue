@@ -1,7 +1,6 @@
-
 'use client';
 import React, { useEffect, useState, useMemo } from "react";
-import { getLeagueTeams, getTeamDraftPicks } from "../lib/api";
+import { getLeagueTeams, getTeamDraftPicks, getTeamTaxiPicks } from "../lib/api";
 
 const buildPositions = (rosterSettings) => {
     if (!rosterSettings) return [];
@@ -19,37 +18,37 @@ const buildPositions = (rosterSettings) => {
     ];
 };
 
-const positionToEnum = (pos, index, POSITIONS) => {
-    const counts = {};
-    for (let i = 0; i <= index; i++) {
-        const p = POSITIONS[i];
-        counts[p] = (counts[p] || 0) + 1;
-    }
-    const n = counts[pos];
+// Matches the simple enum used by all draft boards
+const positionToEnum = (pos) => {
     const map = {
-        C: `CATCHER_${n}`,
+        C: "CATCHER",
         "1B": "FIRST",
         "2B": "SECOND",
         "3B": "THIRD",
         SS: "SHORTSTOP",
-        MI: "MIDDLE_INFIELD", 
-        CI: "CORNER_INFIELD", 
-        OF: `OUTFIELD_${n}`,
+        CI: "CORNER",
+        MI: "MIDDLE",
+        OF: "OUTFIELD",
         U: "UTILITY",
-        P: `PITCHER_${n}`,
+        P: "PITCHER",
     };
     return map[pos] || pos;
 };
 
 export default function DraftSummary({ league, onBack, onModeChange }) {
     const POSITIONS = buildPositions(league.rosterSettings);
-    const [teams, setTeams] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const NUM_TAXI  = league.rosterSettings?.numTaxi ?? 0;
+
+    const [teams,     setTeams]     = useState([]);
+    const [taxiTeams, setTaxiTeams] = useState([]);
+    const [loading,   setLoading]   = useState(true);
 
     useEffect(() => {
         const fetchData = async () => {
             try {
                 const { data } = await getLeagueTeams(league.id);
+
+                // ── main draft picks ──────────────────────────────────────
                 const loaded = await Promise.all(
                     data.map(async (t) => {
                         const emptyRows = POSITIONS.map(() => ({
@@ -57,18 +56,22 @@ export default function DraftSummary({ league, onBack, onModeChange }) {
                         }));
                         const { data: picks } = await getTeamDraftPicks(t.id);
                         picks.forEach((pick) => {
-                            const rowIndex = POSITIONS.findIndex((pos, idx) =>
-                                positionToEnum(pos, idx, POSITIONS) === pick.rosterPosition
-                            );
-                            if (rowIndex !== -1) {
+                            // prefer slotIndex saved by the board; fall back to position match
+                            const rowIndex = pick.slotIndex != null
+                                ? pick.slotIndex
+                                : POSITIONS.findIndex((pos, idx) =>
+                                    positionToEnum(pos) === pick.rosterPosition &&
+                                    !emptyRows[idx].player_id
+                                );
+                            if (rowIndex !== -1 && rowIndex < POSITIONS.length) {
                                 emptyRows[rowIndex] = {
                                     player: pick.player
                                         ? `${pick.player.firstName ?? ""} ${pick.player.lastName ?? ""}`.trim()
                                         : "",
                                     player_id: pick.player_id,
-                                    season: pick.season ?? "",
-                                    price: pick.cost ?? "",
-                                    draft_time: pick.draft_time ?? ""
+                                    season:     pick.season    ?? "",
+                                    price:      pick.cost      ?? "",
+                                    draft_time: pick.draft_time ?? "",
                                 };
                             }
                         });
@@ -76,6 +79,35 @@ export default function DraftSummary({ league, onBack, onModeChange }) {
                     })
                 );
                 setTeams(loaded);
+
+                // ── taxi picks ────────────────────────────────────────────
+                if (NUM_TAXI > 0) {
+                    const taxiLoaded = await Promise.all(
+                        data.map(async (t) => {
+                            const emptyRows = Array.from({ length: NUM_TAXI }, () => ({
+                                player: "", player_id: null, season: "", price: ""
+                            }));
+                            try {
+                                const { data: taxiPicks } = await getTeamTaxiPicks(t.id);
+                                taxiPicks.forEach((pick) => {
+                                    const idx = (pick.slot ?? 1) - 1;
+                                    if (idx >= 0 && idx < NUM_TAXI) {
+                                        emptyRows[idx] = {
+                                            player: pick.player
+                                                ? `${pick.player.firstName ?? ""} ${pick.player.lastName ?? ""}`.trim()
+                                                : "",
+                                            player_id: pick.player_id,
+                                            season:    pick.season ?? "",
+                                            price:     pick.cost != null ? String(parseFloat(pick.cost)) : "",
+                                        };
+                                    }
+                                });
+                            } catch { /* no taxi picks yet — fine */ }
+                            return { id: Number(t.id), name: t.name, rows: emptyRows };
+                        })
+                    );
+                    setTaxiTeams(taxiLoaded);
+                }
             } catch (err) {
                 console.error("Failed to load draft summary:", err);
             } finally {
@@ -91,11 +123,11 @@ export default function DraftSummary({ league, onBack, onModeChange }) {
             team.rows.forEach((row, i) => {
                 if (row.player_id && row.draft_time) {
                     entries.push({
-                        id: `${team.id}-${i}`,
-                        teamName: team.name,
+                        id:         `${team.id}-${i}`,
+                        teamName:   team.name,
                         playerName: row.player,
-                        position: POSITIONS[i],
-                        price: row.price,
+                        position:   POSITIONS[i],
+                        price:      row.price,
                         draft_time: row.draft_time,
                     });
                 }
@@ -113,7 +145,7 @@ export default function DraftSummary({ league, onBack, onModeChange }) {
             }, 0);
             result[team.id] = {
                 spent,
-                remaining: (league.draftSettings?.budget ?? 0) - spent
+                remaining: (league.draftSettings?.budget ?? 0) - spent,
             };
         });
         return result;
@@ -134,6 +166,10 @@ export default function DraftSummary({ league, onBack, onModeChange }) {
         return top;
     }, [teams]);
 
+    const hasTaxiPicks = useMemo(() =>
+        taxiTeams.some(t => t.rows.some(r => r.player_id))
+    , [taxiTeams]);
+
     if (loading) {
         return (
             <div className="home home-padded">
@@ -152,6 +188,7 @@ export default function DraftSummary({ league, onBack, onModeChange }) {
                 🏆 DRAFT COMPLETE — FINAL SUMMARY
             </div>
 
+            {/* ── header ── */}
             <div className="db-header">
                 <div className="db-header-left">
                     <button className="db-back-btn" onClick={onBack}>← Home</button>
@@ -180,6 +217,7 @@ export default function DraftSummary({ league, onBack, onModeChange }) {
                 </div>
             </div>
 
+            {/*  toolbar */}
             <div className="db-toolbar">
                 <div className="db-toolbar-left">
                     <span className="ds-readonly-label">
@@ -198,6 +236,7 @@ export default function DraftSummary({ league, onBack, onModeChange }) {
                 </div>
             </div>
 
+            {/* top pick callout */}
             {topPick && (
                 <div className="ds-top-pick">
                     <span className="ds-top-pick-icon">💰</span>
@@ -213,6 +252,7 @@ export default function DraftSummary({ league, onBack, onModeChange }) {
                 </div>
             )}
 
+            {/*  main draft roster cards  */}
             <div className="ds-team-grid">
                 {teams.map(team => {
                     const totals = teamTotals[team.id] ?? { spent: 0, remaining: 0 };
@@ -270,6 +310,58 @@ export default function DraftSummary({ league, onBack, onModeChange }) {
                 })}
             </div>
 
+            {/* taxi draft summary */}
+            {NUM_TAXI > 0 && hasTaxiPicks && (
+                <>
+                    <div className="ds-timeline-title" style={{ marginBottom: 14 }}>
+                        🚕 Taxi Draft Rosters
+                    </div>
+                    <div className="ds-team-grid" style={{ marginBottom: 36 }}>
+                        {taxiTeams.map(team => (
+                            <div key={team.id} className="ds-team-card">
+                                <div className="ds-team-card-header">
+                                    <span className="ds-team-card-name">{team.name}</span>
+                                    <span style={{ fontSize: "0.75rem", color: "#888" }}>
+                                        {team.rows.filter(r => r.player_id).length}/{NUM_TAXI} filled
+                                    </span>
+                                </div>
+                                <table className="ds-roster-table">
+                                    <thead className="ds-roster-thead">
+                                        <tr>
+                                            <th className="ds-roster-th ds-roster-th-pos">SLOT</th>
+                                            <th className="ds-roster-th">PLAYER</th>
+                                            <th className="ds-roster-th ds-roster-th-price">PRICE</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {team.rows.map((row, i) => (
+                                            <tr key={i} className={`ds-roster-row${i % 2 !== 0 ? " ds-roster-row-alt" : ""}`}>
+                                                <td className="ds-roster-td">
+                                                    <span className="ds-pos-badge">{i + 1}</span>
+                                                </td>
+                                                <td className="ds-roster-td">
+                                                    {row.player
+                                                        ? <span className="ds-player-name">{row.player}</span>
+                                                        : <span className="ds-player-empty">—</span>
+                                                    }
+                                                </td>
+                                                <td className="ds-roster-td">
+                                                    {row.price
+                                                        ? <span className="ds-price-value">${row.price}</span>
+                                                        : <span className="ds-price-empty">—</span>
+                                                    }
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        ))}
+                    </div>
+                </>
+            )}
+
+            {/* draft order timeline */}
             {draftLog.length > 0 && (
                 <div className="ds-timeline">
                     <div className="ds-timeline-title">📋 Draft Order Timeline</div>
