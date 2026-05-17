@@ -1,9 +1,11 @@
 import Player from "../models/player";
 import csv from "csv-parser";
 import fs from "fs";
+import { Op} from "sequelize";
 
 type StatType =
   | "lastYearStats"
+  | "threeYearAvg"
   | "projectedStats";
 
 const emptyHitterStats = () => ({
@@ -129,6 +131,7 @@ async function updateStatsFromCsv(
   const players = await Player.findAll({
     where: {
       isHitter,
+      status: { [Op.ne]: "MINORS" }
     },
   });
 
@@ -144,8 +147,7 @@ async function updateStatsFromCsv(
 
       let stats;
 
-      // 3-year averages divide counting stats by 3
-      const divideBy = 1
+      const divideBy = statType === "threeYearAvg" ? 3 : 1; 
       
       if (isHitter) {
         stats = buildHitterStats(
@@ -163,9 +165,9 @@ async function updateStatsFromCsv(
 
       await player.save();
 
-      console.log(
-        `Updated ${player.firstName} ${player.lastName}`
-      );
+      // console.log(
+      //   `Updated ${player.firstName} ${player.lastName}`
+      // );
     } catch (err) {
       console.error(
         `Failed updating ${player.firstName} ${player.lastName}`,
@@ -181,10 +183,15 @@ async function updateStatsFromCsv(
 async function run() {
   await updateStatsFromCsv(
     "./python/rsrc/batting_3avg.csv",
-    "projectedStats",
+    "threeYearAvg",
     true
   );
 
+  await updateStatsFromCsv(
+    "./python/rsrc/projected_hitters.csv",
+    "projectedStats",
+    true
+  );
   await updateStatsFromCsv(
     "./python/rsrc/batting_last.csv",
     "lastYearStats",
@@ -194,10 +201,15 @@ async function run() {
   // Pitchers
   await updateStatsFromCsv(
     "./python/rsrc/pitching_3avg.csv",
-    "projectedStats",
+    "threeYearAvg",
     false
   );
 
+  await updateStatsFromCsv(
+    "./python/rsrc/projected_pitchers.csv",
+    "projectedStats",
+    false
+  );
   await updateStatsFromCsv(
     "./python/rsrc/pitching_last.csv",
     "lastYearStats",
