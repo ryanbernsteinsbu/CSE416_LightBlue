@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useState, useRef, useMemo } from "react";
-import { createTeam, getLeagueTeams, deleteTeam, getAllPlayers, saveDraftPicks, getTeamDraftPicks, updateLeague } from "../lib/api";
+import { createTeam, getLeagueTeams, deleteTeam, getAllPlayers, saveDraftPicks, getTeamDraftPicks, updateLeague, updateTeam } from "../lib/api";
 import ConfirmDeleteModal from "./ConfirmDeleteModal.jsx";
 import { PositionPlayersModal, playerMatchesRowPosition } from "./PositionPlayersModal";
 import { PlayerProfileModal } from "./PlayerProfileModal";
@@ -511,19 +511,55 @@ export default function LiveDraftBoard({ league, onBack, onModeChange, onLeagueU
         setTimeout(() => teamInputRef.current?.focus(), 0);
     };
 
-    const commitTeamEdit = () => {
+    const commitTeamEdit = async () => {
         if (!editingTeamId) return;
 
         const currentTeam = teams.find(t => t.id === editingTeamId);
         const nextName = editTeamValue.trim() || currentTeam?.name;
 
-        if (currentTeam && nextName !== currentTeam.name) {
-            recordDraftHistory();
+        if (!currentTeam || !nextName) {
+            setEditingTeamId(null);
+            setEditTeamValue("");
+            return;
         }
 
-        setTeams(prev => prev.map(t =>
-            t.id === editingTeamId ? { ...t, name: nextName || t.name } : t
-        ));
+        if (nextName !== currentTeam.name) {
+            recordDraftHistory();
+
+            const updatedTeams = teams.map(t =>
+                t.id === editingTeamId ? { ...t, name: nextName } : t
+            );
+
+            setTeams(updatedTeams);
+
+            setDraftLog(prev =>
+                prev.map(entry =>
+                    entry.teamId === editingTeamId
+                        ? { ...entry, teamName: nextName }
+                        : entry
+                )
+            );
+
+            onLeagueUpdate?.({
+                teams: updatedTeams.map(t => ({
+                    id: t.id,
+                    name: t.name,
+                    players: t.rows
+                        .map((r, i) => ({ r, i }))
+                        .filter(({ r }) => r.player_id)
+                        .map(({ r, i }) => ({
+                            player_id: r.player_id,
+                            rosterPosition: positionToEnum(POSITIONS[i]),
+                        })),
+                })),
+            });
+
+            try {
+                await updateTeam(editingTeamId, { name: nextName });
+            } catch (err) {
+                console.error("Failed to update team name:", err);
+            }
+        }
 
         setEditingTeamId(null);
         setEditTeamValue("");
