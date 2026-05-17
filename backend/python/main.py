@@ -177,7 +177,9 @@ def get_pitching_stats(start_dt, end_dt, filename=r"./pdata.csv"):
     final_pitching_data["team_abbr"] = final_pitching_data["mlbID"].map(mlb_teams)
     final_pitching_data.to_csv(filename, index=False)
 
-get_batting_stats('2023-04-01', yesterday)
-get_pitching_stats('2023-04-01', yesterday)
+get_batting_stats('2025-03-18', '2025-11-01', r"./rsrc/batting_last.csv")
+get_batting_stats('2023-04-01',  '2025-11-01', r"./rsrc/batting_3avg.csv")
+get_pitching_stats('2025-03-18', '2025-11-01', r"./rsrc/pitching_last.csv")
+get_pitching_stats('2023-04-01',  '2025-11-01', r"./rsrc/pitching_3avg.csv")
 
 
