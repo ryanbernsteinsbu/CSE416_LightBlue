@@ -3807,3 +3807,18 @@ button {
     opacity: 0.45;
     cursor: not-allowed;
 }
+
+.sim-th-teamname--you {
+  background: #1a472a !important;
+  border-color: #52c41a !important;
+  box-shadow: inset 0 -3px 0 #52c41a;
+}
+
+.sim-th-teamname--you .db-team-name {
+  color: #ffffff;
+}
+
+.sim-th-teamname--you .ld-your-team-badge {
+  background: #52c41a;
+  color: #0b2a16;
+}
