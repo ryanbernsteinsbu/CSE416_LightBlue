@@ -82,7 +82,7 @@ export const updateTeam = async (req: Request, res: Response) => {
             include: [{ association: 'league' }, { association: 'players' }]
         });
 
-        res.status(200).json(team);
+        res.status(200).json(updatedTeam);
     } catch (error) {
         res.status(500).json({ message: 'Error updating team', error });
     }
