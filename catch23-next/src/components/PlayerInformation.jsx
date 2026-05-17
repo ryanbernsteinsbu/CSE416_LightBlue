@@ -29,8 +29,9 @@ const PITCHING_COLUMNS = [
     ...BASE_COLUMNS,
     { key: "W", label: "W", sortable: true, stat: "W" },
     { key: "SV", label: "SV", sortable: true, stat: "SV" },
-    { key: "K", label: "K", sortable: true, stat: "K" },
+    { key: "SO", label: "SO", sortable: true, stat: "SO" },
     { key: "ERA", label: "ERA", sortable: true, stat: "ERA", format: "era" },
+    { key: "BB", label: "BB", sortable: true, stat: "BB"},
     { key: "WHIP", label: "WHIP", sortable: true, stat: "WHIP", format: "whip" },
 ];
 

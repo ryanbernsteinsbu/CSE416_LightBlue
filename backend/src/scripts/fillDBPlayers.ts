@@ -31,8 +31,8 @@ async function addPlayer(data: CreatePlayerInput): Promise<Player| null> {
             player.firstName = data.firstName;
             player.lastName = data.lastName;
             player.age = data.age;
-            player.status = data.status;
-            player.realTeam = data.realTeam;
+            player.status = (data.depth !== "") ? data.status: player.status;
+            player.realTeam = (data.depth !== "") ? data.realTeam: player.realTeam;
             player.realLeague = data.realLeague;
             player.depth = data.depth;
 
