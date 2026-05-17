@@ -67,6 +67,7 @@ export default function PlayerInformation() {
                 const { players, total } = data;
                 const mapped = players.map(p => ({
                     id: p.id,                                    // ← always carry id through
+                    mlbID: p.mlbPlayerId,
                     firstName: p.firstName || p.first_name,
                     lastName: p.lastName || p.last_name,
                     team: p.realTeam || p.real_team,
@@ -244,6 +245,7 @@ export default function PlayerInformation() {
                                                                 >
                                                                     <span
                                                                         onClick={() => {
+                                                                            // console.log(p);
                                                                             if (!compareOpen) setSelectedPlayer(p);
                                                                             addPlayer(p);
                                                                         }}
@@ -306,6 +308,7 @@ export default function PlayerInformation() {
                 onClose={() => setSelectedPlayer(null)}
                 player={selectedPlayer ? {
                     id:       selectedPlayer.id,      
+                    mlbID: selectedPlayer.mlbID,
                     username: `${selectedPlayer.firstName} ${selectedPlayer.lastName}`,
                     role:     selectedPlayer.pos,
                     team:     selectedPlayer.team,

@@ -130,10 +130,31 @@ export function PlayerProfileModal({ isOpen, onClose, player }) {
           <button className="pprof-close" onClick={onClose}>✕</button>
         </div>
 
-        <div className="pprof-body">
-
-          <div className="pprof-name-section">
-            <div className="pprof-name">{player?.username || "PLAYER"}</div>
+        <div className="pprof-body" >
+            <div style={{alignItems: "center"}}>
+          <div className="pprof-name-section"
+            style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "16px",
+                width: "100%",
+            }}
+          >
+            <img
+                  src={`https://securea.mlb.com/mlb/images/players/head_shot/${player.mlbID}.jpg`}
+                  alt="Profile picture"
+                  style={{
+                      width: "150px",
+                      height: "150px",
+                      borderRadius: "50%",
+                      objectFit: "cover",
+                  }}
+              />
+            <div>
+            <div className="pprof-name">
+              {player?.username || "PLAYER"}
+              </div>
             <div className="pprof-sub">
                 {player?.team
                     ? `${player.team} · ${player.role}`
@@ -144,6 +165,8 @@ export function PlayerProfileModal({ isOpen, onClose, player }) {
                     Depth: {player.depth}
                 </div>
             )}
+        </div>
+        </div>
         </div>
 
           {player?.stats && (
