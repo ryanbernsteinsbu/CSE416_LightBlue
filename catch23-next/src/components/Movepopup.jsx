@@ -1,11 +1,10 @@
 'use client';
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { playerMatchesRowPosition } from "./PositionPlayersModal";
 
 export function MovePopup({ movePopup, teams, POSITIONS, onConfirm, onClose, remainingBudgets, budget }) {
     const defaultTeamId = teams.find(t => t.id !== movePopup.fromTeamId)?.id ?? movePopup.fromTeamId;
     const [toTeamId, setToTeamId] = useState(defaultTeamId);
-    const [toRowIndex, setToRowIndex] = useState(0);
 
     const destTeam = teams.find(t => t.id === Number(toTeamId));
 
@@ -13,6 +12,10 @@ export function MovePopup({ movePopup, teams, POSITIONS, onConfirm, onClose, rem
         ? destTeam.rows
             .map((r, i) => ({ ...r, i, pos: POSITIONS[i] }))
             .filter(r => !(r.i === movePopup.fromRowIndex && Number(toTeamId) === movePopup.fromTeamId))
+            .filter(r => {
+                const isKeeperSlot = r.player_id && !r.draft_time;
+                return !isKeeperSlot;
+            })
             .filter(r =>
                 movePopup.playerObj
                     ? playerMatchesRowPosition(movePopup.playerObj, POSITIONS[r.i])
@@ -20,17 +23,23 @@ export function MovePopup({ movePopup, teams, POSITIONS, onConfirm, onClose, rem
             )
         : [];
 
-    // Budget check (only applies to cross-team moves)
+    const [toRowIndex, setToRowIndex] = useState(compatibleRows[0]?.i ?? 0);
+
+    useEffect(() => {
+        if (compatibleRows.length > 0 && !compatibleRows.some(r => r.i === toRowIndex)) {
+            setToRowIndex(compatibleRows[0].i);
+        }
+    }, [toTeamId, compatibleRows, toRowIndex]);
+
     const isSameTeam = Number(toTeamId) === movePopup.fromTeamId;
     const destSlotPrice = parseFloat(compatibleRows.find(r => r.i === toRowIndex)?.price) || 0;
     const movingPrice = parseFloat(movePopup.price) || 0;
-    const netCostToDest = movingPrice - destSlotPrice; // displaced player's price offsets the cost
+    const netCostToDest = movingPrice - destSlotPrice;
     const destRemaining = remainingBudgets?.[Number(toTeamId)] ?? Infinity;
     const wouldOverBudget = !isSameTeam && budget != null && netCostToDest > destRemaining;
 
     const handleTeamChange = (e) => {
         setToTeamId(Number(e.target.value));
-        setToRowIndex(0);
     };
 
     return (
