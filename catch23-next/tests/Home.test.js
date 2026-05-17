@@ -13,8 +13,8 @@ jest.mock("../src/lib/api", () => ({
   deleteLeague: jest.fn(),
 }));
 
-jest.mock("../src/components/LeagueDraftBoard", () => () => (
-  <div>Mock Draft Board</div>
+jest.mock("../src/components/LeagueDraftController", () => () => (
+  <div>Mock Draft Controller</div>
 ));
 
 jest.mock("../src/components/ConfirmDeleteModal", () => ({ isOpen, onConfirm, onCancel, leagueName }) =>
@@ -54,7 +54,7 @@ test("renders empty state when no leagues exist", async () => {
 test("renders league cards", async () => {
   getUserLeagues.mockResolvedValue({
     data: [
-      { id: 1, title: "Jackie Wackie", teamCount: 2, season: "2025", seasonNum: 3},
+      { id: 1, title: "Jackie Wackie", teamCount: 2, season: "2025", seasonNum: 3 },
     ],
   });
 
@@ -63,9 +63,8 @@ test("renders league cards", async () => {
   render(<Home />);
 
   expect(await screen.findByText("Jackie Wackie")).toBeInTheDocument();
-  // expect(screen.getByText(2)).toBeInTheDocument();
   expect(screen.getByText(/2025/i)).toBeInTheDocument();
-  expect(screen.getByText(/3/i)).toBeInTheDocument();
+  expect(screen.getByText("Season 3")).toBeInTheDocument();
 });
 
 test("opens create league modal when + button is clicked", async () => {
@@ -92,13 +91,15 @@ test("clicking a league card calls setActiveLeague", async () => {
   const setActiveLeague = jest.fn();
   render(<Home setActiveLeague={setActiveLeague} />);
 
-  fireEvent.click(await screen.findByText("League A"));
+  const leagueTitle = await screen.findByText("League A");
+  fireEvent.click(leagueTitle);
   expect(setActiveLeague).toHaveBeenCalledWith(expect.objectContaining({ id: 1 }));
 });
 
-test("renders draft board when activeLeague is set", () => {
+test("renders draft controller when activeLeague is set", () => {
   render(<Home activeLeague={{ id: 1, title: "League A" }} setActiveLeague={jest.fn()} />);
-  expect(screen.getByText("Mock Draft Board")).toBeInTheDocument();
+
+  expect(screen.getByText("Mock Draft Controller")).toBeInTheDocument();
 });
 
 test("renders empty state when no user_id in localStorage", async () => {

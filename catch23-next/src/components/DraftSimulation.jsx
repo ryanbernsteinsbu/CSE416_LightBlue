@@ -63,6 +63,7 @@ export default function DraftSimulation({ league, onBack, onModeChange }) {
 
     // team identity
     const [simTeamId, setSimTeamId] = useState(null);
+    const [leagueTeams, setLeagueTeams] = useState([]);
     const [teamName, setTeamName] = useState("My Team");
     const [editingName, setEditingName] = useState(false);
     const [editNameValue, setEditNameValue] = useState("");
@@ -189,74 +190,155 @@ export default function DraftSimulation({ league, onBack, onModeChange }) {
     }, [suggestions.length]);
 
     useEffect(() => {
+        const loadSimulationTeam = async (targetTeam, shouldUseStoredPicks = true) => {
+            if (!targetTeam) {
+                setLoading(false);
+                return;
+            }
+
+            const teamId = Number(targetTeam.id);
+
+            setSimTeamId(teamId);
+            setTeamName(targetTeam.name);
+
+            if (typeof window !== "undefined") {
+                localStorage.setItem(simTeamIdKey(league.id), String(teamId));
+            }
+
+            const { data: picks } = await getTeamDraftPicks(teamId);
+            const newRows = emptyRows();
+
+            picks.forEach(pick => {
+                if (!pick.draft_time && pick.player_id) {
+                    const rowIndex = pick.slotIndex ?? POSITIONS.findIndex((pos, idx) =>
+                        positionToEnum(pos) === pick.rosterPosition &&
+                        !newRows[idx].player_id
+                    );
+
+                    if (rowIndex !== -1 && rowIndex < newRows.length) {
+                        newRows[rowIndex] = {
+                            player: pick.player
+                                ? `${pick.player.firstName ?? ""} ${pick.player.lastName ?? ""}`.trim()
+                                : "",
+                            player_id: pick.player_id,
+                            season: pick.season ?? "",
+                            price: pick.cost ?? "",
+                            isKeeper: true
+                        };
+                    }
+                }
+            });
+
+            let storedPayload = null;
+
+            if (typeof window !== "undefined" && shouldUseStoredPicks) {
+                try {
+                    storedPayload = JSON.parse(localStorage.getItem(simPicksKey(league.id)) ?? "null");
+                } catch { }
+            }
+
+            const storedPayloadMatchesTeam =
+                storedPayload &&
+                (!storedPayload.teamId || Number(storedPayload.teamId) === teamId);
+
+            if (storedPayloadMatchesTeam) {
+                setTeamName(storedPayload.teamName || targetTeam.name);
+
+                (storedPayload.picks ?? []).forEach(pick => {
+                    const ri = pick.rowIndex;
+
+                    if (ri >= 0 && ri < newRows.length && !newRows[ri].isKeeper) {
+                        newRows[ri] = {
+                            player: pick.player ?? "",
+                            player_id: pick.player_id ?? null,
+                            season: pick.season ?? league.season,
+                            price: pick.price ?? "",
+                            isKeeper: false
+                        };
+                    }
+                });
+            }
+
+            setRows(newRows);
+        };
+
         const init = async () => {
             try {
                 const { data: teams } = await getLeagueTeams(league.id);
+                setLeagueTeams(teams);
 
-                const storedId = typeof window !== "undefined" ? localStorage.getItem(simTeamIdKey(league.id)) : null;
-                const targetTeam = (storedId ? teams.find(t => String(t.id) === storedId) : null) ?? teams[0];
+                const storedId = typeof window !== "undefined"
+                    ? localStorage.getItem(simTeamIdKey(league.id))
+                    : null;
 
-                if (!targetTeam) { setLoading(false); return; }
+                const targetTeam =
+                    (storedId ? teams.find(t => String(t.id) === storedId) : null) ??
+                    teams[0];
 
-                const teamId = Number(targetTeam.id);
-                setSimTeamId(teamId);
-                if (typeof window !== "undefined") localStorage.setItem(simTeamIdKey(league.id), String(teamId));
-
-                const { data: picks } = await getTeamDraftPicks(targetTeam.id);
-                const newRows = emptyRows();
-
-                picks.forEach(pick => {
-                    if (!pick.draft_time && pick.player_id) {
-                        const rowIndex = pick.slotIndex ?? POSITIONS.findIndex((pos, idx) =>
-                            positionToEnum(pos) === pick.rosterPosition &&
-                            !newRows[idx].player_id
-                        );
-                        if (rowIndex !== -1 && rowIndex < newRows.length) {
-                            newRows[rowIndex] = {
-                                player: pick.player
-                                    ? `${pick.player.firstName ?? ""} ${pick.player.lastName ?? ""}`.trim()
-                                    : "",
-                                player_id: pick.player_id,
-                                season: pick.season ?? "",
-                                price: pick.cost ?? "",
-                                isKeeper: true
-                            };
-                        }
-                    }
-                });
-
-                let storedPayload = null;
-                if (typeof window !== "undefined") {
-                    try { storedPayload = JSON.parse(localStorage.getItem(simPicksKey(league.id)) ?? "null"); } catch { }
-                }
-
-                if (storedPayload) {
-                    setTeamName(storedPayload.teamName || targetTeam.name);
-                    (storedPayload.picks ?? []).forEach(pick => {
-                        const ri = pick.rowIndex;
-                        if (ri >= 0 && ri < newRows.length && !newRows[ri].isKeeper) {
-                            newRows[ri] = {
-                                player: pick.player ?? "",
-                                player_id: pick.player_id ?? null,
-                                season: pick.season ?? league.season,
-                                price: pick.price ?? "",
-                                isKeeper: false
-                            };
-                        }
-                    });
-                } else {
-                    setTeamName(targetTeam.name);
-                }
-
-                setRows(newRows);
+                await loadSimulationTeam(targetTeam, true);
             } catch (err) {
                 console.error("Failed to load simulation:", err);
             } finally {
                 setLoading(false);
             }
         };
+
         init();
     }, [league.id]);
+
+    const handleSimulationTeamChange = async (e) => {
+        const nextTeamId = Number(e.target.value);
+        const nextTeam = leagueTeams.find(t => Number(t.id) === nextTeamId);
+
+        if (!nextTeam) return;
+
+        recordDraftHistory();
+
+        setLoading(true);
+
+        try {
+            if (typeof window !== "undefined") {
+                localStorage.setItem(simTeamIdKey(league.id), String(nextTeamId));
+                localStorage.removeItem(simPicksKey(league.id));
+            }
+
+            const { data: picks } = await getTeamDraftPicks(nextTeamId);
+            const newRows = emptyRows();
+
+            picks.forEach(pick => {
+                if (!pick.draft_time && pick.player_id) {
+                    const rowIndex = pick.slotIndex ?? POSITIONS.findIndex((pos, idx) =>
+                        positionToEnum(pos) === pick.rosterPosition &&
+                        !newRows[idx].player_id
+                    );
+
+                    if (rowIndex !== -1 && rowIndex < newRows.length) {
+                        newRows[rowIndex] = {
+                            player: pick.player
+                                ? `${pick.player.firstName ?? ""} ${pick.player.lastName ?? ""}`.trim()
+                                : "",
+                            player_id: pick.player_id,
+                            season: pick.season ?? "",
+                            price: pick.cost ?? "",
+                            isKeeper: true
+                        };
+                    }
+                }
+            });
+
+            setSimTeamId(nextTeamId);
+            setTeamName(nextTeam.name);
+            setRows(newRows);
+            setEditingCell(null);
+            setEditValue("");
+            setSuggestions([]);
+            setEditingName(false);
+        } catch (err) {
+            console.error("Failed to switch simulation team:", err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
         getAllPlayers()
@@ -284,7 +366,7 @@ export default function DraftSimulation({ league, onBack, onModeChange }) {
             .map((row, i) => ({ ...row, pos: POSITIONS[i], rowIndex: i }))
             .filter(r => r.player_id && !r.isKeeper);
 
-        const payload = { teamName, picks: simPicks };
+        const payload = { teamId: simTeamId, teamName, picks: simPicks };
         if (typeof window !== "undefined") {
             localStorage.setItem(simPicksKey(league.id), JSON.stringify(payload));
             if (simTeamId) localStorage.setItem(simTeamIdKey(league.id), String(simTeamId));
@@ -307,9 +389,42 @@ export default function DraftSimulation({ league, onBack, onModeChange }) {
 
         if (nextName !== teamName) {
             recordDraftHistory();
+
+            setTeamName(nextName);
+
+            setLeagueTeams(prev =>
+                prev.map(t =>
+                    Number(t.id) === Number(simTeamId)
+                        ? { ...t, name: nextName }
+                        : t
+                )
+            );
+
+            if (typeof window !== "undefined") {
+                const raw = localStorage.getItem(simPicksKey(league.id));
+
+                if (raw) {
+                    try {
+                        const payload = JSON.parse(raw);
+                        localStorage.setItem(
+                            simPicksKey(league.id),
+                            JSON.stringify({
+                                ...payload,
+                                teamId: simTeamId,
+                                teamName: nextName
+                            })
+                        );
+                    } catch { }
+                }
+            }
+
+            try {
+                await updateTeam(simTeamId, { name: nextName });
+            } catch (err) {
+                console.error("Failed to update simulation team name:", err);
+            }
         }
 
-        setTeamName(nextName);
         setEditingName(false);
 
         if(simTeamId && nextName !== teamName) {
@@ -320,7 +435,6 @@ export default function DraftSimulation({ league, onBack, onModeChange }) {
             }
         }
     };
-
     const handleNameKeyDown = (e) => {
         if (e.key === "Enter" || e.key === "Tab") { e.preventDefault(); commitNameEdit(); }
         if (e.key === "Escape") setEditingName(false);
@@ -434,7 +548,24 @@ export default function DraftSimulation({ league, onBack, onModeChange }) {
             <div className="db-toolbar">
                 <div className="db-toolbar-left">
                     <span className="db-progress-label">
-                        Plan your auction targets · Keepers shown in blue · Click any cell to edit
+                        Simulating as:
+                    </span>
+
+                    <select
+                        className="move-popup-select"
+                        value={simTeamId ?? ""}
+                        onChange={handleSimulationTeamChange}
+                        disabled={leagueTeams.length === 0}
+                    >
+                        {leagueTeams.map(team => (
+                            <option key={team.id} value={team.id}>
+                                {team.name}
+                            </option>
+                        ))}
+                    </select>
+
+                    <span className="db-progress-label">
+                        Keepers shown in blue · Click any cell to edit
                     </span>
                 </div>
                 <div className="db-toolbar-right">
@@ -473,7 +604,7 @@ export default function DraftSimulation({ league, onBack, onModeChange }) {
                             <thead>
                                 <tr>
                                     <th className="db-th db-th-pos db-sticky-col" rowSpan={2}>POS</th>
-                                    <th className="db-th db-th-teamname sim-th-teamname" colSpan={3}>
+                                    <th className="db-th db-th-teamname sim-th-teamname sim-th-teamname--you" colSpan={3}>
                                         <div className="db-th-team-inner">
                                             {editingName ? (
                                                 <input
@@ -487,6 +618,7 @@ export default function DraftSimulation({ league, onBack, onModeChange }) {
                                             ) : (
                                                 <span className="db-team-name" onClick={startEditName} title="Click to rename">
                                                     {teamName}
+                                                    <span className="ld-your-team-badge">YOU</span>
                                                 </span>
                                             )}
                                         </div>

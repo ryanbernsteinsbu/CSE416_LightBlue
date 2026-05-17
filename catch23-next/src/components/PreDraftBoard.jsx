@@ -244,12 +244,25 @@ export default function PreDraftBoard({ league, onBack, onModeChange, onLeagueUp
                         const emptyRows = POSITIONS.map(() => ({
                             player: "", player_id: null, season: "", price: ""
                         }));
+
                         const { data: picks } = await getTeamDraftPicks(t.id);
+
+                        const seenPlayerIds = new Set();
+
                         picks.forEach((pick) => {
+                            if (pick.player_id && seenPlayerIds.has(pick.player_id)) {
+                                return;
+                            }
+
+                            if (pick.player_id) {
+                                seenPlayerIds.add(pick.player_id);
+                            }
+
                             const rowIndex = pick.slotIndex ?? POSITIONS.findIndex((pos, idx) =>
                                 positionToEnum(pos) === pick.rosterPosition &&
                                 !emptyRows[idx].player_id
                             );
+
                             if (rowIndex !== -1 && rowIndex < POSITIONS.length) {
                                 emptyRows[rowIndex] = {
                                     player: pick.player
@@ -262,11 +275,12 @@ export default function PreDraftBoard({ league, onBack, onModeChange, onLeagueUp
                                 };
                             }
                         });
+
                         return { id: Number(t.id), name: t.name, rows: emptyRows };
                     })
                 );
-                setTeams(loaded);
 
+                setTeams([...loaded].sort((a, b) => Number(a.id) - Number(b.id)));
                 const allTaxiIds = new Set();
                 await Promise.all(
                     data.map(async (t) => {
@@ -385,13 +399,34 @@ export default function PreDraftBoard({ league, onBack, onModeChange, onLeagueUp
         const currentTeam = teams.find(t => t.id === editingTeamId);
         const nextName = editTeamValue.trim() || currentTeam?.name;
 
-        if (currentTeam && nextName !== currentTeam.name) {
-            recordDraftHistory();
+        if (!currentTeam || !nextName) {
+            setEditingTeamId(null);
+            setEditTeamValue("");
+            return;
         }
 
-        setTeams(prev => prev.map(t =>
-            t.id === editingTeamId ? { ...t, name: nextName || t.name } : t
-        ));
+        if (nextName !== currentTeam.name) {
+            recordDraftHistory();
+
+            const updatedTeams = teams.map(t =>
+                t.id === editingTeamId ? { ...t, name: nextName } : t
+            );
+
+            setTeams(updatedTeams);
+
+            onLeagueUpdate?.({
+                teams: updatedTeams.map(t => ({
+                    id: t.id,
+                    name: t.name
+                }))
+            });
+
+            try {
+                await updateTeam(editingTeamId, { name: nextName });
+            } catch (err) {
+                console.error("Failed to update team name:", err);
+            }
+        }
 
         setEditingTeamId(null);
         setEditTeamValue("");
@@ -432,7 +467,8 @@ export default function PreDraftBoard({ league, onBack, onModeChange, onLeagueUp
                         ...row,
                         player: isValid ? getPlayerDisplayName(matched) : "",
                         player_id: isValid ? matched.id : null,
-                        season: isValid ? (row.season || "") : ""
+                        season: isValid ? (row.season || "") : "",
+                        price: isValid ? row.price : ""
                     };
                 }
                 return { ...row, [field]: editValue };

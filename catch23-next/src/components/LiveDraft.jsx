@@ -4,6 +4,7 @@ import { createTeam, getLeagueTeams, deleteTeam, getAllPlayers, saveDraftPicks, 
 import ConfirmDeleteModal from "./ConfirmDeleteModal.jsx";
 import { PositionPlayersModal, playerMatchesRowPosition } from "./PositionPlayersModal";
 import { PlayerProfileModal } from "./PlayerProfileModal";
+import { MovePopup } from "./Movepopup";
 
 // helpers
 
@@ -78,6 +79,7 @@ export default function LiveDraftBoard({ league, onBack, onModeChange, onLeagueU
     const [selectedPosition, setSelectedPosition] = useState(null);
     const [draftLog, setDraftLog] = useState([]);
     const [draftPopup, setDraftPopup] = useState(null);
+    const [movePopup, setMovePopup] = useState(null);
     const [endDraftConfirm, setEndDraftConfirm] = useState(false);
     const [endingDraft, setEndingDraft] = useState(false);
     const [profilePlayer, setProfilePlayer] = useState(null); // PlayerProfileModal
@@ -108,6 +110,7 @@ export default function LiveDraftBoard({ league, onBack, onModeChange, onLeagueU
         setDraftLog(cloneDraftState(snapshot.draftLog));
 
         setDraftPopup(null);
+        setMovePopup(null);
         setSuggestions([]);
         setEditingTeamId(null);
         setEditTeamValue("");
@@ -179,6 +182,151 @@ export default function LiveDraftBoard({ league, onBack, onModeChange, onLeagueU
         e.stopPropagation();
         const found = allPlayers.find(p => p.id === playerId);
         if (found) setProfilePlayer(toProfilePlayer(found));
+    };
+
+    const openMove = (e, team, rowIndex, row) => {
+        e.stopPropagation();
+
+        const playerData = allPlayers.find(p => p.id === row.player_id);
+
+        setMovePopup({
+            fromTeamId: team.id,
+            fromRowIndex: rowIndex,
+            player: row.player,
+            player_id: row.player_id,
+            season: row.season,
+            price: row.price,
+            draft_time: row.draft_time,
+            playerObj: playerData ?? null,
+        });
+    };
+
+    const confirmMove = async (toTeamId, toRowIndex) => {
+        if (!movePopup) return;
+
+        const { fromTeamId, fromRowIndex } = movePopup;
+
+        const movingPlayer = {
+            player: movePopup.player,
+            player_id: movePopup.player_id,
+            season: movePopup.season,
+            price: movePopup.price,
+            draft_time: movePopup.draft_time,
+        };
+
+        recordDraftHistory();
+
+        let movedToTeamName = "";
+        let movedPosition = POSITIONS[toRowIndex];
+
+        const updatedTeams = teams.map(t => {
+            const destTeam = teams.find(team => team.id === toTeamId);
+            const destRow = destTeam?.rows[toRowIndex];
+
+            const destPlayer = destRow?.player_id
+                ? {
+                    player: destRow.player,
+                    player_id: destRow.player_id,
+                    season: destRow.season,
+                    price: destRow.price,
+                    draft_time: destRow.draft_time,
+                }
+                : {
+                    player: "",
+                    player_id: null,
+                    season: "",
+                    price: "",
+                    draft_time: "",
+                };
+
+            if (t.id === toTeamId) {
+                movedToTeamName = t.name;
+            }
+
+            if (t.id === fromTeamId && t.id === toTeamId) {
+                const newRows = t.rows.map((r, i) => {
+                    if (i === fromRowIndex) return { ...r, ...destPlayer };
+                    if (i === toRowIndex) return { ...r, ...movingPlayer };
+                    return r;
+                });
+
+                return { ...t, rows: newRows };
+            }
+
+            if (t.id === fromTeamId) {
+                const newRows = t.rows.map((r, i) =>
+                    i === fromRowIndex ? { ...r, ...destPlayer } : r
+                );
+
+                return { ...t, rows: newRows };
+            }
+
+            if (t.id === toTeamId) {
+                const newRows = t.rows.map((r, i) =>
+                    i === toRowIndex ? { ...r, ...movingPlayer } : r
+                );
+
+                return { ...t, rows: newRows };
+            }
+
+            return t;
+        });
+
+        const fromTeam = teams.find(t => t.id === fromTeamId);
+        const toTeam = teams.find(t => t.id === toTeamId);
+        const originalDestRow = toTeam?.rows[toRowIndex];
+
+        const updatedDraftLog = draftLog.map(entry => {
+            if (entry.playerName === movingPlayer.player && entry.teamId === fromTeamId) {
+                return {
+                    ...entry,
+                    teamName: movedToTeamName || toTeam?.name || entry.teamName,
+                    teamId: toTeamId,
+                    position: movedPosition,
+                    price: movingPlayer.price,
+                    rowIndex: toRowIndex,
+                };
+            }
+
+            if (
+                originalDestRow?.player &&
+                entry.playerName === originalDestRow.player &&
+                entry.teamId === toTeamId
+            ) {
+                return {
+                    ...entry,
+                    teamName: fromTeam?.name || entry.teamName,
+                    teamId: fromTeamId,
+                    position: POSITIONS[fromRowIndex],
+                    price: originalDestRow.price,
+                    rowIndex: fromRowIndex,
+                };
+            }
+
+            return entry;
+        });
+
+        setTeams(updatedTeams);
+        setDraftLog(updatedDraftLog);
+
+        onLeagueUpdate({
+            teams: updatedTeams.map(t => ({
+                id: t.id,
+                name: t.name,
+                players: t.rows
+                    .map((r, i) => ({ r, i }))
+                    .filter(({ r }) => r.player_id)
+                    .map(({ r, i }) => ({
+                        player_id: r.player_id,
+                        rosterPosition: positionToEnum(POSITIONS[i]),
+                    })),
+            })),
+        });
+
+        setMovePopup(null);
+        setSuggestions([]);
+
+        await autoSave(updatedTeams);
     };
 
 
@@ -363,19 +511,55 @@ export default function LiveDraftBoard({ league, onBack, onModeChange, onLeagueU
         setTimeout(() => teamInputRef.current?.focus(), 0);
     };
 
-    const commitTeamEdit = async() => {
+    const commitTeamEdit = async () => {
         if (!editingTeamId) return;
 
         const currentTeam = teams.find(t => t.id === editingTeamId);
         const nextName = editTeamValue.trim() || currentTeam?.name;
 
-        if (currentTeam && nextName !== currentTeam.name) {
-            recordDraftHistory();
+        if (!currentTeam || !nextName) {
+            setEditingTeamId(null);
+            setEditTeamValue("");
+            return;
         }
 
-        setTeams(prev => prev.map(t =>
-            t.id === editingTeamId ? { ...t, name: nextName || t.name } : t
-        ));
+        if (nextName !== currentTeam.name) {
+            recordDraftHistory();
+
+            const updatedTeams = teams.map(t =>
+                t.id === editingTeamId ? { ...t, name: nextName } : t
+            );
+
+            setTeams(updatedTeams);
+
+            setDraftLog(prev =>
+                prev.map(entry =>
+                    entry.teamId === editingTeamId
+                        ? { ...entry, teamName: nextName }
+                        : entry
+                )
+            );
+
+            onLeagueUpdate?.({
+                teams: updatedTeams.map(t => ({
+                    id: t.id,
+                    name: t.name,
+                    players: t.rows
+                        .map((r, i) => ({ r, i }))
+                        .filter(({ r }) => r.player_id)
+                        .map(({ r, i }) => ({
+                            player_id: r.player_id,
+                            rosterPosition: positionToEnum(POSITIONS[i]),
+                        })),
+                })),
+            });
+
+            try {
+                await updateTeam(editingTeamId, { name: nextName });
+            } catch (err) {
+                console.error("Failed to update team name:", err);
+            }
+        }
 
         setEditingTeamId(null);
         setEditTeamValue("");
@@ -415,18 +599,18 @@ export default function LiveDraftBoard({ league, onBack, onModeChange, onLeagueU
         });
 
         setTeams(updatedTeams);
-        onLeagueUpdate({ 
-            teams: updatedTeams.map(t => ({ 
-                id: t.id, 
-                name: t.name, 
+        onLeagueUpdate({
+            teams: updatedTeams.map(t => ({
+                id: t.id,
+                name: t.name,
                 players: t.rows
                     .map((r, i) => ({ r, i }))
                     .filter(({ r }) => r.player_id)
-                    .map(({ r, i }) => ({ 
-                        player_id: r.player_id, 
-                        rosterPosition: positionToEnum(POSITIONS[i]) 
+                    .map(({ r, i }) => ({
+                        player_id: r.player_id,
+                        rosterPosition: positionToEnum(POSITIONS[i])
                     }))
-            })) 
+            }))
         });
 
         const teamName = teams.find(t => t.id === teamId)?.name;
@@ -624,6 +808,7 @@ export default function LiveDraftBoard({ league, onBack, onModeChange, onLeagueU
                                                                 {row.player ? (
                                                                     <span className="db-cell-value db-cell-has-player">
                                                                         <span className="db-cell-name">{row.player}</span>
+
                                                                         <button
                                                                             className="db-cell-detail-btn"
                                                                             onClick={(e) => openProfile(e, row.player_id)}
@@ -631,6 +816,16 @@ export default function LiveDraftBoard({ league, onBack, onModeChange, onLeagueU
                                                                         >
                                                                             Details
                                                                         </button>
+
+                                                                        {!isKeeper && (
+                                                                            <button
+                                                                                className="db-cell-detail-btn"
+                                                                                onClick={(e) => openMove(e, team, rowIndex, row)}
+                                                                                title="Move player"
+                                                                            >
+                                                                                Move
+                                                                            </button>
+                                                                        )}
                                                                     </span>
                                                                 ) : (
                                                                     <span className="db-cell-value">
@@ -825,12 +1020,25 @@ export default function LiveDraftBoard({ league, onBack, onModeChange, onLeagueU
                 league={league}
             />
 
+            {movePopup && (
+                <MovePopup
+                    movePopup={movePopup}
+                    teams={teams}
+                    POSITIONS={POSITIONS}
+                    onConfirm={confirmMove}
+                    onClose={() => setMovePopup(null)}
+                    remainingBudgets={remainingBudgets}
+                    budget={league.draftSettings?.budget}
+                />
+            )}
+
             {/* Player Profile slide-in */}
             <PlayerProfileModal
                 isOpen={!!profilePlayer}
                 onClose={() => setProfilePlayer(null)}
                 player={profilePlayer}
             />
+
         </div>
     );
 }
