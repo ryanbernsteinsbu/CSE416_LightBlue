@@ -1,8 +1,9 @@
 'use client';
 import React, { useEffect, useState, useRef, useMemo } from "react";
-import { createTeam, getLeagueTeams, deleteTeam, getAllPlayers } from "../lib/api";
+import { createTeam, getLeagueTeams, deleteTeam, getAllPlayers, updateTeam } from "../lib/api";
 import ConfirmDeleteModal from "./ConfirmDeleteModal.jsx";
 
+const simTeamIdKey = (id) => `sim_team_${id}`;
 const getPlayerDisplayName = (p) => `${p?.firstName ?? ""} ${p?.lastName ?? ""}`.trim();
 const getPlayerName = (p) => getPlayerDisplayName(p).toLowerCase();
 
@@ -50,6 +51,7 @@ export default function MinorLeagueDraftBoard({ league, onBack, onModeChange }) 
     const [teamDeleteTarget, setTeamDeleteTarget] = useState(null);
     const [saveBanner, setSaveBanner] = useState(false);
     const [errorBanner, setErrorBanner] = useState(false);
+    const [simTeamId, setSimTeamId] = useState(null);
 
     const teamInputRef = useRef(null);
     const cellInputRef = useRef(null);
@@ -63,6 +65,9 @@ export default function MinorLeagueDraftBoard({ league, onBack, onModeChange }) 
 
     useEffect(() => {
         const fetchTeams = async () => {
+            const storedSimId = typeof window !== "undefined"
+            ? localStorage.getItem(simTeamIdKey(league.id)) : null;
+            setSimTeamId(storedSimId ? Number(storedSimId) : null);
             try {
                 const { data } = await getLeagueTeams(league.id);
                 const loaded = await Promise.all(
@@ -166,13 +171,22 @@ export default function MinorLeagueDraftBoard({ league, onBack, onModeChange }) 
         setTimeout(() => teamInputRef.current?.focus(), 0);
     };
 
-    const commitTeamEdit = () => {
+    const commitTeamEdit = async () => {
         if (!editingTeamId) return;
+        const currentTeam = teams.find(t => t.id === editingTeamId);
+        const nextName = editTeamValue.trim() || currentTeam?.name;
         setTeams(prev => prev.map(t =>
-            t.id === editingTeamId ? { ...t, name: editTeamValue.trim() || t.name } : t
+            t.id === editingTeamId ? { ...t, name: nextName || t.name } : t
         ));
         setEditingTeamId(null);
         setEditTeamValue("");
+        if (nextName && nextName !== currentTeam?.name) {
+            try {
+                await updateTeam(editingTeamId, { name: nextName });
+            } catch (err) {
+                console.error("Failed to save team name:", err);
+            }
+        }
     };
 
     const handleTeamKeyDown = (e) => {
@@ -294,8 +308,7 @@ export default function MinorLeagueDraftBoard({ league, onBack, onModeChange }) 
                                 <tr>
                                     <th className="db-th db-th-pos db-sticky-col" rowSpan={2}>#</th>
                                     {teams.map(team => (
-                                        <th key={team.id} className="db-th db-th-teamname" colSpan={2}>
-                                            <div className="db-th-team-inner">
+                                        <th key={team.id} className={`db-th db-th-teamname ${team.id === simTeamId ? "db-th-simteam" : ""}`} colSpan={2}>                                            <div className="db-th-team-inner">
                                                 {editingTeamId === team.id ? (
                                                     <input
                                                         ref={teamInputRef}
@@ -308,6 +321,7 @@ export default function MinorLeagueDraftBoard({ league, onBack, onModeChange }) 
                                                 ) : (
                                                     <span className="db-team-name" onClick={() => startEditTeam(team)} title="Click to rename">
                                                         {team.name}
+                                                        {team.id === simTeamId && <span className="ld-your-team-badge">YOU</span>}
                                                     </span>
                                                 )}
                                                 <button
@@ -316,11 +330,6 @@ export default function MinorLeagueDraftBoard({ league, onBack, onModeChange }) 
                                                     title="Remove team"
                                                 >×</button>
                                             </div>
-                                            {!team.tableId && (
-                                                <div className="db-team-budget" style={{ color: "var(--color-warning)" }}>
-                                                    no minor league table
-                                                </div>
-                                            )}
                                         </th>
                                     ))}
                                 </tr>

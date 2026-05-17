@@ -1,11 +1,11 @@
 'use client';
 import React, { useEffect, useState, useRef, useMemo } from "react";
-import { createTeam, getLeagueTeams, deleteTeam, getAllPlayers, saveTaxiPicks, getTeamTaxiPicks, getTeamDraftPicks } from "../lib/api";
+import { createTeam, getLeagueTeams, deleteTeam, getAllPlayers, saveTaxiPicks, getTeamTaxiPicks, getTeamDraftPicks, updateTeam } from "../lib/api";
 import ConfirmDeleteModal from "./ConfirmDeleteModal.jsx";
 import { PlayerProfileModal } from "./PlayerProfileModal";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
-
+const simTeamIdKey = (id) => `sim_team_${id}`;
 const getPlayerDisplayName = (p) => `${p?.firstName ?? ""} ${p?.lastName ?? ""}`.trim();
 const getPlayerName = (p) => getPlayerDisplayName(p).toLowerCase();
 
@@ -64,6 +64,7 @@ export default function TaxiDraftBoard({ league, onBack, onModeChange }) {
     const [errorBanner, setErrorBanner] = useState(false);
     const [seasonErrorBanner, setSeasonErrorBanner] = useState(false);
     const [profilePlayer, setProfilePlayer] = useState(null);
+    const [simTeamId, setSimTeamId] = useState(null);
 
     const cellInputRef = useRef(null);
     const teamInputRef = useRef(null);
@@ -97,6 +98,9 @@ export default function TaxiDraftBoard({ league, onBack, onModeChange }) {
 
     useEffect(() => {
         const fetchTeams = async () => {
+            const storedSimId = typeof window !== "undefined"
+                ? localStorage.getItem(simTeamIdKey(league.id)) : null;
+            setSimTeamId(storedSimId ? Number(storedSimId) : null);
             try {
                 const { data } = await getLeagueTeams(league.id);
                 const loaded = await Promise.all(
@@ -221,13 +225,22 @@ export default function TaxiDraftBoard({ league, onBack, onModeChange }) {
         setTimeout(() => teamInputRef.current?.focus(), 0);
     };
 
-    const commitTeamEdit = () => {
+    const commitTeamEdit = async () => {
         if (!editingTeamId) return;
+        const currentTeam = teams.find(t => t.id === editingTeamId);
+        const nextName = editTeamValue.trim() || currentTeam?.name;
         setTeams(prev => prev.map(t =>
-            t.id === editingTeamId ? { ...t, name: editTeamValue.trim() || t.name } : t
+            t.id === editingTeamId ? { ...t, name: nextName || t.name } : t
         ));
         setEditingTeamId(null);
         setEditTeamValue("");
+        if (nextName && nextName !== currentTeam?.name) {
+            try {
+                await updateTeam(editingTeamId, { name: nextName });
+            } catch (err) {
+                console.error("Failed to save team name:", err);
+            }
+        }
     };
 
     const handleTeamKeyDown = (e) => {
@@ -442,7 +455,7 @@ export default function TaxiDraftBoard({ league, onBack, onModeChange }) {
                                 <tr>
                                     <th className="db-th db-th-pos db-sticky-col" rowSpan={2}>SLOT</th>
                                     {teams.map(team => (
-                                        <th key={team.id} className="db-th db-th-teamname" colSpan={3}>
+                                        <th key={team.id} className={`db-th db-th-teamname ${team.id === simTeamId ? "db-th-simteam" : ""}`} colSpan={3}>
                                             <div className="db-th-team-inner">
                                                 {editingTeamId === team.id ? (
                                                     <input
@@ -460,6 +473,7 @@ export default function TaxiDraftBoard({ league, onBack, onModeChange }) {
                                                         title="Click to rename"
                                                     >
                                                         {team.name}
+                                                        {team.id === simTeamId && <span className="ld-your-team-badge">YOU</span>}
                                                     </span>
                                                 )}
                                                 <button
