@@ -4,23 +4,23 @@ import nodemailer from 'nodemailer';
 import bcrypt from 'bcryptjs';
 import { Op } from 'sequelize';
 import PasswordResetToken from '../models/passwordResetToken';
-
-import User from '../models/user';  
+import User from '../models/user';
+import { verifyToken } from '../middleware/verifyToken';
 
 const router = Router();
 
-// Nodemailer transporter 
+// Nodemailer transporter
 const transporter = nodemailer.createTransport({
     host: process.env.EMAIL_HOST,
     port: Number(process.env.EMAIL_PORT) || 587,
-    secure: false,  
+    secure: false,
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
     },
 });
 
-// POST /api/auth/forgot-password
+// ── POST /api/auth/forgot-password ──────────────────────────────────────────
 router.post('/forgot-password', async (req: Request, res: Response) => {
     console.log('FORGOT PASSWORD HIT', req.body);
     try {
@@ -30,16 +30,13 @@ router.post('/forgot-password', async (req: Request, res: Response) => {
             return res.status(400).json({ error: 'Email is required' });
         }
 
-        // Look up the user
         const user = await User.findOne({ where: { email } });
 
         if (user) {
-            // Delete any existing unused tokens for this user
             await PasswordResetToken.destroy({
                 where: { user_id: Number(user.id), used: false },
             });
 
-            // Generate a cryptographically secure token
             const token = crypto.randomBytes(32).toString('hex');
             const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
@@ -54,7 +51,7 @@ router.post('/forgot-password', async (req: Request, res: Response) => {
 
             await transporter.sendMail({
                 from: `"Catch 23" <${process.env.EMAIL_USER}>`,
-                to: user.email,   
+                to: user.email,
                 subject: 'Reset your Catch 23 password',
                 html: `
                     <div style="font-family:sans-serif;max-width:480px;margin:auto;padding:24px">
@@ -86,7 +83,7 @@ router.post('/forgot-password', async (req: Request, res: Response) => {
     }
 });
 
-// POST /api/auth/reset-password 
+// ── POST /api/auth/reset-password ───────────────────────────────────────────
 router.post('/reset-password', async (req: Request, res: Response) => {
     try {
         const { token, password } = req.body;
@@ -99,7 +96,6 @@ router.post('/reset-password', async (req: Request, res: Response) => {
             return res.status(400).json({ error: 'Password must be at least 8 characters' });
         }
 
-        // Find a valid, unused, unexpired token
         const resetToken = await PasswordResetToken.findOne({
             where: {
                 token,
@@ -109,7 +105,6 @@ router.post('/reset-password', async (req: Request, res: Response) => {
         });
 
         if (!resetToken) {
-            // Distinguish expired vs truly invalid so the frontend can show the right message
             const expiredToken = await PasswordResetToken.findOne({ where: { token } });
             if (expiredToken) {
                 return res.status(400).json({ error: 'Token expired' });
@@ -117,22 +112,82 @@ router.post('/reset-password', async (req: Request, res: Response) => {
             return res.status(400).json({ error: 'Invalid token' });
         }
 
-        // Hash the new password  (12 salt rounds)
         const hashedPassword = await bcrypt.hash(password, 12);
 
-        // Update user password
         await User.update(
-            { hashedPassword: hashedPassword },
+            { hashedPassword },
             { where: { id: resetToken.user_id } }
         );
 
-        // Mark token as used so it can't be replayed
         await resetToken.update({ used: true });
 
         return res.status(200).json({ message: 'Password updated successfully.' });
     } catch (err) {
         console.error('RESET PASSWORD ERROR:', err);
         return res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// ── PUT /api/auth/change-password ───────────────────────────────────────────
+router.put('/change-password', verifyToken, async (req: Request, res: Response) => {
+    const { currentPassword, newPassword } = req.body;
+    const userId = (req as any).user.id;
+
+    if (!currentPassword || !newPassword) {
+        return res.status(400).json({ error: 'Both current and new password are required.' });
+    }
+
+    if (newPassword.length < 8) {
+        return res.status(400).json({ error: 'New password must be at least 8 characters.' });
+    }
+
+    try {
+        const user = await User.findByPk(userId);
+        if (!user) return res.status(404).json({ error: 'User not found.' });
+
+        const isMatch = await bcrypt.compare(currentPassword, user.hashedPassword);
+        if (!isMatch) {
+            return res.status(401).json({ error: 'Current password is incorrect.' });
+        }
+
+        const hashed = await bcrypt.hash(newPassword, 10);
+        await user.update({ hashedPassword: hashed });
+
+        return res.json({ message: 'Password updated successfully.' });
+    } catch (err) {
+        console.error('CHANGE PASSWORD ERROR:', err);
+        return res.status(500).json({ error: 'Internal server error.' });
+    }
+});
+
+// ── PUT /api/auth/update-profile ────────────────────────────────────────────
+router.put('/update-profile', verifyToken, async (req: Request, res: Response) => {
+    const { username } = req.body;
+    const userId = (req as any).user.id;
+
+    if (!username || !username.trim()) {
+        return res.status(400).json({ error: 'Username cannot be empty.' });
+    }
+
+    if (username.trim().length > 32) {
+        return res.status(400).json({ error: 'Username must be 32 characters or fewer.' });
+    }
+
+    try {
+        const existing = await User.findOne({ where: { displayName: username.trim() } });
+        if (existing && Number(existing.id) !== Number(userId)) {
+            return res.status(409).json({ error: 'That display name is already taken.' });
+        }
+
+        const user = await User.findByPk(userId);
+        if (!user) return res.status(404).json({ error: 'User not found.' });
+
+        await user.update({ displayName: username.trim() });
+
+        return res.json({ message: 'Profile updated successfully.', username: username.trim() });
+    } catch (err) {
+        console.error('UPDATE PROFILE ERROR:', err);
+        return res.status(500).json({ error: 'Internal server error.' });
     }
 });
 

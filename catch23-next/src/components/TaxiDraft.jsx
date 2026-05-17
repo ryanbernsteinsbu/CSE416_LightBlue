@@ -7,31 +7,31 @@ import { PlayerProfileModal } from "./PlayerProfileModal";
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
 const getPlayerDisplayName = (p) => `${p?.firstName ?? ""} ${p?.lastName ?? ""}`.trim();
-const getPlayerName        = (p) => getPlayerDisplayName(p).toLowerCase();
+const getPlayerName = (p) => getPlayerDisplayName(p).toLowerCase();
 
 const toProfilePlayer = (p) => ({
-    id:       p.id,
+    id: p.id,
     username: getPlayerDisplayName(p),
-    team:     p.team ?? p.mlbTeam ?? p.teamAbbreviation ?? "",
-    role:     Array.isArray(p.playablePositions) ? p.playablePositions.join(", ") : (p.position ?? ""),
-    stats:    p.stats ?? {
-        HR:   p.HR   ?? p.homeRuns,
-        RBI:  p.RBI,
-        SB:   p.SB   ?? p.stolenBases,
-        R:    p.R    ?? p.runs,
-        AVG:  p.AVG  ?? p.battingAverage,
-        OBP:  p.OBP,
-        W:    p.W    ?? p.wins,
-        SV:   p.SV   ?? p.saves,
-        K:    p.K    ?? p.strikeouts,
-        ERA:  p.ERA,
+    team: p.team ?? p.mlbTeam ?? p.teamAbbreviation ?? "",
+    role: Array.isArray(p.playablePositions) ? p.playablePositions.join(", ") : (p.position ?? ""),
+    stats: p.stats ?? {
+        HR: p.HR ?? p.homeRuns,
+        RBI: p.RBI,
+        SB: p.SB ?? p.stolenBases,
+        R: p.R ?? p.runs,
+        AVG: p.AVG ?? p.battingAverage,
+        OBP: p.OBP,
+        W: p.W ?? p.wins,
+        SV: p.SV ?? p.saves,
+        K: p.K ?? p.strikeouts,
+        ERA: p.ERA,
         WHIP: p.WHIP,
     },
 });
 
 function makeEmptyTeam(index, numSlots) {
     return {
-        id:   crypto.randomUUID(),
+        id: crypto.randomUUID(),
         name: `Team ${index + 1}`,
         rows: Array.from({ length: numSlots }, () => ({
             player: "", player_id: null, season: "", price: ""
@@ -45,25 +45,25 @@ export default function TaxiDraftBoard({ league, onBack, onModeChange }) {
     const NUM_SLOTS = league.rosterSettings?.numTaxi ?? 8;
 
     // core state
-    const [teams,          setTeams]          = useState([]);
-    const [mainRosterIds,  setMainRosterIds]  = useState(new Set());
+    const [teams, setTeams] = useState([]);
+    const [mainRosterIds, setMainRosterIds] = useState(new Set());
 
     // editing
-    const [editingCell,   setEditingCell]   = useState(null); // { teamId, rowIndex, field }
-    const [editValue,     setEditValue]     = useState("");
+    const [editingCell, setEditingCell] = useState(null); // { teamId, rowIndex, field }
+    const [editValue, setEditValue] = useState("");
     const [editingTeamId, setEditingTeamId] = useState(null);
     const [editTeamValue, setEditTeamValue] = useState("");
 
     // players
-    const [allPlayers,  setAllPlayers]  = useState([]);
+    const [allPlayers, setAllPlayers] = useState([]);
     const [suggestions, setSuggestions] = useState([]);
 
     // ui
     const [teamDeleteTarget, setTeamDeleteTarget] = useState(null);
-    const [saveBanner,       setSaveBanner]       = useState(false);
-    const [errorBanner,      setErrorBanner]      = useState(false);
+    const [saveBanner, setSaveBanner] = useState(false);
+    const [errorBanner, setErrorBanner] = useState(false);
     const [seasonErrorBanner, setSeasonErrorBanner] = useState(false);
-    const [profilePlayer,    setProfilePlayer]    = useState(null);
+    const [profilePlayer, setProfilePlayer] = useState(null);
 
     const cellInputRef = useRef(null);
     const teamInputRef = useRef(null);
@@ -74,9 +74,26 @@ export default function TaxiDraftBoard({ league, onBack, onModeChange }) {
             ...mainRosterIds,
             ...teams.flatMap(t => t.rows.map(r => r.player_id).filter(Boolean))
         ])
-    , [teams, mainRosterIds]);
+        , [teams, mainRosterIds]);
 
     // ── data loading ──────────────────────────────────────────────────────────
+
+    const [suggestAnchor, setSuggestAnchor] = useState(null);
+
+    useEffect(() => {
+        if (suggestions.length > 0 && cellInputRef.current) {
+            const rect = cellInputRef.current.getBoundingClientRect();
+            const spaceBelow = window.innerHeight - rect.bottom;
+            const dropdownHeight = Math.min(suggestions.length * 42, 280);
+            setSuggestAnchor({
+                top: rect.top,
+                bottom: rect.bottom,
+                left: rect.left,
+                width: rect.width,
+                openUpward: spaceBelow < dropdownHeight,
+            });
+        }
+    }, [suggestions.length]);
 
     useEffect(() => {
         const fetchTeams = async () => {
@@ -93,11 +110,11 @@ export default function TaxiDraftBoard({ league, onBack, onModeChange }) {
                                 const idx = pick.slot - 1;
                                 if (idx >= 0 && idx < NUM_SLOTS) {
                                     emptyRows[idx] = {
-                                        player:    pick.player
+                                        player: pick.player
                                             ? `${pick.player.firstName ?? ""} ${pick.player.lastName ?? ""}`.trim()
                                             : "",
                                         player_id: pick.player_id,
-                                        season:    pick.season ?? "",
+                                        season: pick.season ?? "",
                                         price: pick.cost != null ? String(parseFloat(pick.cost)) : "",
                                     };
                                 }
@@ -120,7 +137,7 @@ export default function TaxiDraftBoard({ league, onBack, onModeChange }) {
                             draftPicks.forEach(p => {
                                 if (p.player_id) allMainIds.add(p.player_id);
                             });
-                        } catch {}
+                        } catch { }
                     })
                 );
                 setMainRosterIds(allMainIds);
@@ -141,7 +158,7 @@ export default function TaxiDraftBoard({ league, onBack, onModeChange }) {
 
     const handleSave = async () => {
         const missingseason = teams.some(team =>
-        team.rows.some(row => row.player_id && !row.season));
+            team.rows.some(row => row.player_id && !row.season));
         if (missingseason) {
             setSeasonErrorBanner(true);
             setTimeout(() => setSeasonErrorBanner(false), 3000);
@@ -153,11 +170,11 @@ export default function TaxiDraftBoard({ league, onBack, onModeChange }) {
             team.rows.forEach((row, i) => {
                 if (!row.player_id) return;
                 picks.push({
-                    slot:      i + 1,
-                    team_id:   team.id,
+                    slot: i + 1,
+                    team_id: team.id,
                     player_id: row.player_id,
-                    season:    row.season || league.season,
-                    cost:      parseFloat(row.price) || 1,
+                    season: row.season || league.season,
+                    cost: parseFloat(row.price) || 1,
                 });
             });
         });
@@ -239,10 +256,10 @@ export default function TaxiDraftBoard({ league, onBack, onModeChange }) {
                     const isValid = matched && !draftedIds.has(matched.id);
                     return {
                         ...row,
-                        player:    isValid ? getPlayerDisplayName(matched) : "",
+                        player: isValid ? getPlayerDisplayName(matched) : "",
                         player_id: isValid ? matched.id : null,
-                        season:    isValid ? (row.season || league.season) : "",
-                        price:     isValid ? (row.price  || "1") : "",
+                        season: isValid ? (row.season || league.season) : "",
+                        price: isValid ? (row.price || "1") : "",
                     };
                 }
                 return { ...row, [field]: editValue };
@@ -273,10 +290,10 @@ export default function TaxiDraftBoard({ league, onBack, onModeChange }) {
                 i === rowIndex
                     ? {
                         ...r,
-                        player:    getPlayerDisplayName(p),
+                        player: getPlayerDisplayName(p),
                         player_id: p.id,
-                        season:    r.season || league.season,
-                        price:     r.price  || "1",
+                        season: r.season || league.season,
+                        price: r.price || "1",
                     }
                     : r
             );
@@ -301,11 +318,11 @@ export default function TaxiDraftBoard({ league, onBack, onModeChange }) {
 
     const allSlotsFilled = useMemo(() =>
         teams.length > 0 && teams.every(t => t.rows.every(r => r.player_id))
-    , [teams]);
+        , [teams]);
 
     const filledCount = useMemo(() =>
         teams.reduce((sum, t) => sum + t.rows.filter(r => r.player_id).length, 0)
-    , [teams]);
+        , [teams]);
 
     const totalSlots = teams.length * NUM_SLOTS;
 
@@ -501,7 +518,7 @@ export default function TaxiDraftBoard({ league, onBack, onModeChange }) {
                                                                     value={editValue}
                                                                     onChange={e => {
                                                                         const value = e.target.value;
-                                                                        const q     = value.toLowerCase();
+                                                                        const q = value.toLowerCase();
                                                                         setEditValue(value);
                                                                         // no position filter — any player is eligible
                                                                         setSuggestions(
@@ -516,7 +533,20 @@ export default function TaxiDraftBoard({ league, onBack, onModeChange }) {
                                                                     onKeyDown={handleCellKeyDown}
                                                                 />
                                                                 {suggestions.length > 0 && (
-                                                                    <ul className="db-suggestions">
+                                                                    <ul
+                                                                        className="db-suggestions"
+                                                                        style={suggestAnchor ? {
+                                                                            position: 'fixed',
+                                                                            top: suggestAnchor.openUpward
+                                                                                ? suggestAnchor.top - Math.min(suggestions.length * 42, 280)
+                                                                                : suggestAnchor.bottom,
+                                                                            left: suggestAnchor.left,
+                                                                            width: Math.max(suggestAnchor.width, 220),
+                                                                            margin: 0,
+                                                                            maxHeight: 280,
+                                                                            overflowY: 'auto',
+                                                                        } : {}}
+                                                                    >
                                                                         {suggestions.map(p => (
                                                                             <li
                                                                                 key={p.id}
