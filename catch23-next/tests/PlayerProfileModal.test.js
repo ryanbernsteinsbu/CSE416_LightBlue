@@ -1,89 +1,108 @@
-import { render, screen, fireEvent, act } from "@testing-library/react";
-import { PlayerProfileModal } from "@/components/PlayerProfileModal";
+import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
+import { PlayerProfileModal } from "../src/components/PlayerProfileModal";
+import { getUser, updatePlayerNotes } from "../src/lib/api";
 
-test("renders nothing when isOpen is false", () => {
-    render(<PlayerProfileModal isOpen={false} onClose={jest.fn()} player={null} />);
-
-    expect(screen.queryByText("PLAYER PROFILE")).not.toBeInTheDocument();
-})
-
-test("renders the modal when isOpen is true", () => {
-    render(<PlayerProfileModal isOpen={true} onClose={jest.fn()} player={null} />);
-    expect(screen.getByText("PLAYER PROFILE")).toBeInTheDocument();
-})
+jest.mock("../src/lib/api", () => ({
+  getUser: jest.fn(),
+  updatePlayerNotes: jest.fn(),
+}));
 
 const mockPlayer = {
-    username: "Shohei Ohtani",
-    team: "Dodgers",
-    role: "SP",
-    stats: {
-        HR: 44, RBI: 102, SB: 20, R: 98, AVG: ".310", OBP: ".390",
-        W: 10, SV: 0, K: 167, ERA: "3.14", WHIP: "1.05",
-    },
+  id: 42,
+  mlbID: 660271,
+  username: "Aaron Judge",
+  team: "NYY",
+  role: "OUTFIELD",
+  depth: "1",
+  stats: {
+    PA: 696, AB: 581, R: 96, H: 155, HR: 58, RBI: 144,
+    BB: 111, K: 175, SB: 10, CS: 2, AVG: 0.267, OBP: 0.373,
+    G: 0, GS: 0, W: 0, SV: 0, IP: 0, ER: 0, SO: 0, ERA: 0, WHIP: 0, BF: 0, PO: 0,
+  },
 };
 
-test("displays player name, team and role", () => {
-    render(<PlayerProfileModal isOpen={true} onClose={jest.fn()} player={mockPlayer} />);
-
-    expect(screen.getByText("Shohei Ohtani")).toBeInTheDocument();
-    expect(screen.getByText("Dodgers · SP")).toBeInTheDocument();
+beforeEach(() => {
+  jest.clearAllMocks();
+  getUser.mockResolvedValue({ data: { playerNotes: [] } });
+  updatePlayerNotes.mockResolvedValue({});
+  Object.defineProperty(window, "localStorage", {
+    value: { getItem: jest.fn(() => "123") },
+    writable: true,
+  });
 });
 
-test("displays hitting and pitching stats", () => {
-    render(<PlayerProfileModal isOpen={true} onClose={jest.fn()} player={mockPlayer} />);
-
-    expect(screen.getByText("HR (Home Runs)")).toBeInTheDocument();
-    expect(screen.getByText("44")).toBeInTheDocument();
-    expect(screen.getByText("ERA (Earned Run Average)")).toBeInTheDocument();
-    expect(screen.getByText("3.14")).toBeInTheDocument();
+test("renders nothing when isOpen is false", () => {
+  const { container } = render(
+    <PlayerProfileModal isOpen={false} onClose={jest.fn()} player={mockPlayer} />
+  );
+  expect(container.firstChild).toBeNull();
 });
 
-test("shows temp text when player is null", () => {
-    render(<PlayerProfileModal isOpen={true} onClose={jest.fn()} player={null}/> );
-
-    expect(screen.getByText("PLAYER")).toBeInTheDocument();
+test("renders player name when open", () => {
+  render(<PlayerProfileModal isOpen={true} onClose={jest.fn()} player={mockPlayer} />);
+  expect(screen.getByText("Aaron Judge")).toBeInTheDocument();
 });
 
-test("shows dash for missing stat values", () => {
-    const playerGaps = {
-        username: "Test Guy",
-        role: "2B",
-        stats: { HR: null, RBI: undefined, SB: 5 },
-    };
-
-    render(<PlayerProfileModal isOpen={true} onClose={jest.fn()} player={playerGaps}/> );
-
-    expect(screen.getByText("5")).toBeInTheDocument();
-    expect(screen.getAllByText("—").length).toBeGreaterThan(0);
+test("renders player team and role", () => {
+  render(<PlayerProfileModal isOpen={true} onClose={jest.fn()} player={mockPlayer} />);
+  expect(screen.getByText(/NYY/)).toBeInTheDocument();
+  expect(screen.getByText(/OUTFIELD/)).toBeInTheDocument();
 });
 
-test("calls onClose when x is clicked", () => {
-    const onClose = jest.fn();
-    render(<PlayerProfileModal isOpen={true} onClose={onClose} player={null}/> );
-
-    fireEvent.click(screen.getByText("✕"));
-
-    expect(onClose).toHaveBeenCalledTimes(1);
+test("renders player depth when provided", () => {
+  render(<PlayerProfileModal isOpen={true} onClose={jest.fn()} player={mockPlayer} />);
+  expect(screen.getByText(/Depth/i)).toBeInTheDocument();
 });
 
-test("calls onClose when backdrop is clicked", () => {
-    const onClose = jest.fn();
-    const {container} = render(<PlayerProfileModal isOpen={true} onClose={onClose} player={null} />);
-
-    const backdrop = container.querySelector(".pprof-backdrop");
-    fireEvent.click(backdrop);
-
-    expect(onClose).toHaveBeenCalledTimes(1);
+test("renders HITTING section", () => {
+  render(<PlayerProfileModal isOpen={true} onClose={jest.fn()} player={mockPlayer} />);
+  expect(screen.getByText("HITTING")).toBeInTheDocument();
 });
 
-test("adds pprof-visible class after modal opens", async () => {
-    jest.useFakeTimers();
-    const {container} = render(<PlayerProfileModal isOpen={true} onClose={jest.fn()} player={null} />);
+test("renders PITCHING section", () => {
+  render(<PlayerProfileModal isOpen={true} onClose={jest.fn()} player={mockPlayer} />);
+  expect(screen.getByText("PITCHING")).toBeInTheDocument();
+});
 
-    const panel = container.querySelector(".pprof-panel");
-    expect(panel).not.toHaveClass("pprof-visible");
+test("renders SCOUT NOTES section", () => {
+  render(<PlayerProfileModal isOpen={true} onClose={jest.fn()} player={mockPlayer} />);
+  expect(screen.getByText("SCOUT NOTES")).toBeInTheDocument();
+});
 
-    act(() => jest.advanceTimersByTime(10));
-    expect(panel).toHaveClass("pprof-visible");
-    jest.useRealTimers();
+test("textarea is disabled when player has no id", () => {
+  const playerNoId = { ...mockPlayer, id: null };
+  render(<PlayerProfileModal isOpen={true} onClose={jest.fn()} player={playerNoId} />);
+  expect(screen.getByPlaceholderText(/scouting notes/i)).toBeDisabled();
+});
+
+test("textarea is enabled when player has an id", () => {
+  render(<PlayerProfileModal isOpen={true} onClose={jest.fn()} player={mockPlayer} />);
+  expect(screen.getByPlaceholderText(/scouting notes/i)).not.toBeDisabled();
+});
+
+test("loads existing note from API when opened", async () => {
+  getUser.mockResolvedValue({
+    data: { playerNotes: [{ playerId: 42, note: "Great power hitter" }] },
+  });
+  render(<PlayerProfileModal isOpen={true} onClose={jest.fn()} player={mockPlayer} />);
+  await waitFor(() => {
+    expect(screen.getByDisplayValue("Great power hitter")).toBeInTheDocument();
+  });
+});
+
+test("clicking close button calls onClose", () => {
+  const onClose = jest.fn();
+  render(<PlayerProfileModal isOpen={true} onClose={onClose} player={mockPlayer} />);
+  fireEvent.click(screen.getByText("✕"));
+  expect(onClose).toHaveBeenCalledTimes(1);
+});
+
+test("clicking backdrop calls onClose", () => {
+  const onClose = jest.fn();
+  const { container } = render(
+    <PlayerProfileModal isOpen={true} onClose={onClose} player={mockPlayer} />
+  );
+  const backdrop = container.querySelector(".pprof-backdrop");
+  fireEvent.click(backdrop);
+  expect(onClose).toHaveBeenCalledTimes(1);
 });

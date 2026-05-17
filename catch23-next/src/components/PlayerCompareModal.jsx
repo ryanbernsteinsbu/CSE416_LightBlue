@@ -11,20 +11,40 @@ function fmt(v, key) {
 }
 
 const HIT_STATS = [
+  ["PA", "PA (Plate Appearances)"],
+  ["AB", "AB (At Bats)"],
+  ["R", "R (Runs Scored)"],
+  ["H", "H (Hits)"],
+  ["1B", "1B (Singles)"],
+  ["2B", "2B (Doubles)"],
+  ["3B", "3B (Triples)"],
   ["HR", "HR (Home Runs)"],
   ["RBI", "RBI (Runs Batted In)"],
+  ["BB", "BB (Walks)"],
+  ["K", "K (Strikeouts)"],
   ["SB", "SB (Stolen Bases)"],
-  ["R", "R (Runs Scored)"],
+  ["CS", "CS (Caught Stealing)"],
   ["AVG", "AVG (Batting Average)"],
-  ["OBP", "OBP (On-Base %)"],
+  ["OBP", "OBP (On-Base Percentage)"],
+  ["SLG", "SLG (Slugging Percentage)"],
 ];
-
 const PIT_STATS = [
+  ["G", "G (Games Appeared)"],
+  ["GS", "GS (Games Started)"],
   ["W", "W (Wins)"],
   ["SV", "SV (Saves)"],
-  ["K", "K (Strikeouts)"],
-  ["ERA", "ERA (Earned Run Avg)"],
-  ["WHIP", "WHIP"],
+  ["IP", "IP (Innings Pitched)"],
+  ["H", "H (Hits Allowed)"],
+  ["ER", "ER (Earned Runs)"],
+  ["BB", "BB (Walks Allowed)"],
+  ["SO", "SO (Strikeouts)"],
+  ["HR", "HR (Home Runs Allowed)"],
+  ["ERA", "ERA (Earned Run Average)"],
+  ["WHIP", "WHIP (Walks + Hits per Inning Pitched)"],
+  ["BF", "BF (Batters Faced)"],
+  ["SO/W", "SO/W (Strikeout-to-Walk Ratio)"],
+  ["SB", "SB (Stolen Bases Allowed)"],
+  ["PO", "PO (Pickoffs)"],
 ];
 
 function PlayerCompareCard({ player, onRemove, mode }) {

@@ -130,10 +130,31 @@ export function PlayerProfileModal({ isOpen, onClose, player }) {
           <button className="pprof-close" onClick={onClose}>✕</button>
         </div>
 
-        <div className="pprof-body">
-
-          <div className="pprof-name-section">
-            <div className="pprof-name">{player?.username || "PLAYER"}</div>
+        <div className="pprof-body" >
+            <div style={{alignItems: "center"}}>
+          <div className="pprof-name-section"
+            style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "16px",
+                width: "100%",
+            }}
+          >
+            <img
+                  src={`https://securea.mlb.com/mlb/images/players/head_shot/${player.mlbID}.jpg`}
+                  alt="Profile picture"
+                  style={{
+                      width: "150px",
+                      height: "150px",
+                      borderRadius: "50%",
+                      objectFit: "cover",
+                  }}
+              />
+            <div>
+            <div className="pprof-name">
+              {player?.username || "PLAYER"}
+              </div>
             <div className="pprof-sub">
                 {player?.team
                     ? `${player.team} · ${player.role}`
@@ -145,17 +166,29 @@ export function PlayerProfileModal({ isOpen, onClose, player }) {
                 </div>
             )}
         </div>
+        </div>
+        </div>
 
           {player?.stats && (
             <div>
               <div className="pprof-hitpitch">HITTING</div>
               {[
-                ["HR (Home Runs)",        player.stats.HR],
-                ["RBI (Runs Batted In)",  player.stats.RBI],
-                ["SB (Stolen Bases)",     player.stats.SB],
-                ["R (Runs Scored)",       player.stats.R],
-                ["AVG (Batting Average)", player.stats.AVG],
-                ["OBP (On-Base %)",       player.stats.OBP],
+                  ["PA (Plate Appearances)", player.stats.PA],
+                  ["AB (At Bats)", player.stats.AB],
+                  ["R (Runs Scored)", player.stats.R],
+                  ["H (Hits)", player.stats.H],
+                  ["1B (Singles)", player.stats["1B"]],
+                  ["2B (Doubles)", player.stats["2B"]],
+                  ["3B (Triples)", player.stats["3B"]],
+                  ["HR (Home Runs)", player.stats.HR],
+                  ["RBI (Runs Batted In)", player.stats.RBI],
+                  ["BB (Walks)", player.stats.BB],
+                  ["K (Strikeouts)", player.stats.K],
+                  ["SB (Stolen Bases)", player.stats.SB],
+                  ["CS (Caught Stealing)", player.stats.CS],
+                  ["AVG (Batting Average)", player.stats.AVG],
+                  ["OBP (On-Base Percentage)", player.stats.OBP],
+                  ["SLG (Slugging Percentage)", player.stats.SLG],
               ].map(([label, value]) => (
                 <div key={label} className="pprof-row">
                   <span className="pprof-team">{label}</span>
@@ -169,11 +202,22 @@ export function PlayerProfileModal({ isOpen, onClose, player }) {
             <div>
               <div className="pprof-hitpitch">PITCHING</div>
               {[
-                ["W (Wins)",                     player.stats.W],
-                ["SV (Saves)",                   player.stats.SV],
-                ["K (Strikeouts)",               player.stats.K],
-                ["ERA (Earned Run Average)",     player.stats.ERA],
-                ["WHIP (Walks+Hits per Inning)", player.stats.WHIP],
+                    ["G (Games Appeared)", player.stats.G],
+                  ["GS (Games Started)", player.stats.GS],
+                  ["W (Wins)", player.stats.W],
+                  ["SV (Saves)", player.stats.SV],
+                  ["IP (Innings Pitched)", player.stats.IP],
+                  ["H (Hits Allowed)", player.stats.H],
+                  ["ER (Earned Runs)", player.stats.ER],
+                  ["BB (Walks Allowed)", player.stats.BB],
+                  ["SO (Strikeouts)", player.stats.SO],
+                  ["HR (Home Runs Allowed)", player.stats.HR],
+                  ["ERA (Earned Run Average)", player.stats.ERA],
+                  ["WHIP (Walks + Hits per Inning Pitched)", player.stats.WHIP],
+                  ["BF (Batters Faced)", player.stats.BF],
+                  ["SO/W (Strikeout-to-Walk Ratio)", Number((player.stats.SO / player.stats.BB).toFixed(3))],
+                  ["SB (Stolen Bases Allowed)", player.stats.SB],
+                  ["PO (Pickoffs)", player.stats.PO],
               ].map(([label, value]) => (
                 <div key={label} className="pprof-row">
                   <span className="pprof-team">{label}</span>

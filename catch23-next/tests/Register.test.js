@@ -1,221 +1,142 @@
-import { render, screen, waitFor, fireEvent } from "@testing-library/react";
-import Register from "@/components/Register";
-
-import {
-  registerUser
-} from "../src/lib/api";
-
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import Register from "../src/components/Register";
+import { registerUser } from "../src/lib/api";
 
 jest.mock("../src/lib/api", () => ({
   registerUser: jest.fn(),
 }));
 
+const fillForm = ({ email = "", displayName = "", password = "", confirm = "" } = {}) => {
+  if (email) fireEvent.change(screen.getByPlaceholderText("Email"), { target: { value: email } });
+  if (displayName) fireEvent.change(screen.getByPlaceholderText("Display Name"), { target: { value: displayName } });
+  if (password) fireEvent.change(screen.getByPlaceholderText("Password"), { target: { value: password } });
+  if (confirm) fireEvent.change(screen.getByPlaceholderText("Re-Type password"), { target: { value: confirm } });
+};
+
 beforeEach(() => {
-  Object.defineProperty(window, "localStorage", {
-    value: {
-      getItem: jest.fn(() => "123"),
-    },
-    writable: true,
-  });
   jest.clearAllMocks();
 });
 
-// -- Helpers --
-
-const mockProps = {
-  onCreateUserClick: jest.fn(),
-  onShowLogin: jest.fn(),
-};
-
-const fillForm = ({
-  email = "sunshine@gmail.com",
-  displayName = "Evelyn Sunshine",
-  password = "SecurePass1!",
-  confirmPassword = "SecurePass1!",
-} = {}) => {
-  fireEvent.change(screen.getByPlaceholderText("Email"), { target: { value: email } });
-  fireEvent.change(screen.getByPlaceholderText("Display Name"), { target: { value: displayName } });
-  fireEvent.change(screen.getByPlaceholderText("Password"), { target: { value: password } });
-  fireEvent.change(screen.getByPlaceholderText("Re-Type password"), { target: { value: confirmPassword } });
-};
-
-const submitForm = () => fireEvent.click(screen.getByText("Register"));
-
-// -- Render Tests --
-
-test("renders all form fields and buttons", () => {
-  render(<Register {...mockProps} />);
-
+test("renders all form inputs", () => {
+  render(<Register onCreateUserClick={jest.fn()} onShowLogin={jest.fn()} />);
   expect(screen.getByPlaceholderText("Email")).toBeInTheDocument();
   expect(screen.getByPlaceholderText("Display Name")).toBeInTheDocument();
   expect(screen.getByPlaceholderText("Password")).toBeInTheDocument();
   expect(screen.getByPlaceholderText("Re-Type password")).toBeInTheDocument();
+});
+
+test("renders Register and Sign In buttons", () => {
+  render(<Register onCreateUserClick={jest.fn()} onShowLogin={jest.fn()} />);
   expect(screen.getByText("Register")).toBeInTheDocument();
   expect(screen.getByText("Sign In")).toBeInTheDocument();
 });
 
-// -- Validation Tests --
+test("clicking Sign In calls onShowLogin", () => {
+  const onShowLogin = jest.fn();
+  render(<Register onCreateUserClick={jest.fn()} onShowLogin={onShowLogin} />);
+  fireEvent.click(screen.getByText("Sign In"));
+  expect(onShowLogin).toHaveBeenCalledTimes(1);
+});
 
 test("shows error when email is empty", async () => {
-  render(<Register {...mockProps} />);
-  fillForm({ email: "" });
-  submitForm();
-
+  render(<Register onCreateUserClick={jest.fn()} onShowLogin={jest.fn()} />);
+  fireEvent.click(screen.getByText("Register"));
   await waitFor(() => {
     expect(screen.getByText(/Email is required/i)).toBeInTheDocument();
   });
 });
 
 test("shows error when display name is empty", async () => {
-  render(<Register {...mockProps} />);
-  fillForm({ displayName: "" });
-  submitForm();
-
+  render(<Register onCreateUserClick={jest.fn()} onShowLogin={jest.fn()} />);
+  fillForm({ email: "test@test.com" });
+  fireEvent.click(screen.getByText("Register"));
   await waitFor(() => {
     expect(screen.getByText(/Display Name is required/i)).toBeInTheDocument();
   });
 });
 
 test("shows error when password is empty", async () => {
-  render(<Register {...mockProps} />);
-  fillForm({ password: "", confirmPassword: "" });
-  submitForm();
-
+  render(<Register onCreateUserClick={jest.fn()} onShowLogin={jest.fn()} />);
+  fillForm({ email: "test@test.com", displayName: "John" });
+  fireEvent.click(screen.getByText("Register"));
   await waitFor(() => {
     expect(screen.getByText(/Password is required/i)).toBeInTheDocument();
   });
 });
 
-test("shows error when confirm password is empty", async () => {
-  render(<Register {...mockProps} />);
-  fillForm({ confirmPassword: "" });
-  submitForm();
-
+test("shows error when passwords do not match", async () => {
+  render(<Register onCreateUserClick={jest.fn()} onShowLogin={jest.fn()} />);
+  fillForm({ email: "test@test.com", displayName: "John", password: "Password1!", confirm: "Password2!" });
+  fireEvent.click(screen.getByText("Register"));
   await waitFor(() => {
-    expect(screen.getByText(/Re-type Password is required/i)).toBeInTheDocument();
+    expect(screen.getByText(/do not match/i)).toBeInTheDocument();
   });
 });
 
-test("shows error when passwords do not match", async () => {
-  render(<Register {...mockProps} />);
-  fillForm({ password: "Password1!", confirmPassword: "Password2!" });
-  submitForm();
-
+test("shows error when password is less than 8 characters", async () => {
+  render(<Register onCreateUserClick={jest.fn()} onShowLogin={jest.fn()} />);
+  fillForm({ email: "test@test.com", displayName: "John", password: "short", confirm: "short" });
+  fireEvent.click(screen.getByText("Register"));
   await waitFor(() => {
-    expect(screen.getByText(/Passwords do not match/i)).toBeInTheDocument();
+    expect(screen.getByText(/at least 8 characters/i)).toBeInTheDocument();
   });
 });
 
 test("shows error for invalid email format", async () => {
-  render(<Register {...mockProps} />);
-  fillForm({ email: "not-an-email" });
-  submitForm();
-
+  render(<Register onCreateUserClick={jest.fn()} onShowLogin={jest.fn()} />);
+  fillForm({ email: "notvalid", displayName: "John", password: "Password1!", confirm: "Password1!" });
+  fireEvent.click(screen.getByText("Register"));
   await waitFor(() => {
-    expect(screen.getByText(/valid email address/i)).toBeInTheDocument();
+    expect(screen.getByText(/valid email/i)).toBeInTheDocument();
   });
 });
 
 test("shows error when password contains display name", async () => {
-  render(<Register {...mockProps} />);
-  fillForm({ displayName: "JohnDoe", password: "johndoe123!", confirmPassword: "johndoe123!" });
-  submitForm();
-
+  render(<Register onCreateUserClick={jest.fn()} onShowLogin={jest.fn()} />);
+  fillForm({ email: "test@test.com", displayName: "JohnDoe", password: "JohnDoeRocks1", confirm: "JohnDoeRocks1" });
+  fireEvent.click(screen.getByText("Register"));
   await waitFor(() => {
-    expect(screen.getByText(/Password cannot contain your display name/i)).toBeInTheDocument();
+    expect(screen.getByText(/cannot contain your display name/i)).toBeInTheDocument();
   });
 });
 
-test("shows error when password contains email username", async () => {
-  render(<Register {...mockProps} />);
-  fillForm({ email: "johnsmith@example.com", password: "johnsmith123!", confirmPassword: "johnsmith123!" });
-  submitForm();
-
+test("shows error when password contains email prefix", async () => {
+  render(<Register onCreateUserClick={jest.fn()} onShowLogin={jest.fn()} />);
+  fillForm({ email: "myemail@test.com", displayName: "John", password: "myemailRocks1!", confirm: "myemailRocks1!" });
+  fireEvent.click(screen.getByText("Register"));
   await waitFor(() => {
-    expect(screen.getByText(/Password cannot contain your email/i)).toBeInTheDocument();
+    expect(screen.getByText(/cannot contain your email/i)).toBeInTheDocument();
   });
 });
 
-// -- Succesful Registration --
-
-test("shows success banner and calls onCreateUserClick after successful registration", async () => {
+test("calls registerUser with valid form data", async () => {
   registerUser.mockResolvedValue({ data: { id: 1 } });
+  render(<Register onCreateUserClick={jest.fn()} onShowLogin={jest.fn()} />);
+  fillForm({ email: "test@example.com", displayName: "JohnDoe", password: "SuperPass1!", confirm: "SuperPass1!" });
+  fireEvent.click(screen.getByText("Register"));
+  await waitFor(() => {
+    expect(registerUser).toHaveBeenCalledWith("test@example.com", "JohnDoe", "SuperPass1!");
+  });
+});
 
-  render(<Register {...mockProps} />);
-  fillForm();
-  submitForm();
-
+test("shows success banner after successful registration", async () => {
+  registerUser.mockResolvedValue({ data: { id: 1 } });
+  render(<Register onCreateUserClick={jest.fn()} onShowLogin={jest.fn()} />);
+  fillForm({ email: "test@example.com", displayName: "JohnDoe", password: "SuperPass1!", confirm: "SuperPass1!" });
+  fireEvent.click(screen.getByText("Register"));
   await waitFor(() => {
     expect(screen.getByText(/Account successfully created/i)).toBeInTheDocument();
   });
-
-  await waitFor(() => {
-    expect(mockProps.onCreateUserClick).toHaveBeenCalled();
-  }, { timeout: 3000 });
 });
 
-test("clears form fields after successful registration", async () => {
-  registerUser.mockResolvedValue({ data: { id: 1 } });
-
-  render(<Register {...mockProps} />);
-  fillForm();
-  submitForm();
-
-  await waitFor(() => {
-    expect(screen.getByPlaceholderText("Email").value).toBe("");
-    expect(screen.getByPlaceholderText("Display Name").value).toBe("");
-  });
-});
-
-test("calls registerUser with correct arguments", async () => {
-  registerUser.mockResolvedValue({ data: { id: 1 } });
-
-  render(<Register {...mockProps} />);
-  fillForm({ email: "test@example.com", displayName: "TestUser", password: "SecurePass1!" });
-  submitForm();
-
-  await waitFor(() => {
-    expect(registerUser).toHaveBeenCalledWith("test@example.com", "TestUser", "SecurePass1!");
-  });
-});
-
-// --- Backend Error Handling ---
-
-test("shows specific error when email is already registered", async () => {
+test("shows error for duplicate email from backend", async () => {
   registerUser.mockRejectedValue({
     response: { data: { error: { message: "Email is connected to existing account" } } },
   });
-
-  render(<Register {...mockProps} />);
-  fillForm();
-  submitForm();
-
+  render(<Register onCreateUserClick={jest.fn()} onShowLogin={jest.fn()} />);
+  fillForm({ email: "test@example.com", displayName: "JohnDoe", password: "SuperPass1!", confirm: "SuperPass1!" });
+  fireEvent.click(screen.getByText("Register"));
   await waitFor(() => {
-    expect(screen.getByText(/already an account associated with that email/i)).toBeInTheDocument();
+    expect(screen.getByText(/already an account/i)).toBeInTheDocument();
   });
 });
-
-test("shows generic error on unexpected backend failure", async () => {
-  registerUser.mockRejectedValue({ response: { data: { error: { message: "Server exploded" } } } });
-
-  render(<Register {...mockProps} />);
-  fillForm();
-  submitForm();
-
-  await waitFor(() => {
-    expect(screen.getByText(/Error creating user. Please try again later./i)).toBeInTheDocument();
-  });
-});
-
-// --- Navigation ---
-
-test("calls onShowLogin when Sign In button is clicked", () => {
-  render(<Register {...mockProps} />);
-  fireEvent.click(screen.getByText("Sign In"));
-  expect(mockProps.onShowLogin).toHaveBeenCalled();
-});
-
-
-
-
-

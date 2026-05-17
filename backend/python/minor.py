@@ -46,7 +46,7 @@ def parse_age(age_str):
 
 def transform_player(p):
     return {
-            "Name": repr(clean_name(p.get("Name")).encode("utf-8"))[2:-2],
+            "Name": repr(clean_name(p.get("Name")).encode("utf-8"))[2:-1],
         "Age": parse_age(p.get("MaxAge", p.get("Age"))),
 
         # IDs
@@ -85,7 +85,7 @@ def transform_player(p):
 
 def transform_pitcher(p):
     return {
-            "Name": repr(clean_name(p.get("Name")).encode("utf-8"))[2:-2],
+            "Name": repr(clean_name(p.get("Name")).encode("utf-8"))[2:-1],
         "Age": parse_age(p.get("MaxAge", p.get("Age"))),
 
         # IDs
@@ -158,7 +158,7 @@ def get_minor_stats(is_bat, start_dt, end_dt):
 
         df = to_dataframe(data, is_bat)
 
-        df.to_csv((r"minordata.csv" if is_bat else r"minorpdata.csv"), index=False)
+        df.to_csv((r"./rsrc/minordata.csv" if is_bat else r"./rsrc/minorpdata.csv"), index=False)
     except requests.RequestException as e:
         print(f"Failed : {e}")
 
