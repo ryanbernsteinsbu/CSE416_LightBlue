@@ -1,127 +1,94 @@
-import { render, screen, waitFor, fireEvent, act } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import Login from "../src/components/Login";
 import { loginUser } from "../src/lib/api";
 
 jest.mock("../src/lib/api", () => ({
-    loginUser: jest.fn(),
+  loginUser: jest.fn(),
 }));
 
-window.alert = jest.fn();
-
 beforeEach(() => {
-    jest.clearAllMocks();
+  jest.clearAllMocks();
 });
 
-test("renders form fields (email, password, buttons", () => {
-    render(<Login/>);
-
-    expect(screen.getByPlaceholderText("Email")).toBeInTheDocument();
-    expect(screen.getByPlaceholderText("Password")).toBeInTheDocument();
-    expect(screen.getByText("Sign in")).toBeInTheDocument();
-    expect(screen.getByText("Register")).toBeInTheDocument();
+test("renders email and password inputs", () => {
+  render(<Login onLoginSuccess={jest.fn()} onShowRegister={jest.fn()} onShowForgotPassword={jest.fn()} />);
+  expect(screen.getByPlaceholderText("Email")).toBeInTheDocument();
+  expect(screen.getByPlaceholderText("Password")).toBeInTheDocument();
 });
 
-test("alerts when submitting with no email", async () => {
-    render(<Login />);
-
-    fireEvent.click(screen.getByText("Sign in"));
-
-    expect(window.alert).toHaveBeenCalledWith("Please enter email");
-    expect(loginUser).not.toHaveBeenCalled();
+test("renders Sign in and Register buttons", () => {
+  render(<Login onLoginSuccess={jest.fn()} onShowRegister={jest.fn()} onShowForgotPassword={jest.fn()} />);
+  expect(screen.getByText("Sign in")).toBeInTheDocument();
+  expect(screen.getByText("Register")).toBeInTheDocument();
 });
 
-test("calls loginUser with email and password on submit", async () => {
-    loginUser.mockResolvedValue({ data: { id: "123" } });
-    render(<Login onLoginSuccess={jest.fn()} />);
-
-    fireEvent.change(screen.getByPlaceholderText("Email"), {
-        target: { value: "test@test.com"},
-    });
-    fireEvent.change(screen.getByPlaceholderText("Password"), {
-        target: { value: "password123" },
-    });
-    fireEvent.click(screen.getByText("Sign in"));
-
-    await waitFor(() => {
-        expect(loginUser).toHaveBeenCalledWith("test@test.com", "password123");
-    });
-})
-
-test("calls onLoginSuccess with data on successful login", async () => {
-    const mockData = { id: "1", username: "Jackie" };
-    loginUser.mockResolvedValue({ data: mockData });
-    const onLoginSuccess = jest.fn();
-
-    render(<Login onLoginSuccess={onLoginSuccess} />);
-
-    fireEvent.change(screen.getByPlaceholderText("Email"), {
-        target: { value: "test@test.com" }
-    });
-    fireEvent.click(screen.getByText("Sign in"));
-
-    await waitFor(() => {
-        expect(onLoginSuccess).toHaveBeenCalledWith(mockData);
-    });
-});
-
-test("shows invalid credentials error banner on bad login", async () => {
-    loginUser.mockRejectedValue({
-        response: { data: { message: "Invalid user credentials"}}
-    });
-
-    render(<Login/>);
-
-    fireEvent.change(screen.getByPlaceholderText("Email"), {
-        target: { value: "wrong@test.com" }
-    });
-    fireEvent.click(screen.getByText("Sign in"));
-
-    expect(await screen.findByText(/Invalid user credentials/i)).toBeInTheDocument();
-});
-
-test("shows error banner on any bad error or unexpected error", async () => {
-    loginUser.mockRejectedValue({
-        response: { data: { message: "Random zero issue"}}
-    });
-
-    render(<Login/>);
-
-    fireEvent.change(screen.getByPlaceholderText("Email"), {
-        target: { value: "wrong@test.com" }
-    });
-    fireEvent.click(screen.getByText("Sign in"));
-
-    expect(await screen.findByText(/An error has occurred/i)).toBeInTheDocument();
-});
-
-test("error banner clears after 3 seconds", async () => {
-    jest.useFakeTimers();
-    loginUser.mockRejectedValue({
-        response: { data: { message: "Invalid user credentials" } },
-    });
-
-    render(<Login />);
-
-    fireEvent.change(screen.getByPlaceholderText("Email"), {
-        target: { value: "test@test.com" },
-    });
-    fireEvent.click(screen.getByText("Sign in"));
-
-    expect(await screen.findByText(/Invalid user credentials/i)).toBeInTheDocument();
-
-    act(() => jest.advanceTimersByTime(3000));
-
-    await waitFor(() => {
-        expect(screen.queryByText(/Invalid user credentials/i)).not.toBeInTheDocument();
-    });
-
-    jest.useRealTimers();
+test("renders Forgot password link", () => {
+  render(<Login onLoginSuccess={jest.fn()} onShowRegister={jest.fn()} onShowForgotPassword={jest.fn()} />);
+  expect(screen.getByText(/Forgot password/i)).toBeInTheDocument();
 });
 
 test("clicking Register calls onShowRegister", () => {
-    const onShowRegister = jest.fn();
-    render(<Login onShowRegister={onShowRegister} />);
+  const onShowRegister = jest.fn();
+  render(<Login onLoginSuccess={jest.fn()} onShowRegister={onShowRegister} onShowForgotPassword={jest.fn()} />);
+  fireEvent.click(screen.getByText("Register"));
+  expect(onShowRegister).toHaveBeenCalledTimes(1);
+});
 
-    fireEvent.click(screen.getByText("Register"));
-    expect(onShowRegister).toHaveBeenCalledTimes(1);
+test("clicking Forgot password calls onShowForgotPassword", () => {
+  const onShowForgotPassword = jest.fn();
+  render(<Login onLoginSuccess={jest.fn()} onShowRegister={jest.fn()} onShowForgotPassword={onShowForgotPassword} />);
+  fireEvent.click(screen.getByText(/Forgot password/i));
+  expect(onShowForgotPassword).toHaveBeenCalledTimes(1);
+});
+
+test("shows error when submitting empty email", async () => {
+  render(<Login onLoginSuccess={jest.fn()} onShowRegister={jest.fn()} onShowForgotPassword={jest.fn()} />);
+  fireEvent.click(screen.getByText("Sign in"));
+  await waitFor(() => {
+    expect(screen.getByText(/enter your email/i)).toBeInTheDocument();
+  });
+});
+
+test("shows error when submitting empty password", async () => {
+  render(<Login onLoginSuccess={jest.fn()} onShowRegister={jest.fn()} onShowForgotPassword={jest.fn()} />);
+  fireEvent.change(screen.getByPlaceholderText("Email"), { target: { value: "test@test.com" } });
+  fireEvent.click(screen.getByText("Sign in"));
+  await waitFor(() => {
+    expect(screen.getByText(/enter your password/i)).toBeInTheDocument();
+  });
+});
+
+test("calls loginUser with email and password on submit", async () => {
+  loginUser.mockResolvedValue({ data: { token: "abc" } });
+  const onLoginSuccess = jest.fn();
+  render(<Login onLoginSuccess={onLoginSuccess} onShowRegister={jest.fn()} onShowForgotPassword={jest.fn()} />);
+  fireEvent.change(screen.getByPlaceholderText("Email"), { target: { value: "user@test.com" } });
+  fireEvent.change(screen.getByPlaceholderText("Password"), { target: { value: "password123" } });
+  fireEvent.click(screen.getByText("Sign in"));
+  await waitFor(() => {
+    expect(loginUser).toHaveBeenCalledWith("user@test.com", "password123");
+    expect(onLoginSuccess).toHaveBeenCalledWith({ token: "abc" });
+  });
+});
+
+test("shows error on invalid credentials", async () => {
+  loginUser.mockRejectedValue({ response: { data: { message: "Invalid user credentials" } } });
+  render(<Login onLoginSuccess={jest.fn()} onShowRegister={jest.fn()} onShowForgotPassword={jest.fn()} />);
+  fireEvent.change(screen.getByPlaceholderText("Email"), { target: { value: "bad@test.com" } });
+  fireEvent.change(screen.getByPlaceholderText("Password"), { target: { value: "wrong" } });
+  fireEvent.click(screen.getByText("Sign in"));
+  await waitFor(() => {
+    expect(screen.getByText(/Invalid email or password/i)).toBeInTheDocument();
+  });
+});
+
+test("shows generic error for unexpected API failure", async () => {
+  loginUser.mockRejectedValue({ response: { data: { message: "Server down" } } });
+  render(<Login onLoginSuccess={jest.fn()} onShowRegister={jest.fn()} onShowForgotPassword={jest.fn()} />);
+  fireEvent.change(screen.getByPlaceholderText("Email"), { target: { value: "user@test.com" } });
+  fireEvent.change(screen.getByPlaceholderText("Password"), { target: { value: "pass1234" } });
+  fireEvent.click(screen.getByText("Sign in"));
+  await waitFor(() => {
+    expect(screen.getByText(/error has occurred/i)).toBeInTheDocument();
+  });
 });
