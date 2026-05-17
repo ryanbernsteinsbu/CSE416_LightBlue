@@ -1,6 +1,7 @@
 import { Request, Response } from 'express'
 import DraftPick from '../models/draftPick';
 import Player from '../models/player';
+import { Op } from 'sequelize';
 
 export const saveDraftPicks = async (req: Request, res: Response) => {
     try {
@@ -10,32 +11,48 @@ export const saveDraftPicks = async (req: Request, res: Response) => {
             return res.status(400).json({ error: 'picks and teamIds must be arrays' });
         }
 
-        for (const pick of picks) {
-            const existingPick = await DraftPick.findOne({
-                where: {
-                    team_id: pick.team_id,
-                    slotIndex: pick.slotIndex  // ← use slotIndex instead
-                }
-            });
+        const cleanTeamIds = teamIds
+            .map((id) => Number(id))
+            .filter((id) => !Number.isNaN(id));
 
-            if (existingPick) {
-                await existingPick.update({
-                    cost: pick.cost,
-                    player_id: pick.player_id,
-                    season: pick.season,
-                    rosterPosition: pick.rosterPosition,
-                    draft_time: pick.draft_time
-                });
-            } else {
-                await DraftPick.create(pick);
-            }
+        if (cleanTeamIds.length === 0) {
+            return res.status(400).json({ error: 'teamIds cannot be empty' });
+        }
+
+        // Remove old draft picks for these teams first.
+        await DraftPick.destroy({
+            where: {
+                team_id: {
+                    [Op.in]: cleanTeamIds,
+                },
+            },
+        });
+
+        const cleanPicks = picks
+            .filter((pick) => pick.player_id && pick.team_id)
+            .map((pick) => ({
+                cost: pick.cost,
+                player_id: pick.player_id,
+                team_id: pick.team_id,
+                season: pick.season,
+                rosterPosition: pick.rosterPosition,
+                draft_time: pick.draft_time || "",
+                slotIndex: pick.slotIndex,
+            }));
+
+        if (cleanPicks.length > 0) {
+            await DraftPick.bulkCreate(cleanPicks);
         }
 
         res.status(201).json({ success: true });
     } catch (err: any) {
         console.error('Failed to save draft picks:', err.message);
         console.error('Detail:', err.original?.message);
-        res.status(500).json({ error: 'Failed to save draft picks', details: err.message, detail: err.original?.message });
+        res.status(500).json({
+            error: 'Failed to save draft picks',
+            details: err.message,
+            detail: err.original?.message,
+        });
     }
 };
 
