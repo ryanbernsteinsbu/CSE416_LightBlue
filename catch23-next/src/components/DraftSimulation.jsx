@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useState, useRef, useMemo } from "react";
-import { getLeagueTeams, getAllPlayers, getTeamDraftPicks } from "../lib/api";
+import { getLeagueTeams, getAllPlayers, getTeamDraftPicks, updateTeam } from "../lib/api";
 import { PositionPlayersModal, playerMatchesRowPosition } from "./PositionPlayersModal";
 import { PlayerProfileModal } from "./PlayerProfileModal";
 
@@ -302,7 +302,7 @@ export default function DraftSimulation({ league, onBack, onModeChange }) {
         setTimeout(() => teamInputRef.current?.focus(), 0);
     };
 
-    const commitNameEdit = () => {
+    const commitNameEdit = async () => {
         const nextName = editNameValue.trim() || teamName;
 
         if (nextName !== teamName) {
@@ -311,6 +311,14 @@ export default function DraftSimulation({ league, onBack, onModeChange }) {
 
         setTeamName(nextName);
         setEditingName(false);
+
+        if(simTeamId && nextName !== teamName) {
+            try {
+                await updateTeam(simTeamId, { name: nextName });
+            } catch (err) {
+                console.error("Failed to save team name:", err);
+            }
+        }
     };
 
     const handleNameKeyDown = (e) => {

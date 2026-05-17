@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useState, useRef, useMemo } from "react";
-import { createTeam, getLeagueTeams, deleteTeam, getAllPlayers, saveDraftPicks, getTeamDraftPicks, getTeamTaxiPicks } from "../lib/api";
+import { createTeam, getLeagueTeams, deleteTeam, getAllPlayers, saveDraftPicks, getTeamDraftPicks, getTeamTaxiPicks, updateTeam } from "../lib/api";
 import ConfirmDeleteModal from "./ConfirmDeleteModal.jsx";
 import { PositionPlayersModal, playerMatchesRowPosition } from "./PositionPlayersModal";
 import { PlayerProfileModal } from "./PlayerProfileModal";
@@ -379,7 +379,7 @@ export default function PreDraftBoard({ league, onBack, onModeChange, onLeagueUp
         setTimeout(() => teamInputRef.current?.focus(), 0);
     };
 
-    const commitTeamEdit = () => {
+    const commitTeamEdit = async () => {
         if (!editingTeamId) return;
 
         const currentTeam = teams.find(t => t.id === editingTeamId);
@@ -395,6 +395,14 @@ export default function PreDraftBoard({ league, onBack, onModeChange, onLeagueUp
 
         setEditingTeamId(null);
         setEditTeamValue("");
+
+        if (nextName && nextName !== currentTeam?.name) {
+            try {
+                await updateTeam(editingTeamId, { name: nextName });
+            } catch (err) {
+                console.error("Failed to save team name:", err);
+            }
+        }
     };
 
     const handleTeamKeyDown = (e) => {
