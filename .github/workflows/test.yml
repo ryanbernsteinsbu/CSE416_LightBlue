@@ -31,7 +31,7 @@ jobs:
 
       - name: Setup environment variables
         run: |
-          echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> .env
+          echo "DATABASE_URL=postgresql://localhost:5432" >> .env
           echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
 
       - name: Run backend tests
