@@ -46,7 +46,7 @@ def parse_age(age_str):
 
 def transform_player(p):
     return {
-            "Name": repr(clean_name(p.get("Name")).encode("utf-8"))[2:-2],
+            "Name": repr(clean_name(p.get("Name")).encode("utf-8"))[2:-1],
         "Age": parse_age(p.get("MaxAge", p.get("Age"))),
 
         # IDs

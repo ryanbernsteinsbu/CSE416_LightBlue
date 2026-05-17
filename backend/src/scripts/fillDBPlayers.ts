@@ -322,15 +322,15 @@ async function ingestPitchers(csvPath: string) {
       .on("error", reject);
   });
 }
-ingestHitters("./python/minordata.csv")
+ingestHitters("./python/rsrc/minordata.csv")
   .then(() => console.log("Done"))
   .catch((err) => console.error("Error:", err));
-ingestPitchers("./python/minorpdata.csv")
+ingestPitchers("./python/rsrc/minorpdata.csv")
   .then(() => console.log("Done"))
   .catch((err) => console.error("Error:", err));
-ingestHitters("./python/data.csv")
+ingestHitters("./python/rsrc/batting_3avg.csv")
   .then(() => console.log("Done"))
   .catch((err) => console.error("Error:", err));
-ingestPitchers("./python/pdata.csv")
+ingestPitchers("./python/rsrc/pitching_3avg.csv")
   .then(() => console.log("Done"))
   .catch((err) => console.error("Error:", err));
