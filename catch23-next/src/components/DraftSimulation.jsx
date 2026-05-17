@@ -383,6 +383,7 @@ export default function DraftSimulation({ league, onBack, onModeChange }) {
         setEditNameValue(teamName);
         setTimeout(() => teamInputRef.current?.focus(), 0);
     };
+
     const commitNameEdit = async () => {
         const nextName = editNameValue.trim() || teamName;
 
@@ -425,6 +426,14 @@ export default function DraftSimulation({ league, onBack, onModeChange }) {
         }
 
         setEditingName(false);
+
+        if(simTeamId && nextName !== teamName) {
+            try {
+                await updateTeam(simTeamId, { name: nextName });
+            } catch (err) {
+                console.error("Failed to save team name:", err);
+            }
+        }
     };
     const handleNameKeyDown = (e) => {
         if (e.key === "Enter" || e.key === "Tab") { e.preventDefault(); commitNameEdit(); }

@@ -430,6 +430,14 @@ export default function PreDraftBoard({ league, onBack, onModeChange, onLeagueUp
 
         setEditingTeamId(null);
         setEditTeamValue("");
+
+        if (nextName && nextName !== currentTeam?.name) {
+            try {
+                await updateTeam(editingTeamId, { name: nextName });
+            } catch (err) {
+                console.error("Failed to save team name:", err);
+            }
+        }
     };
 
     const handleTeamKeyDown = (e) => {
