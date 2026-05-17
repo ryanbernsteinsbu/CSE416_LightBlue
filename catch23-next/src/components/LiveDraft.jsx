@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useState, useRef, useMemo } from "react";
-import { createTeam, getLeagueTeams, deleteTeam, getAllPlayers, saveDraftPicks, getTeamDraftPicks, updateLeague } from "../lib/api";
+import { createTeam, getLeagueTeams, deleteTeam, getAllPlayers, saveDraftPicks, getTeamDraftPicks, updateLeague, updateTeam } from "../lib/api";
 import ConfirmDeleteModal from "./ConfirmDeleteModal.jsx";
 import { PositionPlayersModal, playerMatchesRowPosition } from "./PositionPlayersModal";
 import { PlayerProfileModal } from "./PlayerProfileModal";
@@ -310,11 +310,22 @@ export default function LiveDraftBoard({ league, onBack, onModeChange, onLeagueU
         setTimeout(() => teamInputRef.current?.focus(), 0);
     };
 
-    const commitTeamEdit = () => {
+    const commitTeamEdit = async() => {
         if (!editingTeamId) return;
-        setTeams(prev => prev.map(t =>
-            t.id === editingTeamId ? { ...t, name: editTeamValue.trim() || t.name } : t
-        ));
+        const newName = editTeamValue.trim()
+        if(!newName) { setEditingTeamId(null); return; }
+
+        try{
+            await updateTeam(editingTeamId, { name: newName });
+            const updated = teams.map(t =>
+                t.id === editingTeamId ? { ...t, name: newName } : t
+            );
+            setTeams(updated);
+            onLeagueUpdate({ teams: updated.map(t => ({ id: t.id, name: t.name }))});
+        } catch(err) {
+            console.error("Failed to rename team:", err);
+            alert("Error saving team name.");
+        }
         setEditingTeamId(null);
         setEditTeamValue("");
     };
