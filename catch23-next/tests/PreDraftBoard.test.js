@@ -39,7 +39,7 @@ jest.mock("../src/components/PlayerProfileModal", () => ({
   PlayerProfileModal: () => null,
 }));
 
-jest.mock("../src/components/MovePopup", () => ({
+jest.mock("../src/components/Movepopup", () => ({
   MovePopup: ({ onClose }) => (
     <div data-testid="move-popup">
       <button onClick={onClose}>Close Move</button>

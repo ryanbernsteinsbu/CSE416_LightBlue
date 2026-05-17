@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from "@testing-library/react";
-import { MovePopup } from "../src/components/MovePopup";
+import { MovePopup } from "../src/components/Movepopup";
 
 jest.mock("../src/components/PositionPlayersModal", () => ({
   playerMatchesRowPosition: jest.fn(() => true),
