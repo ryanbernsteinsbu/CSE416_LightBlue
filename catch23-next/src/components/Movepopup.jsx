@@ -2,7 +2,16 @@
 import React, { useEffect, useState } from "react";
 import { playerMatchesRowPosition } from "./PositionPlayersModal";
 
-export function MovePopup({ movePopup, teams, POSITIONS, onConfirm, onClose, remainingBudgets, budget }) {
+export function MovePopup({
+    movePopup,
+    teams,
+    POSITIONS,
+    onConfirm,
+    onClose,
+    remainingBudgets,
+    budget,
+    slotsMode = false,   // true for minor league / taxi — skips keeper & position filters
+}) {
     const defaultTeamId = teams.find(t => t.id !== movePopup.fromTeamId)?.id ?? movePopup.fromTeamId;
     const [toTeamId, setToTeamId] = useState(defaultTeamId);
 
@@ -11,16 +20,21 @@ export function MovePopup({ movePopup, teams, POSITIONS, onConfirm, onClose, rem
     const compatibleRows = destTeam
         ? destTeam.rows
             .map((r, i) => ({ ...r, i, pos: POSITIONS[i] }))
+            // never show the source slot when moving within the same team
             .filter(r => !(r.i === movePopup.fromRowIndex && Number(toTeamId) === movePopup.fromTeamId))
+            // keeper check — skip entirely in slots mode (no keepers in taxi / minor league)
             .filter(r => {
+                if (slotsMode) return true;
                 const isKeeperSlot = r.player_id && !r.draft_time;
                 return !isKeeperSlot;
             })
-            .filter(r =>
-                movePopup.playerObj
+            // position check — skip in slots mode so any player can go to any slot
+            .filter(r => {
+                if (slotsMode) return true;
+                return movePopup.playerObj
                     ? playerMatchesRowPosition(movePopup.playerObj, POSITIONS[r.i])
-                    : true
-            )
+                    : true;
+            })
         : [];
 
     const [toRowIndex, setToRowIndex] = useState(compatibleRows[0]?.i ?? 0);
@@ -38,10 +52,6 @@ export function MovePopup({ movePopup, teams, POSITIONS, onConfirm, onClose, rem
     const destRemaining = remainingBudgets?.[Number(toTeamId)] ?? Infinity;
     const wouldOverBudget = !isSameTeam && budget != null && netCostToDest > destRemaining;
 
-    const handleTeamChange = (e) => {
-        setToTeamId(Number(e.target.value));
-    };
-
     return (
         <div className="draft-popup-backdrop" onClick={onClose}>
             <div className="draft-popup draft-popup--sm" onClick={e => e.stopPropagation()}>
@@ -55,7 +65,7 @@ export function MovePopup({ movePopup, teams, POSITIONS, onConfirm, onClose, rem
                         <select
                             className="move-popup-select"
                             value={toTeamId}
-                            onChange={handleTeamChange}
+                            onChange={e => setToTeamId(Number(e.target.value))}
                         >
                             {teams.map(t => (
                                 <option key={t.id} value={t.id}>
@@ -69,7 +79,7 @@ export function MovePopup({ movePopup, teams, POSITIONS, onConfirm, onClose, rem
                         Destination Slot
                         {compatibleRows.length === 0 ? (
                             <div className="move-popup-no-slots">
-                                No eligible slots on this team for this player's position.
+                                No eligible slots on this team.
                             </div>
                         ) : (
                             <select
