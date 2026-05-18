@@ -1022,7 +1022,6 @@ button {
   border-radius: 0 0 12px 12px;
   border: 2px solid rgba(255, 255, 255, 0.2);
   border-top: none;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
   z-index: 2000;
   transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
   white-space: nowrap;
@@ -1030,6 +1029,7 @@ button {
 
 .save-banner--visible {
   transform: translateX(-50%) translateY(64px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
 }
 
 .save-banner-error {
@@ -1576,6 +1576,13 @@ button {
   gap: 18px;
 }
 
+/* The topbar already clears the fixed navbar (padding-top: 80px).
+   Any .home board rendered below it must not add its own navbar clearance
+   or the two stack up into a large gap. */
+.draft-topbar ~ .home {
+  padding-top: 0 !important;
+}
+
 .draft-topbar-main {
   display: flex;
   align-items: center;
@@ -1995,7 +2002,6 @@ button {
   border-radius: 0 0 14px 14px;
   border: 2px solid rgba(255, 255, 255, 0.2);
   border-top: none;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
   z-index: 2000;
   transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
   white-space: nowrap;
@@ -2004,6 +2010,7 @@ button {
 
 .pick-banner--visible {
   transform: translateX(-50%) translateY(64px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
 }
 
 .pick-banner-team   { color: #7a9fff; font-weight: 800; }

@@ -3,22 +3,46 @@ import MinorTable from '../models/minorTable';
 import MinorLeaguePick from '../models/minorLeaguePick';
 import Player from '../models/player';
 
+const INCLUDE_PICKS = [
+    {
+        model: MinorLeaguePick,
+        as: 'players',
+        include: [{ model: Player, as: 'player' }],
+    },
+];
+
+const ORDER_BY_SLOT = [
+    [{ model: MinorLeaguePick, as: 'players' }, 'slotIndex', 'ASC'],
+] as any;
+
 export const getTable = async (req: Request, res: Response) => {
     try {
-        const minorTable = await MinorTable.findOne({
-            where: { team_id: req.params.teamId },
-            include: [{
-                model: MinorLeaguePick,
-                as: "players",
-                include: [{ model: Player, as: "player" }],
-            }],
-            order: [[{ model: MinorLeaguePick, as: "players" }, "slotIndex", "ASC"]]
+        const { teamId } = req.params;
+
+        // Find the table for this team
+        let minorTable = await MinorTable.findOne({
+            where: { team_id: teamId },
+            include: INCLUDE_PICKS,
+            order: ORDER_BY_SLOT,
         });
-        if (!minorTable) return res.status(404).json({ error: "No minor league table found" });
+
+        // Auto-create the table if it doesn't exist yet.
+        // This prevents 404s for teams that pre-date the minor league feature,
+        // and stops the frontend from ending up with tableId === null (which
+        // causes saves to be silently skipped).
+        if (!minorTable) {
+            minorTable = await MinorTable.create({
+                team_id: teamId,
+                numPlayers: 10,
+            });
+            // Attach an empty picks array so the response shape is consistent
+            (minorTable as any).players = [];
+        }
+
         res.json(minorTable);
     } catch (err) {
-        console.error("Error fetching minor league table:", err);
-        res.status(500).json({ error: "Failed to fetch minor league table" });
+        console.error('Error fetching minor league table:', err);
+        res.status(500).json({ error: 'Failed to fetch minor league table' });
     }
 };
 
@@ -31,7 +55,7 @@ export const savepicks = async (req: Request, res: Response) => {
         );
         res.json({ success: true });
     } catch (err) {
-        console.error("Error saving minor league picks:", err);
-        res.status(500).json({ error: "Failed to save picks" });
+        console.error('Error saving minor league picks:', err);
+        res.status(500).json({ error: 'Failed to save picks' });
     }
 };
