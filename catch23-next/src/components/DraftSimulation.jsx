@@ -48,8 +48,10 @@ const simTeamIdKey = (id) => `sim_team_${id}`;
 // Maps raw player from allPlayers into the shape PlayerProfileModal expects
 const toProfilePlayer = (p) => ({
     id: p.id,
+    mlbID: p.mlbPlayerId,
     username: getPlayerDisplayName(p),
     team: p.team ?? p.mlbTeam ?? p.teamAbbreviation ?? "",
+    depth: p.depth ?? null,
     role: Array.isArray(p.playablePositions) ? p.playablePositions.join(", ") : (p.position ?? ""),
     stats: {
         HR: 0, RBI: 0, SB: 0, AVG: 0, R: 0, OBP: 0,
