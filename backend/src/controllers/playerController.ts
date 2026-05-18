@@ -114,6 +114,54 @@ export const getPlayerByStatus = async (req: Request, res: Response): Promise<vo
     }
 }
 
+const ROLES = ["rp", "p", "c", "1b", "2b", "3b", "ss", "lf", "cf", "rf", "dh", "cl"];
+
+export const getTeamDepthChart = async ( req: Request, res: Response): Promise<void> => {
+  try {
+    const { team } = req.params;
+
+    const players = await playerService.getPlayersByTeam(team as String);
+    if(!players || players.length === 0){ 
+        res.status(404).json({
+            error: "no players found",
+        });
+        return;
+    }
+    const grouped: Record<string, any[]> = {};
+
+    for (const role of ROLES) {
+      grouped[role] = [];
+    }
+
+    // group players by role from depth string
+    for (const player of players) {
+      if (!player.depth) continue;
+
+      // example depth string: "1 dh"
+      const [depthNum, role] = player.depth.toLowerCase().split(" ");
+
+      if (!ROLES.includes(role)) continue;
+
+      grouped[role].push({
+        ...player.toJSON(),
+        depth: Number(depthNum),
+      });
+    }
+
+    // sort each role by depth
+    for (const role of ROLES) {
+      grouped[role].sort((a, b) => a.depth - b.depth);
+    }
+
+    res.status(200).json(grouped);
+  } catch (err: any) {
+    console.error(err);
+    res.status(500).json({
+      error: err.message,
+    });
+  }
+};
+
 export const queryPlayers = async (req: Request, res: Response): Promise<void> => {
     try {
         const {
