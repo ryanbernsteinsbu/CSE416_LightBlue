@@ -160,3 +160,8 @@ export const getDynamicRankedPlayers = async (league) => {
         headers: { "x-email": EMAIL, "x-signature": sign(league) }
     });
 };
+
+// team depth charts
+
+export const getTeamPlayers = (abbr) =>
+  axios.get(`/api/players/team/${abbr}`);
