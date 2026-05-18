@@ -16,9 +16,6 @@ import TaxiPick from './models/taxiPick';
 import League from './models/league';
 import PasswordResetToken from './models/passwordResetToken';
 
-
-//const ApiUser = require('./models/apiUser')
-
 // associations
 Team.belongsTo(League, { foreignKey: 'league_id', as: 'league' });
 Team.hasMany(DraftPick, { foreignKey: 'team_id', as: 'players' });
