@@ -66,6 +66,13 @@ export const getPlayersByStatus = async (status: Status): Promise<Player[] | nul
     return players;
 }
 
+
+export const getPlayersByTeam = async (team: String): Promise<Player[]> => {
+    const players = await playerRepository.findPlayerByTeam(team);
+    if (!players) throw new Error('Players not found');
+    return players;
+}
+
 // POST /api/players/query
 export const queryPlayers = async (nameQuery: string, posQuery: string, teamQuery: string, sortKey: string, sortDir: boolean, isHitters: boolean, page: number, pageSize:number, minors:boolean): Promise<{players: Player[], total: number} | null> => {
     try {

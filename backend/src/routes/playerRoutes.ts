@@ -17,5 +17,6 @@ router.post('/query', playerController.queryPlayers)
 router.get('/:id', playerController.getPlayer);
 router.put('/:id', playerController.updatePlayer);
 router.delete('/:id', playerController.deletePlayer);
+router.get('/team/:team', playerController.getTeamDepthChart)
 
 export default router;

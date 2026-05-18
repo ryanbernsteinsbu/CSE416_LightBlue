@@ -46,6 +46,16 @@ export const findPlayerByStatus = async (status: Status): Promise<Player[]> => {
     return await Player.findAll({ where: { status } });
 };
 
+export const findPlayerByTeam = async (team: String): Promise<Player[]> => {
+    return await Player.findAll({
+      where: {
+        realTeam: team,
+      },
+      order: [["lastName", "ASC"]],
+    });
+};
+
+
 // Update a player
 export const updatePlayer = async (id: number, updates: Partial<Player>): Promise<Player | null> => {
     const player = await Player.findByPk(id);
