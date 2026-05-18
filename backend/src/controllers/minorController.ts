@@ -3,24 +3,52 @@ import MinorTable from '../models/minorTable';
 import MinorLeaguePick from '../models/minorLeaguePick';
 import Player from '../models/player';
 
-export const getTable = async (req: Request, res: Response) => {
-    try {
-        const minorTable = await MinorTable.findOne({
-            where: { team_id: req.params.teamId },
-            include: [{
-                model: MinorLeaguePick,
-                as: "players",
-                include: [{ model: Player, as: "player" }],
-            }],
-            order: [[{ model: MinorLeaguePick, as: "players" }, "slotIndex", "ASC"]]
-        });
-        if (!minorTable) return res.status(404).json({ error: "No minor league table found" });
-        res.json(minorTable);
-    } catch (err) {
-        console.error("Error fetching minor league table:", err);
-        res.status(500).json({ error: "Failed to fetch minor league table" });
+const INCLUDE_PICKS = [
+    {
+        model: MinorLeaguePick,
+        as: 'players',
+        include: [{ model: Player, as: 'player' }],
+    },
+];
+
+const ORDER_BY_SLOT = [
+    [{ model: MinorLeaguePick, as: 'players' }, 'slotIndex', 'ASC'],
+] as any;
+
+export async function getTable(req: any, res: any) {
+  try {
+    const table = await MinorTable.findOne({
+      where: { team_id: req.params.teamId },
+      include: [
+        {
+          model: MinorLeaguePick,
+          as: "players",
+          include: [{ model: Player, as: "player" }],
+        },
+      ],
+      order: [
+        [
+          { model: MinorLeaguePick, as: "players" },
+          "slotIndex",
+          "ASC",
+        ],
+      ],
+    });
+
+    // Add this null check
+    if (!table) {
+      return res.status(404).json({
+        error: "No minor league table found",
+      });
     }
-};
+
+    res.json(table);
+  } catch (error) {
+    res.status(500).json({
+      error: "Failed to fetch minor league table",
+    });
+  }
+}
 
 export const savepicks = async (req: Request, res: Response) => {
     try {
@@ -31,7 +59,7 @@ export const savepicks = async (req: Request, res: Response) => {
         );
         res.json({ success: true });
     } catch (err) {
-        console.error("Error saving minor league picks:", err);
-        res.status(500).json({ error: "Failed to save picks" });
+        console.error('Error saving minor league picks:', err);
+        res.status(500).json({ error: 'Failed to save picks' });
     }
 };
