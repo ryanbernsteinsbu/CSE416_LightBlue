@@ -48,7 +48,7 @@ export default function DraftSummary({ league, onBack, onModeChange }) {
             try {
                 const { data } = await getLeagueTeams(league.id);
 
-                // ── main draft picks ──────────────────────────────────────
+                //  main draft picks 
                 const loaded = await Promise.all(
                     data.map(async (t) => {
                         const emptyRows = POSITIONS.map(() => ({
@@ -80,7 +80,7 @@ export default function DraftSummary({ league, onBack, onModeChange }) {
                 );
                 setTeams(loaded);
 
-                // ── taxi picks ────────────────────────────────────────────
+                // taxi picks 
                 if (NUM_TAXI > 0) {
                     const taxiLoaded = await Promise.all(
                         data.map(async (t) => {

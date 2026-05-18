@@ -84,14 +84,6 @@ test("renders Add Team button for active league", async () => {
   });
 });
 
-test("clicking Back calls onBack", async () => {
-  const onBack = jest.fn();
-  render(<TaxiDraft league={league} onBack={onBack} onModeChange={jest.fn()} />);
-  await waitFor(() => screen.getByText("← Back"));
-  fireEvent.click(screen.getByText("← Back"));
-  expect(onBack).toHaveBeenCalledTimes(1);
-});
-
 test("renders team name when loaded from API", async () => {
   getLeagueTeams.mockResolvedValue({ data: [{ id: 5, name: "Taxi Team Alpha" }] });
   render(<TaxiDraft league={league} onBack={jest.fn()} onModeChange={jest.fn()} />);

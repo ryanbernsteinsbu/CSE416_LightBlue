@@ -4,29 +4,22 @@ import { createTeam, getLeagueTeams, deleteTeam, getAllPlayers, saveTaxiPicks, g
 import ConfirmDeleteModal from "./ConfirmDeleteModal.jsx";
 import { PlayerProfileModal } from "./PlayerProfileModal";
 
-// ─── helpers ──────────────────────────────────────────────────────────────────
-const simTeamIdKey = (id) => `sim_team_${id}`;
+// helpers 
 const getPlayerDisplayName = (p) => `${p?.firstName ?? ""} ${p?.lastName ?? ""}`.trim();
 const getPlayerName = (p) => getPlayerDisplayName(p).toLowerCase();
 
 const toProfilePlayer = (p) => ({
     id: p.id,
+    mlbID: p.mlbPlayerId,
     username: getPlayerDisplayName(p),
     team: p.team ?? p.mlbTeam ?? p.teamAbbreviation ?? "",
+    depth: p.depth ?? null,
     role: Array.isArray(p.playablePositions) ? p.playablePositions.join(", ") : (p.position ?? ""),
-    stats: p.stats ?? {
-        HR: p.HR ?? p.homeRuns,
-        RBI: p.RBI,
-        SB: p.SB ?? p.stolenBases,
-        R: p.R ?? p.runs,
-        AVG: p.AVG ?? p.battingAverage,
-        OBP: p.OBP,
-        W: p.W ?? p.wins,
-        SV: p.SV ?? p.saves,
-        K: p.K ?? p.strikeouts,
-        ERA: p.ERA,
-        WHIP: p.WHIP,
-    },
+    stats: {
+        HR: 0, RBI: 0, SB: 0, AVG: 0, R: 0, OBP: 0,
+        W: 0, SV: 0, K: 0, ERA: 0, WHIP: 0,
+        ...p.lastYearStats
+    }
 });
 
 function makeEmptyTeam(index, numSlots) {
@@ -39,9 +32,9 @@ function makeEmptyTeam(index, numSlots) {
     };
 }
 
-// ─── component ────────────────────────────────────────────────────────────────
+// component
 
-export default function TaxiDraftBoard({ league, onBack, onModeChange }) {
+export default function TaxiDraftBoard({ league, onBack, onModeChange, principalTeamId }) {
     const NUM_SLOTS = league.rosterSettings?.numTaxi ?? 8;
 
     // core state
@@ -64,7 +57,6 @@ export default function TaxiDraftBoard({ league, onBack, onModeChange }) {
     const [errorBanner, setErrorBanner] = useState(false);
     const [seasonErrorBanner, setSeasonErrorBanner] = useState(false);
     const [profilePlayer, setProfilePlayer] = useState(null);
-    const [simTeamId, setSimTeamId] = useState(null);
 
     const cellInputRef = useRef(null);
     const teamInputRef = useRef(null);
@@ -77,7 +69,7 @@ export default function TaxiDraftBoard({ league, onBack, onModeChange }) {
         ])
         , [teams, mainRosterIds]);
 
-    // ── data loading ──────────────────────────────────────────────────────────
+    // data loading 
 
     const [suggestAnchor, setSuggestAnchor] = useState(null);
 
@@ -98,9 +90,6 @@ export default function TaxiDraftBoard({ league, onBack, onModeChange }) {
 
     useEffect(() => {
         const fetchTeams = async () => {
-            const storedSimId = typeof window !== "undefined"
-                ? localStorage.getItem(simTeamIdKey(league.id)) : null;
-            setSimTeamId(storedSimId ? Number(storedSimId) : null);
             try {
                 const { data } = await getLeagueTeams(league.id);
                 const loaded = await Promise.all(
@@ -158,7 +147,7 @@ export default function TaxiDraftBoard({ league, onBack, onModeChange }) {
             .catch(err => console.error("Failed to load players:", err));
     }, []);
 
-    // ── save ──────────────────────────────────────────────────────────────────
+    // save 
 
     const handleSave = async () => {
         const missingseason = teams.some(team =>
@@ -194,7 +183,7 @@ export default function TaxiDraftBoard({ league, onBack, onModeChange }) {
         }
     };
 
-    // ── team management ───────────────────────────────────────────────────────
+    // team management 
 
     const addTeam = async () => {
         const newTeam = makeEmptyTeam(teams.length, NUM_SLOTS);
@@ -248,7 +237,7 @@ export default function TaxiDraftBoard({ league, onBack, onModeChange }) {
         if (e.key === "Escape") { setEditingTeamId(null); setEditTeamValue(""); }
     };
 
-    // ── cell editing ──────────────────────────────────────────────────────────
+    // cell editing 
 
     const startEditCell = (teamId, rowIndex, field, currentValue) => {
         setEditingCell({ teamId, rowIndex, field });
@@ -294,7 +283,7 @@ export default function TaxiDraftBoard({ league, onBack, onModeChange }) {
         editingCell?.rowIndex === rowIndex &&
         editingCell?.field === field;
 
-    // ── suggestion selection ──────────────────────────────────────────────────
+    // suggestion selection 
 
     const selectSuggestion = (team, rowIndex, p) => {
         setTeams(prev => prev.map(t => {
@@ -317,7 +306,7 @@ export default function TaxiDraftBoard({ league, onBack, onModeChange }) {
         setSuggestions([]);
     };
 
-    // ── profile ───────────────────────────────────────────────────────────────
+    // profile 
 
     const openProfile = (e, playerId) => {
         e.stopPropagation();
@@ -325,7 +314,7 @@ export default function TaxiDraftBoard({ league, onBack, onModeChange }) {
         if (found) setProfilePlayer(toProfilePlayer(found));
     };
 
-    // ── post-draft state ──────────────────────────────────────────────────────
+    // post-draft state 
 
     const isPostDraft = league.status === "DRAFTED";
 
@@ -344,7 +333,6 @@ export default function TaxiDraftBoard({ league, onBack, onModeChange }) {
         onModeChange("summary");
     };
 
-    // ─────────────────────────────────────────────────────────────────────────
 
     return (
         <div className="home" style={{ paddingTop: 80 }}>
@@ -370,38 +358,7 @@ export default function TaxiDraftBoard({ league, onBack, onModeChange }) {
                     <strong> {filledCount}/{totalSlots}</strong> filled.
                 </div>
             )}
-
-            {/* ── header ── */}
-            <div className="db-header">
-                <div className="db-header-left">
-                    <button className="db-back-btn" onClick={onBack}>← Back</button>
-                    <div>
-                        <div className="db-league-name">{league?.title || "LEAGUE"}</div>
-                        <div className="db-league-meta">
-                            {league?.format} • {teams.length} TEAMS • {league?.season} SEASON
-                        </div>
-                    </div>
-                </div>
-                <div className="db-header-right">
-                    <div className="db-stat">
-                        <span className="db-stat-num">{teams.length}</span>
-                        <span className="db-stat-label">Teams</span>
-                    </div>
-                    <div className="db-stat">
-                        <span className="db-stat-num">{NUM_SLOTS}</span>
-                        <span className="db-stat-label">Taxi Slots</span>
-                    </div>
-                    {isPostDraft && (
-                        <div className="db-stat">
-                            <span className={`db-stat-num ${allSlotsFilled ? "db-stat-num--complete" : "db-stat-num--incomplete"}`}>
-                                {allSlotsFilled ? "✓" : `${filledCount}/${totalSlots}`}
-                            </span>
-                            <span className="db-stat-label">{allSlotsFilled ? "Complete" : "Filled"}</span>
-                        </div>
-                    )}
-                </div>
-            </div>
-
+    
             {/* ── toolbar ── */}
             <div className="db-toolbar">
                 <div className="db-toolbar-left">
@@ -417,9 +374,6 @@ export default function TaxiDraftBoard({ league, onBack, onModeChange }) {
                             </span>
                             {!isPostDraft && (
                                 <>
-                                    <button className="db-tool-btn db-tool-secondary" onClick={() => onModeChange("predraft")}>Pre-Draft</button>
-                                    <button className="db-tool-btn db-tool-secondary" onClick={() => onModeChange("simulation")}>Simulation</button>
-                                    <button className="db-tool-btn db-tool-secondary" onClick={() => onModeChange("live")}>Live Draft</button>
                                 </>
                             )}
                             <button className="db-tool-btn db-tool-secondary" onClick={handleSave}>💾 Save</button>
@@ -455,7 +409,11 @@ export default function TaxiDraftBoard({ league, onBack, onModeChange }) {
                                 <tr>
                                     <th className="db-th db-th-pos db-sticky-col" rowSpan={2}>SLOT</th>
                                     {teams.map(team => (
-                                        <th key={team.id} className={`db-th db-th-teamname ${team.id === simTeamId ? "db-th-simteam" : ""}`} colSpan={3}>
+                                        <th
+                                            key={team.id}
+                                            className={`db-th db-th-teamname ${Number(team.id) === Number(principalTeamId) ? "db-th-teamname--you" : ""}`}
+                                            colSpan={3}
+                                        >
                                             <div className="db-th-team-inner">
                                                 {editingTeamId === team.id ? (
                                                     <input
@@ -467,13 +425,11 @@ export default function TaxiDraftBoard({ league, onBack, onModeChange }) {
                                                         onKeyDown={handleTeamKeyDown}
                                                     />
                                                 ) : (
-                                                    <span
-                                                        className="db-team-name"
-                                                        onClick={() => startEditTeam(team)}
-                                                        title="Click to rename"
-                                                    >
+                                                    <span className="db-team-name" onClick={() => startEditTeam(team)} title="Click to rename">
                                                         {team.name}
-                                                        {team.id === simTeamId && <span className="ld-your-team-badge">YOU</span>}
+                                                        {Number(team.id) === Number(principalTeamId) && (
+                                                            <span className="ld-your-team-badge">YOU</span>
+                                                        )}
                                                     </span>
                                                 )}
                                                 <button

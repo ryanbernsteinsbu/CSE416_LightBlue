@@ -48,8 +48,10 @@ const simTeamIdKey = (id) => `sim_team_${id}`;
 // Maps raw player from allPlayers into the shape PlayerProfileModal expects
 const toProfilePlayer = (p) => ({
     id: p.id,
+    mlbID: p.mlbPlayerId,
     username: getPlayerDisplayName(p),
     team: p.team ?? p.mlbTeam ?? p.teamAbbreviation ?? "",
+    depth: p.depth ?? null,
     role: Array.isArray(p.playablePositions) ? p.playablePositions.join(", ") : (p.position ?? ""),
     stats: {
         HR: 0, RBI: 0, SB: 0, AVG: 0, R: 0, OBP: 0,
@@ -58,7 +60,7 @@ const toProfilePlayer = (p) => ({
     }
 });
 
-export default function DraftSimulation({ league, onBack, onModeChange }) {
+export default function DraftSimulation({ league, onBack, onModeChange, principalTeamId, onPrincipalTeamChange }) {
     const POSITIONS = buildPositions(league.rosterSettings);
 
     // team identity
@@ -269,15 +271,18 @@ export default function DraftSimulation({ league, onBack, onModeChange }) {
         const init = async () => {
             try {
                 const { data: teams } = await getLeagueTeams(league.id);
-                setLeagueTeams(teams);
+                const sortedTeams = [...teams].sort((a, b) => Number(a.id) - Number(b.id));
+                setLeagueTeams(sortedTeams);
 
                 const storedId = typeof window !== "undefined"
                     ? localStorage.getItem(simTeamIdKey(league.id))
                     : null;
 
+                const selectedId = principalTeamId ?? (storedId ? Number(storedId) : null);
+
                 const targetTeam =
-                    (storedId ? teams.find(t => String(t.id) === storedId) : null) ??
-                    teams[0];
+                    (selectedId ? sortedTeams.find(t => Number(t.id) === Number(selectedId)) : null) ??
+                    sortedTeams[0];
 
                 await loadSimulationTeam(targetTeam, true);
                 const allTaxiIds = new Set();
@@ -343,6 +348,7 @@ export default function DraftSimulation({ league, onBack, onModeChange }) {
             });
 
             setSimTeamId(nextTeamId);
+            onPrincipalTeamChange?.(nextTeamId);
             setTeamName(nextTeam.name);
             setRows(newRows);
             setEditingCell(null);
@@ -443,7 +449,7 @@ export default function DraftSimulation({ league, onBack, onModeChange }) {
 
         setEditingName(false);
 
-        if(simTeamId && nextName !== teamName) {
+        if (simTeamId && nextName !== teamName) {
             try {
                 await updateTeam(simTeamId, { name: nextName });
             } catch (err) {
@@ -564,31 +570,10 @@ export default function DraftSimulation({ league, onBack, onModeChange }) {
             <div className="db-toolbar">
                 <div className="db-toolbar-left">
                     <span className="db-progress-label">
-                        Simulating as:
-                    </span>
-
-                    <select
-                        className="move-popup-select"
-                        value={simTeamId ?? ""}
-                        onChange={handleSimulationTeamChange}
-                        disabled={leagueTeams.length === 0}
-                    >
-                        {leagueTeams.map(team => (
-                            <option key={team.id} value={team.id}>
-                                {team.name}
-                            </option>
-                        ))}
-                    </select>
-
-                    <span className="db-progress-label">
                         Keepers shown in blue · Click any cell to edit
                     </span>
                 </div>
                 <div className="db-toolbar-right">
-                    <button className="db-tool-btn db-tool-secondary" onClick={() => onModeChange("predraft")}>Pre-Draft</button>
-                    <button className="db-tool-btn db-tool-secondary" onClick={() => onModeChange("live")}>Live Draft</button>
-                    <button className="db-tool-btn db-tool-secondary" onClick={() => onModeChange("taxi")}>Taxi Draft</button>
-                    <button className="db-tool-btn db-tool-secondary" onClick={() => onModeChange("minor")}>Minor League</button>
 
                     <button
                         className="db-tool-btn db-tool-secondary"
