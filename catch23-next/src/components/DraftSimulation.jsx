@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useState, useRef, useMemo } from "react";
-import { getLeagueTeams, getAllPlayers, getTeamDraftPicks, updateTeam } from "../lib/api";
+import { getLeagueTeams, getAllPlayers, getTeamDraftPicks, getTeamTaxiPicks, updateTeam } from "../lib/api";
 import { PositionPlayersModal, playerMatchesRowPosition } from "./PositionPlayersModal";
 import { PlayerProfileModal } from "./PlayerProfileModal";
 
@@ -87,6 +87,7 @@ export default function DraftSimulation({ league, onBack, onModeChange }) {
     const [budgetError, setBudgetError] = useState(null);
     const [loading, setLoading] = useState(true);
     const [profilePlayer, setProfilePlayer] = useState(null); // PlayerProfileModal
+    const [taxiRosterIds, setTaxiRosterIds] = useState(new Set());
 
     const cellInputRef = useRef(null);
     const teamInputRef = useRef(null);
@@ -141,8 +142,11 @@ export default function DraftSimulation({ league, onBack, onModeChange }) {
     };
 
     const draftedIds = useMemo(() =>
-        new Set(rows.map(r => r.player_id).filter(Boolean))
-        , [rows]);
+        new Set([
+            ...taxiRosterIds,
+            ...rows.map(r => r.player_id).filter(Boolean)
+        ])
+        , [rows, taxiRosterIds]);
 
     const totalSpent = useMemo(() =>
         rows.reduce((s, r) => s + (parseFloat(r.price) || 0), 0)
@@ -276,6 +280,18 @@ export default function DraftSimulation({ league, onBack, onModeChange }) {
                     teams[0];
 
                 await loadSimulationTeam(targetTeam, true);
+                const allTaxiIds = new Set();
+                await Promise.all(
+                    teams.map(async (t) => {
+                        try {
+                            const { data: taxiPicks } = await getTeamTaxiPicks(t.id);
+                            taxiPicks.forEach(p => {
+                                if (p.player_id) allTaxiIds.add(p.player_id);
+                            });
+                        } catch { }
+                    })
+                );
+                setTaxiRosterIds(allTaxiIds);
             } catch (err) {
                 console.error("Failed to load simulation:", err);
             } finally {

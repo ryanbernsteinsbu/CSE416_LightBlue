@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useState, useRef, useMemo } from "react";
-import { createTeam, getLeagueTeams, deleteTeam, getAllPlayers, saveDraftPicks, getTeamDraftPicks, updateLeague, updateTeam } from "../lib/api";
+import { createTeam, getLeagueTeams, deleteTeam, getAllPlayers, saveDraftPicks, getTeamDraftPicks, getTeamTaxiPicks, updateLeague, updateTeam } from "../lib/api";
 import ConfirmDeleteModal from "./ConfirmDeleteModal.jsx";
 import { PositionPlayersModal, playerMatchesRowPosition } from "./PositionPlayersModal";
 import { PlayerProfileModal } from "./PlayerProfileModal";
@@ -82,7 +82,8 @@ export default function LiveDraftBoard({ league, onBack, onModeChange, onLeagueU
     const [movePopup, setMovePopup] = useState(null);
     const [endDraftConfirm, setEndDraftConfirm] = useState(false);
     const [endingDraft, setEndingDraft] = useState(false);
-    const [profilePlayer, setProfilePlayer] = useState(null); // PlayerProfileModal
+    const [profilePlayer, setProfilePlayer] = useState(null); 
+    const [taxiRosterIds, setTaxiRosterIds] = useState(new Set());
 
     const [simTeamId, setSimTeamId] = useState(null);
     const [simPicks, setSimPicks] = useState([]);
@@ -149,8 +150,11 @@ export default function LiveDraftBoard({ league, onBack, onModeChange, onLeagueU
 
 
     const draftedIds = useMemo(() =>
-        new Set(teams.flatMap(t => t.rows.map(r => r.player_id).filter(Boolean)))
-        , [teams]);
+        new Set([
+            ...taxiRosterIds,
+            ...teams.flatMap(t => t.rows.map(r => r.player_id).filter(Boolean))
+        ])
+        , [teams, taxiRosterIds]);
 
     const remainingBudgets = useMemo(() => {
         const result = {};
@@ -405,6 +409,18 @@ export default function LiveDraftBoard({ league, onBack, onModeChange, onLeagueU
                         .filter(e => e.playerName)
                         .sort((a, b) => Number(b.id) - Number(a.id))
                 );
+                const allTaxiIds = new Set();
+                await Promise.all(
+                    data.map(async (t) => {
+                        try {
+                            const { data: taxiPicks } = await getTeamTaxiPicks(t.id);
+                            taxiPicks.forEach(p => {
+                                if (p.player_id) allTaxiIds.add(p.player_id);
+                            });
+                        } catch { }
+                    })
+                );
+setTaxiRosterIds(allTaxiIds);
             } catch (err) {
                 console.error("Failed to load teams/draft picks:", err);
             }
