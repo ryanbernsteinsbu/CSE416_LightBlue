@@ -4,20 +4,19 @@ import { useEffect, useState } from "react";
 import { jwtDecode } from "jwt-decode";
 import axios from "axios";
 
+const DISPLAY_NAME_KEY = "display_name";
+
 export default function UserProfile() {
     const [user, setUser] = useState(null);
     const [error, setError] = useState("");
     const [displayName, setDisplayName] = useState("");
 
-    // Panel state: null | "editProfile" | "changePassword"
     const [activePanel, setActivePanel] = useState(null);
 
-    // Edit profile state
     const [newUsername, setNewUsername] = useState("");
     const [editStatus, setEditStatus] = useState(null);
     const [editError, setEditError] = useState("");
 
-    // Change password state
     const [currentPassword, setCurrentPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
@@ -33,7 +32,11 @@ export default function UserProfile() {
             }
             const decoded = jwtDecode(token);
             setUser(decoded);
-            const name = decoded.displayName || decoded.username || decoded.name || "Player";
+
+            // Prefer the locally-cached name so saves persist across reloads
+            // even if the backend doesn't return a refreshed JWT
+            const cached = localStorage.getItem(DISPLAY_NAME_KEY);
+            const name = cached || decoded.displayName || decoded.username || decoded.name || "Player";
             setDisplayName(name);
             setNewUsername(name);
         } catch (err) {
@@ -45,6 +48,7 @@ export default function UserProfile() {
     const handleLogout = () => {
         localStorage.removeItem("token");
         localStorage.removeItem("user_id");
+        localStorage.removeItem(DISPLAY_NAME_KEY);
         window.location.href = "/";
     };
 
@@ -60,7 +64,6 @@ export default function UserProfile() {
         setNewUsername(displayName);
     };
 
-    // ── Edit profile submit ──────────────────────────────────────────────────
     const handleEditProfile = async (e) => {
         e.preventDefault();
         setEditError("");
@@ -77,12 +80,20 @@ export default function UserProfile() {
         try {
             setEditStatus("saving");
             const token = localStorage.getItem("token");
-            await axios.put(
+            const { data } = await axios.put(
                 "/api/auth/update-profile",
                 { username: newUsername.trim() },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
-            setDisplayName(newUsername.trim());
+
+            const saved = newUsername.trim();
+
+            // Persist in localStorage so name survives page reloads
+            // regardless of whether the backend returns a new token
+            localStorage.setItem(DISPLAY_NAME_KEY, saved);
+            if (data?.token) localStorage.setItem("token", data.token);
+
+            setDisplayName(saved);
             setEditStatus("success");
             setTimeout(() => {
                 setEditStatus(null);
@@ -94,7 +105,6 @@ export default function UserProfile() {
         }
     };
 
-    // ── Change password submit ───────────────────────────────────────────────
     const handleChangePassword = async (e) => {
         e.preventDefault();
         setPwError("");
@@ -150,7 +160,6 @@ export default function UserProfile() {
         <div className="profile-page">
             <div className="profile-card">
 
-                {/* Avatar + name */}
                 <div className="profile-top-section">
                     <div className="profile-avatar-ring">
                         <i className="fa-solid fa-user" />
@@ -158,7 +167,6 @@ export default function UserProfile() {
                     <h2 className="profile-name">{displayName}</h2>
                 </div>
 
-                {/* Info grid */}
                 <div className="profile-info-grid">
                     <div className="profile-field">
                         <p className="profile-label">Display Name</p>
@@ -170,7 +178,6 @@ export default function UserProfile() {
                     </div>
                 </div>
 
-                {/* ── Edit Profile panel ── */}
                 {activePanel === "editProfile" && (
                     <form className="profile-pw-form" onSubmit={handleEditProfile}>
                         <p className="profile-pw-title">Edit Display Name</p>
@@ -199,7 +206,6 @@ export default function UserProfile() {
                     </form>
                 )}
 
-                {/* ── Change Password panel ── */}
                 {activePanel === "changePassword" && (
                     <form className="profile-pw-form" onSubmit={handleChangePassword}>
                         <p className="profile-pw-title">Change Password</p>
@@ -245,7 +251,6 @@ export default function UserProfile() {
                     </form>
                 )}
 
-                {/* ── Action buttons (hidden when a panel is open) ── */}
                 {!activePanel && (
                     <div className="profile-actions">
                         <button
