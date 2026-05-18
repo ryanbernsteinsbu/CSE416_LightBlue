@@ -61,7 +61,7 @@ const toProfilePlayer = (p) => ({
     }
 });
 
-export default function PreDraftBoard({ league, onBack, onModeChange, onLeagueUpdate }) {
+export default function PreDraftBoard({ league, onBack, onModeChange, onLeagueUpdate, principalTeamId }) {
     const POSITIONS = buildPositions(league.rosterSettings);
 
     const [teams, setTeams] = useState([]);
@@ -431,13 +431,6 @@ export default function PreDraftBoard({ league, onBack, onModeChange, onLeagueUp
         setEditingTeamId(null);
         setEditTeamValue("");
 
-        if (nextName && nextName !== currentTeam?.name) {
-            try {
-                await updateTeam(editingTeamId, { name: nextName });
-            } catch (err) {
-                console.error("Failed to save team name:", err);
-            }
-        }
     };
 
     const handleTeamKeyDown = (e) => {
@@ -501,27 +494,6 @@ export default function PreDraftBoard({ league, onBack, onModeChange, onLeagueUp
                 ❌ {budgetErrorTeam?.name} is over budget — spent ${budgetErrorTeam?.spent.toFixed(0)} of ${budgetErrorTeam?.budget}
             </div>
 
-            <div className="db-header">
-                <div className="db-header-left">
-                    <button className="db-back-btn" onClick={onBack}>← Back</button>
-                    <div>
-                        <div className="db-league-name">{league?.title || "LEAGUE"}</div>
-                        <div className="db-league-meta">
-                            {league?.format} • {teams.length} TEAMS • {league?.season} SEASON
-                        </div>
-                    </div>
-                </div>
-                <div className="db-header-right">
-                    <div className="db-stat">
-                        <span className="db-stat-num">{teams.length}</span>
-                        <span className="db-stat-label">Teams</span>
-                    </div>
-                    <div className="db-stat">
-                        <span className="db-stat-num">{POSITIONS.length}</span>
-                        <span className="db-stat-label">Positions</span>
-                    </div>
-                </div>
-            </div>
 
             <div className="db-toolbar">
                 <div className="db-toolbar-left">
@@ -531,10 +503,6 @@ export default function PreDraftBoard({ league, onBack, onModeChange, onLeagueUp
                     {teams.length > 0 && (
                         <>
                             <span className="db-progress-label">Click any cell to edit • Click team name to rename</span>
-                            <button className="db-tool-btn db-tool-secondary" onClick={() => onModeChange("taxi")}>Taxi Draft</button>
-                            <button className="db-tool-btn db-tool-secondary" onClick={() => onModeChange("simulation")}>Draft Simulation</button>
-                            <button className="db-tool-btn db-tool-secondary" onClick={() => onModeChange("live")}>Live Draft</button>
-                            <button className="db-tool-btn db-tool-secondary" onClick={() => onModeChange("minor")}>Minor League</button>
 
                             <button
                                 className="db-tool-btn db-tool-secondary"
@@ -573,7 +541,11 @@ export default function PreDraftBoard({ league, onBack, onModeChange, onLeagueUp
                                 <tr>
                                     <th className="db-th db-th-pos db-sticky-col" rowSpan={2}>POS</th>
                                     {teams.map(team => (
-                                        <th key={team.id} className="db-th db-th-teamname" colSpan={3}>
+                                        <th
+                                            key={team.id}
+                                            className={`db-th db-th-teamname ${Number(team.id) === Number(principalTeamId) ? "db-th-teamname--you" : ""}`}
+                                            colSpan={3}
+                                        >
                                             <div className="db-th-team-inner">
                                                 {editingTeamId === team.id ? (
                                                     <input
@@ -587,6 +559,9 @@ export default function PreDraftBoard({ league, onBack, onModeChange, onLeagueUp
                                                 ) : (
                                                     <span className="db-team-name" onClick={() => startEditTeam(team)} title="Click to rename">
                                                         {team.name}
+                                                        {Number(team.id) === Number(principalTeamId) && (
+                                                            <span className="ld-your-team-badge">YOU</span>
+                                                        )}
                                                     </span>
                                                 )}
                                                 <button

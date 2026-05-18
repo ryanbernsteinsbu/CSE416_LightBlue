@@ -67,7 +67,7 @@ const toProfilePlayer = (p) => ({
 });
 
 
-export default function LiveDraftBoard({ league, onBack, onModeChange, onLeagueUpdate }) {
+export default function LiveDraftBoard({ league, onBack, onModeChange, onLeagueUpdate, principalTeamId }) {
     const POSITIONS = buildPositions(league.rosterSettings);
 
     const [teams, setTeams] = useState([]);
@@ -335,7 +335,8 @@ export default function LiveDraftBoard({ league, onBack, onModeChange, onLeagueU
             try {
                 const storedSimId = typeof window !== "undefined"
                     ? localStorage.getItem(simTeamIdKey(league.id)) : null;
-                const storedSimTeamId = storedSimId ? Number(storedSimId) : null;
+
+                const storedSimTeamId = principalTeamId ?? (storedSimId ? Number(storedSimId) : null);
 
                 let storedSimPicks = [];
                 if (typeof window !== "undefined") {
@@ -395,9 +396,9 @@ export default function LiveDraftBoard({ league, onBack, onModeChange, onLeagueU
                     ? [...loaded].sort((a, b) => {
                         if (a.id === storedSimTeamId) return -1;
                         if (b.id === storedSimTeamId) return 1;
-                        return 0;
+                        return Number(a.id) - Number(b.id);
                     })
-                    : loaded;
+                    : [...loaded].sort((a, b) => Number(a.id) - Number(b.id));
 
                 setTeams(sorted);
                 setDraftLog(
@@ -410,7 +411,7 @@ export default function LiveDraftBoard({ league, onBack, onModeChange, onLeagueU
             }
         };
         fetchTeams();
-    }, [league.id]);
+    }, [league.id, principalTeamId]);
 
     useEffect(() => {
         getAllPlayers()
@@ -564,13 +565,6 @@ export default function LiveDraftBoard({ league, onBack, onModeChange, onLeagueU
         setEditingTeamId(null);
         setEditTeamValue("");
 
-        if(nextName && nextName !== currentTeam?.name) {
-            try {
-                await updateTeam(editingTeamId, { name: nextName });
-            } catch(err) {
-                console.error("Failed to save team name:", err);
-            }
-        }
     };
 
     const handleTeamKeyDown = (e) => {
@@ -660,30 +654,6 @@ export default function LiveDraftBoard({ league, onBack, onModeChange, onLeagueU
                 )}
             </div>
 
-            <div className="db-header">
-                <div className="db-header-left">
-                    <button className="db-back-btn" onClick={onBack}>← Back</button>
-                    <div>
-                        <div className="db-league-name">{league?.title || "LEAGUE"}</div>
-                        <div className="db-league-meta">
-                            {league?.format} • {teams.length} TEAMS • {league?.season} SEASON
-                        </div>
-                    </div>
-                </div>
-                <div className="db-header-right">
-                    <div className="db-stat"><span className="db-stat-num">{teams.length}</span><span className="db-stat-label">Teams</span></div>
-                    <div className="db-stat"><span className="db-stat-num">{POSITIONS.length}</span><span className="db-stat-label">Positions</span></div>
-                    {teams.length > 0 && (
-                        <div className="db-stat">
-                            <span className={`db-stat-num ${allFilled ? "db-stat-num--complete" : "db-stat-num--incomplete"}`}>
-                                {allFilled ? "✓" : emptyCount}
-                            </span>
-                            <span className="db-stat-label">{allFilled ? "Complete" : "Empty Slots"}</span>
-                        </div>
-                    )}
-                </div>
-            </div>
-
             <div className="db-toolbar">
                 <div className="db-toolbar-left">
                     <button className="db-tool-btn db-tool-primary" onClick={addTeam}>+ Add Team</button>
@@ -692,10 +662,6 @@ export default function LiveDraftBoard({ league, onBack, onModeChange, onLeagueU
                     {teams.length > 0 && (
                         <>
                             <span className="db-progress-label">Click any player cell to draft · Auto-saves on each pick</span>
-                            <button className="db-tool-btn db-tool-secondary" onClick={() => onModeChange("predraft")}>Pre-Draft</button>
-                            <button className="db-tool-btn db-tool-secondary" onClick={() => onModeChange("simulation")}>Simulation</button>
-                            <button className="db-tool-btn db-tool-secondary" onClick={() => onModeChange("taxi")}>Taxi Draft</button>
-                            <button className="db-tool-btn db-tool-secondary" onClick={() => onModeChange("minor")}>Minor League</button>
 
                             <button
                                 className="db-tool-btn db-tool-secondary"
@@ -741,7 +707,11 @@ export default function LiveDraftBoard({ league, onBack, onModeChange, onLeagueU
                                         <tr>
                                             <th className="db-th db-th-pos db-sticky-col" rowSpan={2}>POS</th>
                                             {teams.map(team => (
-                                                <th key={team.id} className={`db-th db-th-teamname ${team.id === simTeamId ? "db-th-simteam" : ""}`} colSpan={3}>
+                                                <th
+                                                    key={team.id}
+                                                    className={`db-th db-th-teamname ${Number(team.id) === Number(principalTeamId) ? "db-th-teamname--you" : ""}`}
+                                                    colSpan={3}
+                                                >
                                                     <div className="db-th-team-inner">
                                                         {editingTeamId === team.id ? (
                                                             <input ref={teamInputRef} className="db-team-input" value={editTeamValue}
@@ -750,7 +720,9 @@ export default function LiveDraftBoard({ league, onBack, onModeChange, onLeagueU
                                                         ) : (
                                                             <span className="db-team-name" onClick={() => startEditTeam(team)} title="Click to rename">
                                                                 {team.name}
-                                                                {team.id === simTeamId && <span className="ld-your-team-badge">YOU</span>}
+                                                                {Number(team.id) === Number(principalTeamId) && (
+                                                                    <span className="ld-your-team-badge">YOU</span>
+                                                                )}
                                                             </span>
                                                         )}
                                                         <button className="db-remove-team"

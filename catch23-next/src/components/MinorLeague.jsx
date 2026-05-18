@@ -3,7 +3,6 @@ import React, { useEffect, useState, useRef, useMemo } from "react";
 import { createTeam, getLeagueTeams, deleteTeam, getAllPlayers, updateTeam } from "../lib/api";
 import ConfirmDeleteModal from "./ConfirmDeleteModal.jsx";
 
-const simTeamIdKey = (id) => `sim_team_${id}`;
 const getPlayerDisplayName = (p) => `${p?.firstName ?? ""} ${p?.lastName ?? ""}`.trim();
 const getPlayerName = (p) => getPlayerDisplayName(p).toLowerCase();
 
@@ -36,9 +35,8 @@ async function saveMinorPicks(tableId, picks) {
     if (!res.ok) throw new Error("Failed to save minor league picks");
     return res.json();
 }
-// ─────────────────────────────────────────────────────────────────────────────
 
-export default function MinorLeagueDraftBoard({ league, onBack, onModeChange }) {
+export default function MinorLeagueDraftBoard({ league, onBack, onModeChange, principalTeamId }) {
     const [teams, setTeams] = useState([]); // each team has { id, name, tableId, rows[] }
     const [editingTeamId, setEditingTeamId] = useState(null);
     const [editTeamValue, setEditTeamValue] = useState("");
@@ -51,7 +49,6 @@ export default function MinorLeagueDraftBoard({ league, onBack, onModeChange }) 
     const [teamDeleteTarget, setTeamDeleteTarget] = useState(null);
     const [saveBanner, setSaveBanner] = useState(false);
     const [errorBanner, setErrorBanner] = useState(false);
-    const [simTeamId, setSimTeamId] = useState(null);
 
     const teamInputRef = useRef(null);
     const cellInputRef = useRef(null);
@@ -65,9 +62,6 @@ export default function MinorLeagueDraftBoard({ league, onBack, onModeChange }) 
 
     useEffect(() => {
         const fetchTeams = async () => {
-            const storedSimId = typeof window !== "undefined"
-            ? localStorage.getItem(simTeamIdKey(league.id)) : null;
-            setSimTeamId(storedSimId ? Number(storedSimId) : null);
             try {
                 const { data } = await getLeagueTeams(league.id);
                 const loaded = await Promise.all(
@@ -253,28 +247,6 @@ export default function MinorLeagueDraftBoard({ league, onBack, onModeChange }) 
                 ❌ Failed to save. Please try again.
             </div>
 
-            <div className="db-header">
-                <div className="db-header-left">
-                    <button className="db-back-btn" onClick={onBack}>← Back</button>
-                    <div>
-                        <div className="db-league-name">{league?.name || "LEAGUE"}</div>
-                        <div className="db-league-meta">
-                            {teams.length} TEAMS • {league?.season} SEASON • MINOR LEAGUE
-                        </div>
-                    </div>
-                </div>
-                <div className="db-header-right">
-                    <div className="db-stat">
-                        <span className="db-stat-num">{teams.length}</span>
-                        <span className="db-stat-label">Teams</span>
-                    </div>
-                    <div className="db-stat">
-                        <span className="db-stat-num">{numSlots}</span>
-                        <span className="db-stat-label">Slots</span>
-                    </div>
-                </div>
-            </div>
-
             <div className="db-toolbar">
                 <div className="db-toolbar-left">
                     <button className="db-tool-btn db-tool-primary" onClick={addTeam}>+ Add Team</button>
@@ -283,10 +255,6 @@ export default function MinorLeagueDraftBoard({ league, onBack, onModeChange }) 
                     {teams.length > 0 && (
                         <>
                             <span className="db-progress-label">Click any cell to assign a player • Click team name to rename</span>
-                            <button className="db-tool-btn db-tool-secondary" onClick={() => onModeChange("predraft")}>Pre-Draft</button>
-                            <button className="db-tool-btn db-tool-secondary" onClick={() => onModeChange("simulation")}>Draft Simulation</button>
-                            <button className="db-tool-btn db-tool-secondary" onClick={() => onModeChange("live")}>Live Draft</button>
-                            <button className="db-tool-btn db-tool-secondary" onClick={() => onModeChange("taxi")}>Taxi Draft</button>
                             <button className="db-tool-btn db-tool-primary" onClick={handleSave}>💾 Save Draft</button>
                         </>
                     )}
@@ -308,7 +276,11 @@ export default function MinorLeagueDraftBoard({ league, onBack, onModeChange }) 
                                 <tr>
                                     <th className="db-th db-th-pos db-sticky-col" rowSpan={2}>#</th>
                                     {teams.map(team => (
-                                        <th key={team.id} className={`db-th db-th-teamname ${team.id === simTeamId ? "db-th-simteam" : ""}`} colSpan={2}>                                            <div className="db-th-team-inner">
+                                        <th
+                                            key={team.id}
+                                            className={`db-th db-th-teamname ${Number(team.id) === Number(principalTeamId) ? "db-th-teamname--you" : ""}`}
+                                            colSpan={2}
+                                        >                                          <div className="db-th-team-inner">
                                                 {editingTeamId === team.id ? (
                                                     <input
                                                         ref={teamInputRef}
@@ -321,7 +293,9 @@ export default function MinorLeagueDraftBoard({ league, onBack, onModeChange }) 
                                                 ) : (
                                                     <span className="db-team-name" onClick={() => startEditTeam(team)} title="Click to rename">
                                                         {team.name}
-                                                        {team.id === simTeamId && <span className="ld-your-team-badge">YOU</span>}
+                                                        {Number(team.id) === Number(principalTeamId) && (
+                                                            <span className="ld-your-team-badge">YOU</span>
+                                                        )}
                                                     </span>
                                                 )}
                                                 <button

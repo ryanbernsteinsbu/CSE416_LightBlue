@@ -3842,3 +3842,153 @@ button {
   background: #52c41a;
   color: #0b2a16;
 }
+
+/* ─── Shared Draft Board Top Bar ─────────────────────────────── */
+
+.draft-topbar {
+  width: min(1300px, 92vw);
+  margin: 0 auto 14px;
+  padding-top: 80px;
+
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) auto minmax(220px, 280px);
+  align-items: center;
+  gap: 18px;
+}
+
+.draft-topbar-main {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+.draft-topbar-titleblock {
+  min-width: 0;
+}
+
+.draft-topbar-tabs {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
+
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 14px;
+  padding: 6px;
+}
+
+.draft-mode-tab {
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.72);
+  font-family: "Trade Gothic", Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: 0.15s;
+  white-space: nowrap;
+}
+
+.draft-mode-tab:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.draft-mode-tab.active {
+  background: #BD2522;
+  color: white;
+}
+
+.draft-topbar-team {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.draft-topbar-team-label {
+  color: rgba(255, 255, 255, 0.7);
+  font-family: "Trade Gothic", Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.draft-topbar-team-select {
+  min-width: 150px;
+  max-width: 190px;
+  background: #1a2340;
+  border: 1px solid #52c41a;
+  border-radius: 10px;
+  color: white;
+  padding: 8px 10px;
+  font-family: "Trade Gothic", Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  outline: none;
+}
+
+.draft-topbar-team-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Green principal team header */
+.db-th-teamname--you {
+  background: #1a472a !important;
+  border-color: #52c41a !important;
+  box-shadow: inset 0 -3px 0 #52c41a;
+}
+
+.db-th-teamname--you .db-team-name {
+  color: #ffffff;
+}
+
+.ld-your-team-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 8px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #52c41a;
+  color: #0b2a16;
+  font-family: "Trade Gothic", Arial, sans-serif;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  vertical-align: middle;
+}
+
+/* After moving header into controller, reduce board top padding */
+.draft-topbar + .home,
+.draft-topbar + div .home {
+  padding-top: 0 !important;
+}
+
+@media (max-width: 1050px) {
+  .draft-topbar {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .draft-topbar-main,
+  .draft-topbar-team {
+    justify-content: space-between;
+  }
+
+  .draft-topbar-tabs {
+    justify-content: flex-start;
+  }
+
+  .draft-topbar-team-select {
+    max-width: none;
+    flex: 1;
+  }
+}
