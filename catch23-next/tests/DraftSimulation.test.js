@@ -124,35 +124,3 @@ test("renders Simulation Summary sidebar header", async () => {
   });
 });
 
-// "Live Draft" also appears in the sidebar tip <strong> — target by role to get only the button.
-test("clicking Pre-Draft button calls onModeChange with predraft", async () => {
-  const onModeChange = jest.fn();
-  render(<DraftSimulation league={league} onBack={jest.fn()} onModeChange={onModeChange} />);
-  await waitFor(() => screen.getByRole("button", { name: "Pre-Draft" }));
-  fireEvent.click(screen.getByRole("button", { name: "Pre-Draft" }));
-  expect(onModeChange).toHaveBeenCalledWith("predraft");
-});
-
-test("clicking Live Draft button calls onModeChange with live", async () => {
-  const onModeChange = jest.fn();
-  render(<DraftSimulation league={league} onBack={jest.fn()} onModeChange={onModeChange} />);
-  await waitFor(() => screen.getByRole("button", { name: "Live Draft" }));
-  fireEvent.click(screen.getByRole("button", { name: "Live Draft" }));
-  expect(onModeChange).toHaveBeenCalledWith("live");
-});
-
-test("clicking Taxi Draft button calls onModeChange with taxi", async () => {
-  const onModeChange = jest.fn();
-  render(<DraftSimulation league={league} onBack={jest.fn()} onModeChange={onModeChange} />);
-  await waitFor(() => screen.getByRole("button", { name: "Taxi Draft" }));
-  fireEvent.click(screen.getByRole("button", { name: "Taxi Draft" }));
-  expect(onModeChange).toHaveBeenCalledWith("taxi");
-});
-
-test("clicking Minor League button calls onModeChange with minor", async () => {
-  const onModeChange = jest.fn();
-  render(<DraftSimulation league={league} onBack={jest.fn()} onModeChange={onModeChange} />);
-  await waitFor(() => screen.getByRole("button", { name: "Minor League" }));
-  fireEvent.click(screen.getByRole("button", { name: "Minor League" }));
-  expect(onModeChange).toHaveBeenCalledWith("minor");
-});

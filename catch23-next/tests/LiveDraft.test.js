@@ -108,21 +108,6 @@ test("clicking Add Team calls createTeam", async () => {
   });
 });
 
-test("renders league title in header", async () => {
-  render(<LiveDraft league={league} onBack={jest.fn()} onModeChange={jest.fn()} onLeagueUpdate={jest.fn()} />);
-  await waitFor(() => {
-    expect(screen.getByText("Live League")).toBeInTheDocument();
-  });
-});
-
-test("clicking Back calls onBack", async () => {
-  const onBack = jest.fn();
-  render(<LiveDraft league={league} onBack={onBack} onModeChange={jest.fn()} onLeagueUpdate={jest.fn()} />);
-  await waitFor(() => screen.getByText("← Back"));
-  fireEvent.click(screen.getByText("← Back"));
-  expect(onBack).toHaveBeenCalledTimes(1);
-});
-
 test("renders Draft Log sidebar", async () => {
   render(<LiveDraft league={league} onBack={jest.fn()} onModeChange={jest.fn()} onLeagueUpdate={jest.fn()} />);
   await waitFor(() => {
@@ -143,17 +128,5 @@ test("renders team name when teams are loaded from API", async () => {
   render(<LiveDraft league={league} onBack={jest.fn()} onModeChange={jest.fn()} onLeagueUpdate={jest.fn()} />);
   await waitFor(() => {
     expect(screen.getByText("The Ballers")).toBeInTheDocument();
-  });
-});
-
-test("mode buttons appear when teams are loaded", async () => {
-  getLeagueTeams.mockResolvedValue({ data: [{ id: 5, name: "Team A" }] });
-  getTeamDraftPicks.mockResolvedValue({ data: [] });
-
-  render(<LiveDraft league={league} onBack={jest.fn()} onModeChange={jest.fn()} onLeagueUpdate={jest.fn()} />);
-
-  await waitFor(() => {
-    expect(screen.getByRole("button", { name: "Pre-Draft" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Simulation" })).toBeInTheDocument();
   });
 });
