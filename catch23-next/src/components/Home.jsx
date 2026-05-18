@@ -125,7 +125,7 @@ export default function Home({ activeLeague, setActiveLeague }) {
                   {league.format} • {league.teamCount ?? 0} TEAMS • {league.season} SEASON
                 </div>
 
-                <div className="league-season">Season {league.seasonNum}</div>
+                <div className="league-season">Season {league.season}</div>
 
                 {isDrafted && (
                   <button
