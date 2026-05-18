@@ -1576,6 +1576,13 @@ button {
   gap: 18px;
 }
 
+/* The topbar already clears the fixed navbar (padding-top: 80px).
+   Any .home board rendered below it must not add its own navbar clearance
+   or the two stack up into a large gap. */
+.draft-topbar ~ .home {
+  padding-top: 0 !important;
+}
+
 .draft-topbar-main {
   display: flex;
   align-items: center;
