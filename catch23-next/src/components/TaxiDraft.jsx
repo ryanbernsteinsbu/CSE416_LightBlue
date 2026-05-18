@@ -415,7 +415,7 @@ export default function TaxiDraftBoard({ league, onBack, onModeChange, principal
                             <span className="db-progress-label">
                                 Click any cell to edit • Click team name to rename
                             </span>
-                            <button className="db-tool-btn db-tool-secondary" onClick={handleSave}>💾 Save</button>
+                            <button className="db-tool-btn db-tool-primary" onClick={handleSave}>💾 Save Draft</button>
                             {isPostDraft && (
                                 <div className="tooltip-wrap" data-tip={allSlotsFilled ? "Finalize and view draft summary" : `${totalSlots - filledCount} slot${totalSlots - filledCount !== 1 ? "s" : ""} still need to be filled`}>
                                     <button
