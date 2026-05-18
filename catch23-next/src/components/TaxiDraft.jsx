@@ -36,27 +36,22 @@ function makeEmptyTeam(index, numSlots) {
 export default function TaxiDraftBoard({ league, onBack, onModeChange, principalTeamId }) {
     const NUM_SLOTS = league.rosterSettings?.numTaxi ?? 8;
 
-    // slot labels used by MovePopup
     const POSITIONS = useMemo(
         () => Array.from({ length: NUM_SLOTS }, (_, i) => `Slot ${i + 1}`),
         [NUM_SLOTS]
     );
 
-    // core state
     const [teams, setTeams] = useState([]);
     const [mainRosterIds, setMainRosterIds] = useState(new Set());
 
-    // editing
     const [editingCell, setEditingCell] = useState(null);
     const [editValue, setEditValue] = useState("");
     const [editingTeamId, setEditingTeamId] = useState(null);
     const [editTeamValue, setEditTeamValue] = useState("");
 
-    // players
     const [allPlayers, setAllPlayers] = useState([]);
     const [suggestions, setSuggestions] = useState([]);
 
-    // ui
     const [teamDeleteTarget, setTeamDeleteTarget] = useState(null);
     const [saveBanner, setSaveBanner] = useState(false);
     const [errorBanner, setErrorBanner] = useState(false);
@@ -74,8 +69,6 @@ export default function TaxiDraftBoard({ league, onBack, onModeChange, principal
             ...teams.flatMap(t => t.rows.map(r => r.player_id).filter(Boolean))
         ])
         , [teams, mainRosterIds]);
-
-    // data loading
 
     useEffect(() => {
         if (suggestions.length > 0 && cellInputRef.current) {
@@ -145,8 +138,6 @@ export default function TaxiDraftBoard({ league, onBack, onModeChange, principal
             .catch(err => console.error("Failed to load players:", err));
     }, []);
 
-    // save
-
     const handleSave = async () => {
         const missingseason = teams.some(team =>
             team.rows.some(row => row.player_id && !row.season));
@@ -180,8 +171,6 @@ export default function TaxiDraftBoard({ league, onBack, onModeChange, principal
             setTimeout(() => setErrorBanner(false), 3000);
         }
     };
-
-    // team management
 
     const addTeam = async () => {
         const newTeam = makeEmptyTeam(teams.length, NUM_SLOTS);
@@ -235,8 +224,6 @@ export default function TaxiDraftBoard({ league, onBack, onModeChange, principal
         if (e.key === "Escape") { setEditingTeamId(null); setEditTeamValue(""); }
     };
 
-    // cell editing
-
     const startEditCell = (teamId, rowIndex, field, currentValue) => {
         setEditingCell({ teamId, rowIndex, field });
         setEditValue(currentValue);
@@ -281,8 +268,6 @@ export default function TaxiDraftBoard({ league, onBack, onModeChange, principal
         editingCell?.rowIndex === rowIndex &&
         editingCell?.field === field;
 
-    // suggestion selection
-
     const selectSuggestion = (team, rowIndex, p) => {
         setTeams(prev => prev.map(t => {
             if (t.id !== team.id) return t;
@@ -297,8 +282,6 @@ export default function TaxiDraftBoard({ league, onBack, onModeChange, principal
         setEditValue("");
         setSuggestions([]);
     };
-
-    // profile & move
 
     const openProfile = (e, playerId) => {
         e.stopPropagation();
@@ -341,16 +324,16 @@ export default function TaxiDraftBoard({ league, onBack, onModeChange, principal
                 if (t.id === fromTeamId && t.id === toTeamId) {
                     const newRows = t.rows.map((r, i) => {
                         if (i === fromRowIndex) return { ...r, ...destPlayer };
-                        if (i === toRowIndex)   return { ...r, ...movingPlayer };
+                        if (i === toRowIndex) return { ...r, ...movingPlayer };
                         return r;
                     });
                     return { ...t, rows: newRows };
                 }
                 if (t.id === fromTeamId) {
-                    return { ...t, rows: t.rows.map((r, i) => i === fromRowIndex ? { ...r, ...destPlayer }  : r) };
+                    return { ...t, rows: t.rows.map((r, i) => i === fromRowIndex ? { ...r, ...destPlayer } : r) };
                 }
                 if (t.id === toTeamId) {
-                    return { ...t, rows: t.rows.map((r, i) => i === toRowIndex   ? { ...r, ...movingPlayer } : r) };
+                    return { ...t, rows: t.rows.map((r, i) => i === toRowIndex ? { ...r, ...movingPlayer } : r) };
                 }
                 return t;
             });
@@ -358,8 +341,6 @@ export default function TaxiDraftBoard({ league, onBack, onModeChange, principal
 
         setMovePopup(null);
     };
-
-    // post-draft
 
     const isPostDraft = league.status === "DRAFTED";
 
@@ -417,15 +398,20 @@ export default function TaxiDraftBoard({ league, onBack, onModeChange, principal
                             </span>
                             <button className="db-tool-btn db-tool-primary" onClick={handleSave}>💾 Save Draft</button>
                             {isPostDraft && (
-                                <div className="tooltip-wrap" data-tip={allSlotsFilled ? "Finalize and view draft summary" : `${totalSlots - filledCount} slot${totalSlots - filledCount !== 1 ? "s" : ""} still need to be filled`}>
-                                    <button
-                                        className={`db-tool-btn ${allSlotsFilled ? "end-draft-btn--active" : "end-draft-btn--disabled"}`}
-                                        disabled={!allSlotsFilled}
-                                        onClick={handleComplete}
-                                    >
-                                        🏁 Complete Taxi Draft
+                                <>
+                                    <button className="db-tool-btn" onClick={() => onModeChange("summary")}>
+                                        📋 Draft Summary
                                     </button>
-                                </div>
+                                    <div className="tooltip-wrap" data-tip={allSlotsFilled ? "Finalize and view draft summary" : `${totalSlots - filledCount} slot${totalSlots - filledCount !== 1 ? "s" : ""} still need to be filled`}>
+                                        <button
+                                            className={`db-tool-btn ${allSlotsFilled ? "end-draft-btn--active" : "end-draft-btn--disabled"}`}
+                                            disabled={!allSlotsFilled}
+                                            onClick={handleComplete}
+                                        >
+                                            🏁 Complete Taxi Draft
+                                        </button>
+                                    </div>
+                                </>
                             )}
                         </>
                     )}
