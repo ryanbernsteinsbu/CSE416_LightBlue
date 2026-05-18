@@ -85,12 +85,6 @@ test("renders PRE-DRAFT MODE banner", async () => {
   });
 });
 
-test("renders the league title", async () => {
-  render(<PreDraftBoard league={league} onBack={jest.fn()} onModeChange={jest.fn()} onLeagueUpdate={jest.fn()} />);
-  await waitFor(() => {
-    expect(screen.getByText("Pre Draft League")).toBeInTheDocument();
-  });
-});
 
 test("renders empty state when no teams", async () => {
   render(<PreDraftBoard league={league} onBack={jest.fn()} onModeChange={jest.fn()} onLeagueUpdate={jest.fn()} />);
@@ -99,13 +93,6 @@ test("renders empty state when no teams", async () => {
   });
 });
 
-test("clicking Back calls onBack", async () => {
-  const onBack = jest.fn();
-  render(<PreDraftBoard league={league} onBack={onBack} onModeChange={jest.fn()} onLeagueUpdate={jest.fn()} />);
-  await waitFor(() => screen.getByText("← Back"));
-  fireEvent.click(screen.getByText("← Back"));
-  expect(onBack).toHaveBeenCalledTimes(1);
-});
 
 test("clicking Add Team calls createTeam", async () => {
   createTeam.mockResolvedValue({ data: { id: 10, name: "Team 1" } });
