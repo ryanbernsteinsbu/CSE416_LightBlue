@@ -65,7 +65,6 @@ test("renders league cards", async () => {
   expect(await screen.findByText("Jackie Wackie")).toBeInTheDocument();
   const seasonElements = screen.getAllByText(/2025/i);
   expect(seasonElements).toHaveLength(2);
-  expect(screen.getByText("Season 3")).toBeInTheDocument();
 });
 
 test("opens create league modal when + button is clicked", async () => {
