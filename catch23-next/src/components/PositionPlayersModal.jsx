@@ -74,17 +74,46 @@ export async function dynamicRankPlayers(players, league) {
 export const playerMatchesRowPosition = (player, rowPos) => {
     const positions = player?.playablePositions || [];
 
-    if (rowPos === "C") return positions.includes("CATCHER");
-    if (rowPos === "1B") return positions.includes("FIRST");
-    if (rowPos === "2B") return positions.includes("SECOND");
-    if (rowPos === "3B") return positions.includes("THIRD");
-    if (rowPos === "SS") return positions.includes("SHORTSTOP");
-    if (rowPos === "OF") return positions.includes("OUTFIELD");
-    if (rowPos === "P") return positions.includes("PITCHER");
-    if (rowPos === "U") return player?.isHitter === true;
-    if (rowPos === "CI") return positions.includes("FIRST") || positions.includes("THIRD");
-    if (rowPos === "MI") return positions.includes("SECOND") || positions.includes("SHORTSTOP");
-
+    if (rowPos === "C")
+    return positions.includes("CATCHER");
+    
+    if (rowPos === "1B")
+    return positions.includes("FIRST");
+    
+    if (rowPos === "2B")
+    return positions.includes("SECOND");
+    
+    if (rowPos === "3B")
+    return positions.includes("THIRD");
+    
+    if (rowPos === "SS")
+    return positions.includes("SHORTSTOP");
+    
+    if (rowPos === "OF")
+    return (
+        positions.includes("OUTFIELD") ||
+        positions.includes("LEFTFIELD") ||
+        positions.includes("CENTERFIELD") ||
+        positions.includes("RIGHTFIELD")
+    );
+    
+    if (rowPos === "P")
+    return positions.includes("PITCHER");
+    
+    if (rowPos === "U")
+    return player?.isHitter === true;
+    
+    if (rowPos === "CI")
+    return (
+        positions.includes("FIRST") ||
+        positions.includes("THIRD")
+    );
+    
+    if (rowPos === "MI")
+    return (
+        positions.includes("SECOND") ||
+        positions.includes("SHORTSTOP")
+    );
     return false;
 };
 
