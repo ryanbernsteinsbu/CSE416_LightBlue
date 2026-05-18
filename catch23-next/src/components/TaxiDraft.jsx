@@ -10,22 +10,16 @@ const getPlayerName = (p) => getPlayerDisplayName(p).toLowerCase();
 
 const toProfilePlayer = (p) => ({
     id: p.id,
+    mlbID: p.mlbPlayerId,
     username: getPlayerDisplayName(p),
     team: p.team ?? p.mlbTeam ?? p.teamAbbreviation ?? "",
+    depth: p.depth ?? null,
     role: Array.isArray(p.playablePositions) ? p.playablePositions.join(", ") : (p.position ?? ""),
-    stats: p.stats ?? {
-        HR: p.HR ?? p.homeRuns,
-        RBI: p.RBI,
-        SB: p.SB ?? p.stolenBases,
-        R: p.R ?? p.runs,
-        AVG: p.AVG ?? p.battingAverage,
-        OBP: p.OBP,
-        W: p.W ?? p.wins,
-        SV: p.SV ?? p.saves,
-        K: p.K ?? p.strikeouts,
-        ERA: p.ERA,
-        WHIP: p.WHIP,
-    },
+    stats: {
+        HR: 0, RBI: 0, SB: 0, AVG: 0, R: 0, OBP: 0,
+        W: 0, SV: 0, K: 0, ERA: 0, WHIP: 0,
+        ...p.lastYearStats
+    }
 });
 
 function makeEmptyTeam(index, numSlots) {
