@@ -16,7 +16,6 @@ export default function EditProfile({ currentUsername, onUpdated }) {
             setErrorMsg("Username cannot be empty.");
             return;
         }
-
         if (username.trim() === currentUsername) {
             setErrorMsg("That's already your username.");
             return;
@@ -25,13 +24,14 @@ export default function EditProfile({ currentUsername, onUpdated }) {
         try {
             setStatus("saving");
             const token = localStorage.getItem("token");
-            const userId = localStorage.getItem("user_id");
-
-            await axios.put(
+            const { data } = await axios.put(
                 `/api/auth/update-profile`,
                 { username: username.trim() },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
+
+            // Persist refreshed token so the name survives a page reload
+            if (data?.token) localStorage.setItem("token", data.token);
 
             setStatus("success");
             onUpdated(username.trim());
@@ -59,6 +59,15 @@ export default function EditProfile({ currentUsername, onUpdated }) {
             <p className="profile-edit-hint">
                 {username.trim().length}/32 characters
             </p>
+            <button
+                type="submit"
+                className="profile-btn profile-btn--save"
+                disabled={status === "saving" || status === "success"}
+            >
+                {status === "saving"  && "Saving…"}
+                {status === "success" && "✓ Updated!"}
+                {(!status || status === "error") && "Save"}
+            </button>
         </form>
     );
 }

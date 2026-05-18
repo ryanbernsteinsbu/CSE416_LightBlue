@@ -535,36 +535,6 @@ export default function DraftSimulation({ league, onBack, onModeChange, principa
                 ❌ Over budget — spent ${budgetError?.spent.toFixed(0)} of ${budgetError?.budget}
             </div>
 
-            {/* Header */}
-            <div className="db-header">
-                <div className="db-header-left">
-                    <button className="db-back-btn" onClick={onBack}>← Back</button>
-                    <div>
-                        <div className="db-league-name">{league?.title || "LEAGUE"}</div>
-                        <div className="db-league-meta">
-                            {league?.format} • SIMULATION • {league?.season} SEASON
-                        </div>
-                    </div>
-                </div>
-                <div className="db-header-right">
-                    <div className="db-stat">
-                        <span className="db-stat-num">{targetRows.length}</span>
-                        <span className="db-stat-label">Targets</span>
-                    </div>
-                    <div className="db-stat">
-                        <span className="db-stat-num">{emptySlots.length}</span>
-                        <span className="db-stat-label">Open</span>
-                    </div>
-                    {league.draftSettings?.budget != null && (
-                        <div className="db-stat">
-                            <span className={`db-stat-num ${remainingBudget < 0 ? "db-stat-num--incomplete" : "db-stat-num--complete"}`}>
-                                ${remainingBudget.toFixed(0)}
-                            </span>
-                            <span className="db-stat-label">Remaining</span>
-                        </div>
-                    )}
-                </div>
-            </div>
 
             {/* Toolbar */}
             <div className="db-toolbar">
