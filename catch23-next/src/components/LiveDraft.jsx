@@ -3,6 +3,7 @@ import React, { useEffect, useState, useRef, useMemo } from "react";
 import { createTeam, getLeagueTeams, deleteTeam, getAllPlayers, saveDraftPicks, getTeamDraftPicks, getTeamTaxiPicks, updateLeague, updateTeam } from "../lib/api";
 import ConfirmDeleteModal from "./ConfirmDeleteModal.jsx";
 import { PositionPlayersModal, playerMatchesRowPosition } from "./PositionPlayersModal";
+import { PlayerCompareModal } from "./PlayerCompareModal";
 import { PlayerProfileModal } from "./PlayerProfileModal";
 import { MovePopup } from "./Movepopup";
 
@@ -68,6 +69,16 @@ const toProfilePlayer = (p) => ({
     }
 });
 
+const toComparePlayer = (p) => ({
+    id: p.id,
+    firstName: p.firstName ?? "",
+    lastName: p.lastName ?? "",
+    team: p.team ?? p.mlbTeam ?? p.teamAbbreviation ?? "",
+    pos: Array.isArray(p.playablePositions) ? p.playablePositions.join(", ") : (p.position ?? ""),
+    depth: p.depth ?? null,
+    stats: p.lastYearStats ?? {},
+});
+
 
 export default function LiveDraftBoard({ league, onBack, onModeChange, onLeagueUpdate, principalTeamId }) {
     const POSITIONS = buildPositions(league.rosterSettings);
@@ -100,6 +111,10 @@ export default function LiveDraftBoard({ league, onBack, onModeChange, onLeagueU
 
     const [undoStack, setUndoStack] = useState([]);
     const [redoStack, setRedoStack] = useState([]);
+
+    const [compareMode, setCompareMode] = useState(false);
+    const [comparePlayers, setComparePlayers] = useState([]);
+    const MAX_COMPARE = 4;
 
     const cloneDraftState = (state) => JSON.parse(JSON.stringify(state));
 
@@ -697,6 +712,13 @@ setTaxiRosterIds(allTaxiIds);
                                 ↷ Redo
                             </button>
 
+                            <button
+                                className={`db-tool-btn ${compareMode ? "db-tool-primary" : "db-tool-secondary"}`}
+                                onClick={() => { setCompareMode(p => !p); setComparePlayers([]); }}
+                            >
+                                {compareMode ? `Compare (${comparePlayers.length}/${MAX_COMPARE})` : "Compare"}
+                            </button>
+
                             <div className="tooltip-wrap tooltip-bottom" data-tip={allFilled ? "Finalize and view draft summary" : `${emptyCount} slot${emptyCount !== 1 ? "s" : ""} still need to be filled`}>
                                 <button
                                     className={`db-tool-btn ${allFilled ? "end-draft-btn--active" : "end-draft-btn--disabled"}`}
@@ -784,6 +806,7 @@ setTaxiRosterIds(allTaxiIds);
                                                                     isKeeper ? "db-td-keeper" : "db-td-draftable"
                                                                 ].join(" ")}
                                                                 onClick={() => {
+                                                                    if (compareMode) return; 
                                                                     if (isKeeper) return;
                                                                     setDraftPopup({
                                                                         teamId: team.id, rowIndex, pos,
@@ -799,28 +822,46 @@ setTaxiRosterIds(allTaxiIds);
                                                                     <span className="db-cell-value db-cell-has-player">
                                                                         <span className="db-cell-name">{row.player}</span>
 
-                                                                        <button
-                                                                            className="db-cell-detail-btn"
-                                                                            onClick={(e) => openProfile(e, row.player_id)}
-                                                                            title="View player profile"
-                                                                        >
-                                                                            Details
-                                                                        </button>
+                                                                        {!compareMode && (
+                                                                            <>
+                                                                                <button className="db-cell-detail-btn" onClick={(e) => openProfile(e, row.player_id)}>
+                                                                                    Details
+                                                                                </button>
+                                                                                {!isKeeper && (
+                                                                                    <button className="db-cell-detail-btn" onClick={(e) => openMove(e, team, rowIndex, row)}>
+                                                                                        Move
+                                                                                    </button>
+                                                                                )}
+                                                                            </>
+                                                                        )}
 
-                                                                        {!isKeeper && (
-                                                                            <button
-                                                                                className="db-cell-detail-btn"
-                                                                                onClick={(e) => openMove(e, team, rowIndex, row)}
-                                                                                title="Move player"
-                                                                            >
-                                                                                Move
-                                                                            </button>
+                                                                        {compareMode && (
+                                                                            (() => {
+                                                                                const alreadyAdded = comparePlayers.some(cp => cp.id === row.player_id);
+                                                                                const isFull = comparePlayers.length >= MAX_COMPARE;
+                                                                                return (
+                                                                                    <button
+                                                                                        className="db-cell-detail-btn"
+                                                                                        style={alreadyAdded ? { color: "#4caf50", borderColor: "#4caf50" } : {}}
+                                                                                        disabled={!alreadyAdded && isFull}
+                                                                                        onClick={(e) => {
+                                                                                            e.stopPropagation();
+                                                                                            if (alreadyAdded) {
+                                                                                                setComparePlayers(prev => prev.filter(cp => cp.id !== row.player_id));
+                                                                                            } else {
+                                                                                                const found = allPlayers.find(p => p.id === row.player_id);
+                                                                                                if (found) setComparePlayers(prev => [...prev, toComparePlayer(found)]);
+                                                                                            }
+                                                                                        }}
+                                                                                    >
+                                                                                        {alreadyAdded ? "Added" : "Compare"}
+                                                                                    </button>
+                                                                                );
+                                                                            })()
                                                                         )}
                                                                     </span>
                                                                 ) : (
-                                                                    <span className="db-cell-value">
-                                                                        <span className="db-cell-empty">—</span>
-                                                                    </span>
+                                                                    <span className="db-cell-value"><span className="db-cell-empty">—</span></span>
                                                                 )}
                                                             </td>
 
@@ -1027,6 +1068,13 @@ setTaxiRosterIds(allTaxiIds);
                 isOpen={!!profilePlayer}
                 onClose={() => setProfilePlayer(null)}
                 player={profilePlayer}
+            />
+
+            <PlayerCompareModal
+                isOpen={compareMode}
+                selected={comparePlayers}
+                onRemove={(id) => setComparePlayers(prev => prev.filter(p => p.id !== id))}
+                onClose={() => { setCompareMode(false); setComparePlayers([]); }}
             />
 
         </div>
