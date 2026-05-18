@@ -707,6 +707,7 @@ export default function MinorLeagueDraftBoard({ league, onBack, onModeChange, pr
                     POSITIONS={POSITIONS}
                     onConfirm={confirmMove}
                     onClose={() => setMovePopup(null)}
+                    slotsMode={true}  
                 />
             )}
 
