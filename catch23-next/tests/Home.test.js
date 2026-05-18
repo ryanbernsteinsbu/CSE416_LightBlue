@@ -63,7 +63,8 @@ test("renders league cards", async () => {
   render(<Home />);
 
   expect(await screen.findByText("Jackie Wackie")).toBeInTheDocument();
-  expect(screen.getByText(/2025/i)).toBeInTheDocument();
+  const seasonElements = screen.getAllByText(/2025/i);
+  expect(seasonElements).toHaveLength(2);
   expect(screen.getByText("Season 3")).toBeInTheDocument();
 });
 
